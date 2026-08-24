@@ -1,2 +1,1 @@
-ACTIVE ENGINE: SEOLDAE SINGLE GRADING ENGINE v15.0
-Current regression targets: intensely=강렬하게, establishment=설립, instance=예, distress=번민/고민, restrictive=제한하는, strictly=엄격하게.
+BROAD GRADING COMPATIBILITY ENGINE: v18.0
