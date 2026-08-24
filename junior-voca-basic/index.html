@@ -323,6 +323,7 @@
 </div>
 
 <script>
+
 /* Standalone/iPhone safe local storage shim */
 if (!window.storage) {
   window.storage = {
@@ -1636,8 +1637,10 @@ document.getElementById('retry-btn').addEventListener('click', () => {
   document.getElementById('result-screen').classList.add('hidden');
   document.getElementById('setup-screen').classList.remove('hidden');
 });
+
 </script>
 <script>
+
 /* ===== TTS 안정성 + 인앱브라우저 대응 패치 (제작가이드 §9, §11 반영, 2026-07) ===== */
 (function(){
   var ttsVoice=null;
@@ -1755,8 +1758,10 @@ document.getElementById('retry-btn').addEventListener('click', () => {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initPatch);
   else initPatch();
 })();
+
 </script>
 <script>
+
 /* 설대영어 v7 안정화 QA
    - mix/e2k/k2e 분리
    - e2k 자동 발음
@@ -1768,9 +1773,10 @@ document.getElementById('retry-btn').addEventListener('click', () => {
    - DAY custom picker
    핵심 정답 QA: sharp→뾰족한, grow up→자라다
 */
-</script>
 
+</script>
 <script>
+
 (function(){
   function applySDlegacy-disabledHint(){
     try{
@@ -1784,10 +1790,11 @@ document.getElementById('retry-btn').addEventListener('click', () => {
   var obs=new MutationObserver(applySDlegacy-disabledHint); obs.observe(document.body,{subtree:true,childList:true,characterData:true});
   setTimeout(applySDlegacy-disabledHint,200);
 })();
-</script>
 
+</script>
 <script>
-/* === SEOLDAE SINGLE GRADING ENGINE v14.0 === */
+
+/* === SEOLDAE SINGLE GRADING ENGINE v15.0 === */
 const V14_APPROVED_KOR={
 "strictly":["엄격히","엄격하게","철저히","철저하게"],"intensely":["강하게","강렬하게","격렬하게","격렬히","열렬히","열렬하게","세게"],"establishment":["설립","설립하다","수립","수립하다","창립","창립하다","기관","시설"],"instance":["예","예시","사례","경우","보기"],"distress":["고통","고뇌","괴로움","근심","걱정","고민","번민","괴롭히다","근심하게하다"],"restrictive":["제한하는","한정하는","제한적인","한정적인","제약하는","제한하다","한정하다","제한","한정"],"skip":["건너뛰다","생략하다","빼먹다","넘기다"],"continue":["계속하다","지속하다","이어가다","계속되다","지속되다"],"hike":["하이킹하다","하이크하다","도보여행하다"],"even":["심지어","조차","조차도","마저"],"stay up":["안자다","안자고있다","자지않다","자지않고있다","깨어있다","밤을새우다","늦게까지깨어있다"],"everywhere":["어디에나","어디서나","어디든지","모든곳에","어느곳에나","곳곳에"],"quickly":["빨리","빠르게","신속하게","신속히"],"operate":["운영하다","작동하다","수행하다","실행하다","조작하다"],"reliant":["의존적인","의존하는","의지하는"],"description":["설명","묘사","기술","서술"],"multiple":["다수의","여러개의","여러가지의","다중의","복수의"],"have":["가지고있다","가지다","갖다","소유하다","먹다","경험하다"],"classmate":["반친구","학급친구","급우"],"may":["일지도모른다","할지도모른다","할수도있다","해도좋다","해도된다"]};
 const SEOLDAE_ENGINE=(function(){
@@ -1803,18 +1810,48 @@ function candidates(eng,kf,k){const o=new Set,add=r=>pieces(r).forEach(m=>forms(
 function strict(e){return typeof V14_STRICT!=='undefined'&&V14_STRICT.has(nEng(e))}
 function grade(o){o=o||{};const d=o.direction||o.type||'e2k',u0=String(o.userAnswer||'').trim(),e=nEng(o.eng||'');if(!u0)return{correct:false,blank:true,label:'정답을 입력한 뒤 확인을 눌러주세요.',reason:'blank'};if(d==='k2e'){const u=nEng(u0).replace(/[.?!,;:]+$/g,'');if(u===e)return{correct:true,label:'정답',reason:'exact_eng'};if(!strict(e)&&typeof V14_ENG_SYNONYMS!=='undefined')for(const q of V14_ENG_SYNONYMS){const g=q.map(nEng);if(g.includes(u)&&g.includes(e))return{correct:true,label:'정답',reason:'approved_eng_synonym'}}return{correct:false,label:'오답',reason:'eng_mismatch'}}const us=new Set;expand(u0).forEach(x=>forms(x).forEach(y=>us.add(y)));const cs=new Set(candidates(e,o.korFull,o.kor));for(const u of us)if(cs.has(u))return{correct:true,label:'정답',reason:'normalized_exact'};if(strict(e))return{correct:false,label:'오답',reason:'strict_mismatch'};for(const u of us)for(const c of cs)if(u&&c&&Math.min(u.length,c.length)>=2&&(u.includes(c)||c.includes(u)))return{correct:true,label:'정답',reason:'broad_partial'};return{correct:false,label:'오답',reason:'kor_mismatch'}}
 function speakE2K(word){try{if(!('speechSynthesis'in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(word||'').replace(/~/g,'').trim());u.lang='en-US';u.rate=.82;speechSynthesis.speak(u)}catch(e){}}
-return{version:'14.0',grade,nEng,forms,expand,candidates,speakE2K};})();
+return{version:'15.0',grade,nEng,forms,expand,candidates,speakE2K};})();
+
+
+
+gradeAnswer=function(opts){return SEOLDAE_ENGINE.grade(opts||{});};
+if(typeof gradeAnswerV22==='function') gradeAnswerV22=function(opts){return SEOLDAE_ENGINE.grade(opts||{});};
+if(typeof gradeAnswerV31==='function') gradeAnswerV31=function(opts){return SEOLDAE_ENGINE.grade(opts||{});};
+
+
+(function(){
+  var last='';
+  function say(w){
+    try{
+      if(!w||!('speechSynthesis' in window))return;
+      speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(String(w).trim());
+      u.lang='en-US';u.rate=.8;
+      speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function visible(el){return !!(el && el.offsetParent!==null && !el.classList.contains('hidden'));}
+  function playIfE2K(){
+    var quiz=document.getElementById('quiz')||document.getElementById('quiz-screen');
+    if(!visible(quiz))return;
+    var q=document.getElementById('qword')||document.getElementById('questionWord')||document.getElementById('q-word');
+    if(!q||!quiz.contains(q))return;
+    var w=String(q.textContent||'').trim();
+    if(!/[A-Za-z]/.test(w)||/[가-힣]/.test(w))return;
+    var pr=document.getElementById('prog')||document.getElementById('progressText')||document.getElementById('progress-text');
+    var key=(pr?pr.textContent:'')+'|'+w;
+    if(key===last)return;
+    last=key;
+    say(w);
+  }
+  ['startBtn','startButton','start-btn'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b)b.addEventListener('click',function(){setTimeout(playIfE2K,20);});
+  });
+  new MutationObserver(function(){setTimeout(playIfE2K,20);}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class']});
+})();
 
 </script>
-<script>
-/* === v14 ACTIVE ROUTING: all grading calls forced to one engine === */
-(function(){
-  function fromArgs(ans,item,type){return SEOLDAE_ENGINE.grade({direction:type,userAnswer:ans,eng:item&&item.eng,korFull:item&&((item.kor_full||item.korFull)||item.kor),kor:item&&item.kor});}
-  try{ if(typeof gradeAnswer==='function') gradeAnswer=fromArgs; }catch(e){}
-  try{ if(typeof gradeAnswerV5==='function') gradeAnswerV5=fromArgs; }catch(e){}
-  try{ if(typeof gradeAnswerV22==='function') gradeAnswerV22=function(opts){return SEOLDAE_ENGINE.grade(opts||{});}; }catch(e){}
-  try{ if(typeof gradeAnswerV31==='function') gradeAnswerV31=function(opts){return SEOLDAE_ENGINE.grade(opts||{});}; }catch(e){}
-})();
-</script>
+
 </body>
 </html>
