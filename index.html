@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>설대영어 학습실 · 설대영어 단어퀴즈</title>
+<title>설대영어 학습실 · </title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -268,43 +268,5 @@
   </footer>
 
 </div>
-<script>
-/* ===== Seoldae v11 universal grading wrapper: broad Korean natural variants ===== */
-(function(){
- if(typeof SEOLDAE_V9==='undefined'||!SEOLDAE_V9.grade||SEOLDAE_V9.__v11wrapped)return;
- const base=SEOLDAE_V9.grade.bind(SEOLDAE_V9);
- function variants(s){
-   const raw=String(s||'').trim(), out=new Set([raw]);
-   const clean=raw.replace(/[~～…·ㆍ,.;:：；!?？!"'’“”`()[\]{}<>/\\|_-]/g,' ').replace(/\s+/g,' ').trim();
-   if(clean)out.add(clean);
-   const words=[...out];
-   words.forEach(x=>{
-     if(x.endsWith('하게'))out.add(x.slice(0,-2)+'히');
-     if(x.endsWith('히'))out.add(x.slice(0,-1)+'하게');
-     if(x.endsWith('한'))out.add(x.slice(0,-1)+'하다');
-     if(x.endsWith('하다'))out.add(x.slice(0,-2)+'한');
-     if(x.endsWith('되다'))out.add(x.slice(0,-2)+'됨');
-   });
-   const pairs=[
-    ['엄격하게','엄격히'],['철저하게','철저히'],['정확하게','정확히'],['완전하게','완전히'],['조용하게','조용히'],['안전하게','안전히'],['신속하게','신속히'],['격렬하게','격렬히'],['난폭하게','난폭히'],
-    ['도와주다','돕다'],['선택하다','고르다'],['구매하다','사다'],['판매하다','팔다'],['제거하다','없애다'],['종료하다','끝내다'],['종료하다','마치다'],['시작하다','개시하다'],['계속하다','지속하다'],['남아있다','남다'],['가지고있다','가지다'],['갖다','가지다'],['안자다','자지않다'],['안자고있다','깨어있다']
-   ];
-   let changed=true,guard=0;
-   while(changed&&guard++<4){changed=false;[...out].forEach(x=>pairs.forEach(([a,b])=>{if(x.includes(a)){let y=x.replace(a,b);if(!out.has(y)){out.add(y);changed=true}}if(x.includes(b)){let y=x.replace(b,a);if(!out.has(y)){out.add(y);changed=true}}}));}
-   return [...out];
- }
- SEOLDAE_V9.grade=function(o){
-   let r=base(o); if(r&&r.correct)return r;
-   if(!o||o.direction!=='e2k'||!String(o.userAnswer||'').trim())return r;
-   for(const v of variants(o.userAnswer)){
-     if(v===o.userAnswer)continue;
-     const rr=base(Object.assign({},o,{userAnswer:v}));
-     if(rr&&rr.correct)return Object.assign({},rr,{acceptedBy:'v11NaturalKoreanVariant'});
-   }
-   return r;
- };
- SEOLDAE_V9.__v11wrapped=true;
-})();
-</script>
 </body>
 </html>
