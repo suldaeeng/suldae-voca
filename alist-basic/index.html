@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>설대영어 A-List 초등기본 단어시험</title>
+<style>
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}body{margin:0;background:#f2f6f4;color:#202321;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif;overscroll-behavior-y:contain}.app{max-width:520px;margin:0 auto;min-height:100vh;background:#fff;padding:18px 16px calc(54px + env(safe-area-inset-bottom))}h1{font-size:22px;text-align:center;margin:8px 0 4px;color:#0f6e56;font-weight:950}.sub{text-align:center;color:#66766f;font-size:13px;line-height:1.45;margin-bottom:12px}.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}.pill{font-size:12px;background:#e8f3ef;color:#0f6e56;border-radius:99px;padding:6px 10px;font-weight:800}a{color:#697b74;text-decoration:none;font-size:12px}.card{background:#f8fbfa;border:1px solid #dceae5;border-radius:16px;padding:18px;margin:12px 0;box-shadow:0 3px 10px rgba(15,110,86,.05)}label{display:block;margin:10px 0 6px;color:#50615b;font-size:13px;font-weight:800}input,select,textarea{width:100%;padding:13px;border:1px solid #cbd9d4;border-radius:12px;font-size:16px!important;background:#fff;-webkit-user-select:text;user-select:text}textarea{min-height:120px;font-size:13px!important;line-height:1.5}button{width:100%;border:0;border-radius:12px;background:#0f6e56;color:#fff;font-weight:900;font-size:16px;padding:14px 12px;margin-top:10px;cursor:pointer;-webkit-tap-highlight-color:rgba(15,110,86,.18);touch-action:manipulation}button.secondary{background:#fff;color:#0f6e56;border:1px solid #0f6e56}button.light{background:#e7f4ef;color:#0f6e56}button.gray{background:#eef1ec;color:#333}button:active{opacity:.84}.hidden{display:none!important}.row{display:flex;gap:8px}.row>*{flex:1}.small{font-size:12px;color:#73837d;line-height:1.65;text-align:center}.progress{text-align:center;color:#697b74;font-size:13px;margin:8px 0}.qcard{text-align:center;padding:28px 14px}.hint{font-size:14px;color:#7c8c85;margin-bottom:10px}.word{font-size:34px;line-height:1.18;font-weight:950;word-break:keep-all;margin:12px 0;color:#13241d}.kor{font-size:20px;line-height:1.45;font-weight:800;color:#263a32;word-break:keep-all}.answer{text-align:center;font-size:20px!important;margin-top:14px;font-weight:800}.feedback{min-height:30px;text-align:center;font-size:18px;font-weight:950;margin:10px 0}.ok{color:#0f6e56}.bad{color:#a33a22}.score{font-size:52px;color:#0f6e56;font-weight:950;text-align:center;margin:10px 0}.wrong-item,.rec-item{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #e5eeea;padding:10px 0;font-size:14px}.wrong-item b,.rec-item b{font-size:15px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid #e5eeea;padding:8px;text-align:left;vertical-align:top}th{color:#0f6e56}.notice{background:#fff8e8;border:1px solid #f0dfb2;border-radius:12px;padding:10px;font-size:12px;color:#6b5726;line-height:1.55;margin-top:10px}
+.browser-guide{position:relative;background:#fff8e8;border:1px solid #f0b429;color:#7a5b00;border-radius:12px;padding:9px 34px 9px 12px;margin:12px 0 14px;font-weight:700;font-size:12.5px;line-height:1.5}.browser-guide.hidden{display:none!important}.guide-close{position:absolute;top:5px;right:5px;width:24px;height:24px;padding:0;margin:0;border-radius:7px;background:transparent;color:#9a7a1a;font-size:13px;font-weight:900;line-height:24px;border:none;cursor:pointer}.guide-close:active{background:rgba(0,0,0,.06)}.day-trigger{width:100%;padding:13px;border:1px solid #cbd9d4;border-radius:12px;background:#fff;color:#1f2d28;text-align:left;display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:900;margin:0}.day-trigger:after{content:'▾';color:#0f6e56;font-size:15px}.day-modal{position:fixed;inset:0;background:rgba(15,30,24,.52);display:flex;align-items:flex-end;justify-content:center;z-index:9999}.day-modal.hidden{display:none!important}.day-modal-inner{background:#fff;width:100%;max-width:520px;border-radius:18px 18px 0 0;max-height:72vh;display:flex;flex-direction:column;padding:14px 14px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -8px 30px rgba(0,0,0,.18)}.day-modal-header{display:flex;justify-content:space-between;align-items:center;font-weight:950;font-size:16px;margin:0 2px 10px}.day-modal-header button{width:auto;padding:7px 14px;margin:0;background:#f2f2ee;color:#33443c;font-size:13px;border-radius:9px;font-weight:900}.day-list{overflow-y:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:2px}.day-list button{padding:11px 2px;border-radius:9px;border:1px solid #e5e4dd;background:#f9f9f7;font-weight:900;font-size:12.5px;color:#2c2c2a;cursor:pointer;line-height:1.3;margin:0}.day-list button.active{background:#0f6e56;color:#fff;border-color:#0f6e56}
+@media(max-width:420px){.word{font-size:30px}.kor{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>설대영어 단어시험</h1>
+<div class="sub">A-List VOCA 초등기본 Day01~32</div>
+<div class="browser-guide" id="browserGuide"><button id="guideClose" class="guide-close" aria-label="닫기">✕</button>📌 카카오톡 미리보기·문서뷰어에서는 저장/발음이 불안정할 수 있어요. Chrome·Safari로 열어주세요.</div>
+<div class="top"><span class="pill"></span><a href="#" id="teacherLink">선생님 모드</a></div>
+<section id="setup"><div class="card"><label for="studentName">이름</label><input id="studentName" type="text" placeholder="이름을 입력하세요" autocomplete="name"><label for="dayValue">DAY 선택</label><input type="hidden" id="dayValue" value=""><button type="button" id="dayButton" class="day-trigger">DAY 선택</button><label for="modeSelect">시험 방식</label><select id="modeSelect"><option value="mix">영어→한글 / 한글→영어 랜덤</option><option value="e2k">영어→한글만</option><option value="k2e">한글→영어만</option><option value="wrong">저장된 오답만</option></select><label for="limitSelect">문항 수</label><select id="limitSelect"><option value="all">DAY 전체</option><option value="20">랜덤 20문제</option><option value="30">랜덤 30문제</option><option value="50">랜덤 50문제</option></select><div class="row"><button id="listenButton" class="secondary" type="button">🔊 발음 듣기</button><button id="startButton" type="button">시험 시작</button></div><button id="resumeButton" type="button" class="light hidden">이어서 풀기</button></div><div class="small">오답은 뒤에 다시 출제됩니다. 최종 점수는 첫 풀이 기준입니다.<br>Enter 또는 확인을 누르면 자동으로 다음 문제로 넘어갑니다.</div><div class="notice">아이폰은 처음 한 번 버튼을 눌러야 발음이 재생됩니다. HTML 파일 하나만 저장하면 인터넷 없이 실행됩니다.</div></section>
+<div id="dayModal" class="day-modal hidden"><div class="day-modal-inner"><div class="day-modal-header"><span>DAY 선택</span><button type="button" id="dayCloseButton">닫기</button></div><div id="dayList" class="day-list"></div></div></div>
+<section id="listen" class="hidden"><div class="progress" id="listenProgress"></div><div class="card qcard"><div class="word" id="listenWord"></div><div class="kor" id="listenKor"></div><button id="speakButton" class="light" type="button">🔊 다시 듣기</button></div><div class="row"><button id="prevListenButton" class="secondary" type="button">◀ 이전</button><button id="nextListenButton" type="button">다음 ▶</button></div><button id="backButton" class="secondary" type="button">돌아가기</button></section>
+<section id="quiz" class="hidden"><div class="progress" id="progressText"></div><div class="card qcard"><div class="hint" id="questionHint"></div><div class="word" id="questionWord"></div><input id="answerInput" class="answer" autocomplete="off" autocapitalize="none" placeholder="정답 입력"><div id="feedback" class="feedback"></div><div id="correctAnswer" class="small"></div></div><button id="submitButton" type="button">확인</button><button id="nextButton" type="button" class="secondary hidden">다음</button></section>
+<section id="result" class="hidden"><div class="card"><div id="resultName" class="progress"></div><div id="resultScore" class="score"></div><div id="resultDetail" class="progress"></div></div><div class="card"><b>선생님께 제출할 결과</b><textarea id="resultText" readonly></textarea><button id="copyButton" class="secondary" type="button">결과복사 후 선생님에게 전송하기</button></div><div class="card"><b>틀렸던 단어</b><div id="wrongList"></div></div><div class="card"><b>오늘의 추천복습</b><div id="recommendList"></div><button id="recommendQuizButton" type="button" class="light">추천복습 퀴즈 풀기</button></div><button id="retryButton" type="button">처음으로</button></section>
+<section id="teacher" class="hidden"><div class="card"><b>학생 결과 붙여넣기</b><div class="small" style="text-align:left;margin:8px 0">학생들이 카톡으로 보낸 결과를 여러 개 붙여넣고 분석하세요.</div><textarea id="pasteArea"></textarea><button id="analyzeButton" type="button">분석하기</button></div><div class="card hidden" id="analysisCard"><b>분석 결과</b><div id="tableWrap" style="overflow:auto"></div></div><button id="studentButton" class="secondary" type="button">학생 화면으로</button></section>
+</div>
+<script>
+const VOCA={"1":[{"eng":"hello","kor":"안녕 (만났을 때 하는 인사)","kor_full":"안녕 (만났을 때 하는 인사)"},{"eng":"bye","kor":"잘 가 (헤어질 때 하는 인사)","kor_full":"잘 가 (헤어질 때 하는 인사)"},{"eng":"I","kor":"나","kor_full":"나"},{"eng":"you","kor":"너, 너희","kor_full":"너, 너희"},{"eng":"my","kor":"나의, 내","kor_full":"나의, 내"},{"eng":"your","kor":"너의, 네","kor_full":"너의, 네"},{"eng":"boy","kor":"남자아이, 소년","kor_full":"남자아이, 소년"},{"eng":"girl","kor":"여자아이, 소녀","kor_full":"여자아이, 소녀"},{"eng":"name","kor":"이름","kor_full":"이름"},{"eng":"friend","kor":"친구","kor_full":"친구"},{"eng":"who","kor":"누구","kor_full":"누구"},{"eng":"what","kor":"무엇","kor_full":"무엇"},{"eng":"best friend","kor":"가장 친한 친구, 단짝 친구","kor_full":"가장 친한 친구, 단짝 친구"}],"2":[{"eng":"this","kor":"1. 이것 2. 이 사람","kor_full":"1. 이것 2. 이 사람"},{"eng":"that","kor":"1. 저것 2. 저 사람","kor_full":"1. 저것 2. 저 사람"},{"eng":"mom","kor":"엄마","kor_full":"엄마"},{"eng":"dad","kor":"아빠","kor_full":"아빠"},{"eng":"grandma","kor":"할머니","kor_full":"할머니"},{"eng":"grandpa","kor":"할아버지","kor_full":"할아버지"},{"eng":"she","kor":"그녀, 그 여자","kor_full":"그녀, 그 여자"},{"eng":"he","kor":"그, 그 남자","kor_full":"그, 그 남자"},{"eng":"sister","kor":"언니, 누나, 여동생 (여자형제)","kor_full":"언니, 누나, 여동생 (여자형제)"},{"eng":"brother","kor":"오빠, 형, 남동생 (남자 형제)","kor_full":"오빠, 형, 남동생 (남자 형제)"},{"eng":"baby","kor":"아기","kor_full":"아기"},{"eng":"family","kor":"가족","kor_full":"가족"},{"eng":"This is…","kor":"이 사람은 ~이다 (사람을소개할 때)","kor_full":"이 사람은 ~이다 (사람을소개할 때)"}],"3":[{"eng":"can","kor":"~할 수 있다","kor_full":"~할 수 있다"},{"eng":"can't","kor":"~할 수 없다","kor_full":"~할 수 없다"},{"eng":"sing","kor":"노래하다","kor_full":"노래하다"},{"eng":"dance","kor":"춤을 추다; 춤","kor_full":"춤을 추다; 춤"},{"eng":"jump","kor":"점프하다, 뛰어오르다","kor_full":"점프하다, 뛰어오르다"},{"eng":"jump rope","kor":"줄넘기를 하다; 줄넘기, 줄넘 기 줄","kor_full":"줄넘기를 하다; 줄넘기, 줄넘 기 줄"},{"eng":"walk","kor":"걷다","kor_full":"걷다"},{"eng":"run","kor":"뛰다, 달리다","kor_full":"뛰다, 달리다"},{"eng":"fly","kor":"(하늘을) 날다","kor_full":"(하늘을) 날다"},{"eng":"swim","kor":"수영하다, 헤엄치다","kor_full":"수영하다, 헤엄치다"},{"eng":"we","kor":"우리","kor_full":"우리"},{"eng":"they","kor":"그들, 그것들","kor_full":"그들, 그것들"},{"eng":"Let's…","kor":"(우리) ~하자 (권유하거나 제안할 때)","kor_full":"(우리) ~하자 (권유하거나 제안할 때)"}],"4":[{"eng":"farm","kor":"농장","kor_full":"농장"},{"eng":"animal","kor":"동물","kor_full":"동물"},{"eng":"see","kor":"보다, (눈에) 보이다","kor_full":"보다, (눈에) 보이다"},{"eng":"like","kor":"좋아하다","kor_full":"좋아하다"},{"eng":"dog","kor":"개","kor_full":"개"},{"eng":"cat","kor":"고양이","kor_full":"고양이"},{"eng":"chicken","kor":"닭","kor_full":"닭"},{"eng":"duck","kor":"오리","kor_full":"오리"},{"eng":"cow","kor":"암소, 젖소","kor_full":"암소, 젖소"},{"eng":"pig","kor":"돼지","kor_full":"돼지"},{"eng":"horse","kor":"말","kor_full":"말"},{"eng":"sheep","kor":"양","kor_full":"양"},{"eng":"farm animals","kor":"농장 동물들, 가축들","kor_full":"농장 동물들, 가축들"}],"5":[{"eng":"look","kor":"(관심을 기울여) 보다, 바라 보다","kor_full":"(관심을 기울여) 보다, 바라 보다"},{"eng":"rainbow","kor":"무지개","kor_full":"무지개"},{"eng":"color","kor":"색, 색깔","kor_full":"색, 색깔"},{"eng":"it","kor":"그것 (지금 이야기하고 있는 대상)","kor_full":"그것 (지금 이야기하고 있는 대상)"},{"eng":"red","kor":"빨간색의; 빨간색","kor_full":"빨간색의; 빨간색"},{"eng":"orange","kor":"주황색의; 1. 주황색 2. 오렌 지","kor_full":"주황색의; 1. 주황색 2. 오렌 지"},{"eng":"yellow","kor":"노란색의; 노란색","kor_full":"노란색의; 노란색"},{"eng":"green","kor":"녹색의, 초록색의; 녹색, 초 록색","kor_full":"녹색의, 초록색의; 녹색, 초 록색"},{"eng":"blue","kor":"파란색의; 파란색","kor_full":"파란색의; 파란색"},{"eng":"purple","kor":"보라색의, 자주색의; 보라색, 자주색","kor_full":"보라색의, 자주색의; 보라색, 자주색"},{"eng":"mix","kor":"섞다, 혼합하다","kor_full":"섞다, 혼합하다"},{"eng":"love","kor":"사랑하다, 아주 좋아하다; 사 랑","kor_full":"사랑하다, 아주 좋아하다; 사 랑"},{"eng":"look at","kor":"~을 바라보다, ~을 쳐다보 다","kor_full":"~을 바라보다, ~을 쳐다보 다"}],"6":[{"eng":"fruit","kor":"과일","kor_full":"과일"},{"eng":"vegetable","kor":"채소, 야채","kor_full":"채소, 야채"},{"eng":"apple","kor":"사과","kor_full":"사과"},{"eng":"banana","kor":"바나나","kor_full":"바나나"},{"eng":"strawberry","kor":"딸기","kor_full":"딸기"},{"eng":"blueberry","kor":"블루베리","kor_full":"블루베리"},{"eng":"potato","kor":"감자","kor_full":"감자"},{"eng":"tomato","kor":"토마토","kor_full":"토마토"},{"eng":"carrot","kor":"당근","kor_full":"당근"},{"eng":"onion","kor":"양파","kor_full":"양파"},{"eng":"sweet","kor":"달콤한, 단","kor_full":"달콤한, 단"},{"eng":"yummy","kor":"아주 맛있는 (주로 유아, 여 성 용어)","kor_full":"아주 맛있는 (주로 유아, 여 성 용어)"},{"eng":"There is…","kor":"~이(가) 있다","kor_full":"~이(가) 있다"}],"7":[{"eng":"one","kor":"1, 하나","kor_full":"1, 하나"},{"eng":"two","kor":"2, 둘","kor_full":"2, 둘"},{"eng":"three","kor":"3, 셋","kor_full":"3, 셋"},{"eng":"four","kor":"4, 넷","kor_full":"4, 넷"},{"eng":"five","kor":"5, 다섯","kor_full":"5, 다섯"},{"eng":"six","kor":"6, 여섯","kor_full":"6, 여섯"},{"eng":"seven","kor":"7, 일곱","kor_full":"7, 일곱"},{"eng":"eight","kor":"8, 여덟","kor_full":"8, 여덟"},{"eng":"nine","kor":"9, 아홉","kor_full":"9, 아홉"},{"eng":"ten","kor":"10, 열","kor_full":"10, 열"},{"eng":"count","kor":"(수를) 세다, 계산하다","kor_full":"(수를) 세다, 계산하다"},{"eng":"number","kor":"숫자, 수","kor_full":"숫자, 수"},{"eng":"count to ten","kor":"열(10)까지 세다","kor_full":"열(10)까지 세다"}],"8":[{"eng":"have","kor":"가지다, (가지고) 있다","kor_full":"가지다, (가지고) 있다"},{"eng":"book","kor":"책","kor_full":"책"},{"eng":"pencil","kor":"연필","kor_full":"연필"},{"eng":"eraser","kor":"지우개","kor_full":"지우개"},{"eng":"crayon","kor":"크레용","kor_full":"크레용"},{"eng":"scissors","kor":"가위","kor_full":"가위"},{"eng":"read","kor":"읽다","kor_full":"읽다"},{"eng":"write","kor":"쓰다","kor_full":"쓰다"},{"eng":"draw","kor":"(연필, 펜 등으로) 그리다","kor_full":"(연필, 펜 등으로) 그리다"},{"eng":"with","kor":"1. ~로, ~을 이용하여 2. ~ 와 함께","kor_full":"1. ~로, ~을 이용하여 2. ~ 와 함께"},{"eng":"color","kor":"(~에) 색칠하다; 색, 색깔","kor_full":"(~에) 색칠하다; 색, 색깔"},{"eng":"cut","kor":"자르다, 잘라 내다","kor_full":"자르다, 잘라 내다"},{"eng":"school bag","kor":"학교 가방, 책가방","kor_full":"학교 가방, 책가방"}],"9":[{"eng":"big","kor":"(크기가) 큰","kor_full":"(크기가) 큰"},{"eng":"little","kor":"1. (크기가) 작은 2. 어린","kor_full":"1. (크기가) 작은 2. 어린"},{"eng":"tall","kor":"키가 큰","kor_full":"키가 큰"},{"eng":"short","kor":"키가 작은","kor_full":"키가 작은"},{"eng":"elephant","kor":"코끼리","kor_full":"코끼리"},{"eng":"giraffe","kor":"기린","kor_full":"기린"},{"eng":"zebra","kor":"얼룩말","kor_full":"얼룩말"},{"eng":"monkey","kor":"원숭이","kor_full":"원숭이"},{"eng":"puppy","kor":"강아지","kor_full":"강아지"},{"eng":"kitten","kor":"새끼 고양이","kor_full":"새끼 고양이"},{"eng":"very","kor":"매우, 아주","kor_full":"매우, 아주"},{"eng":"cute","kor":"귀여운","kor_full":"귀여운"},{"eng":"There are…","kor":"~이 있다 (둘 이상)","kor_full":"~이 있다 (둘 이상)"}],"10":[{"eng":"face","kor":"얼굴","kor_full":"얼굴"},{"eng":"body","kor":"몸, 신체","kor_full":"몸, 신체"},{"eng":"eye","kor":"눈","kor_full":"눈"},{"eng":"nose","kor":"코","kor_full":"코"},{"eng":"mouth","kor":"입","kor_full":"입"},{"eng":"ear","kor":"귀","kor_full":"귀"},{"eng":"arm","kor":"팔","kor_full":"팔"},{"eng":"hand","kor":"손","kor_full":"손"},{"eng":"leg","kor":"다리","kor_full":"다리"},{"eng":"foot","kor":"발","kor_full":"발"},{"eng":"finger","kor":"손가락","kor_full":"손가락"},{"eng":"toe","kor":"발가락","kor_full":"발가락"},{"eng":"with your eyes","kor":"(너의) 눈으로, 눈을 이용하 여","kor_full":"(너의) 눈으로, 눈을 이용하 여"}],"11":[{"eng":"sky","kor":"하늘","kor_full":"하늘"},{"eng":"weather","kor":"날씨","kor_full":"날씨"},{"eng":"warm","kor":"따뜻한, 따스한","kor_full":"따뜻한, 따스한"},{"eng":"hot","kor":"더운, 뜨거운","kor_full":"더운, 뜨거운"},{"eng":"cool","kor":"선선한, 시원한","kor_full":"선선한, 시원한"},{"eng":"cold","kor":"추운, 차가운","kor_full":"추운, 차가운"},{"eng":"sun","kor":"태양, 해","kor_full":"태양, 해"},{"eng":"sunny","kor":"해가 쨍쨍 내리쬐는, 화창한","kor_full":"해가 쨍쨍 내리쬐는, 화창한"},{"eng":"rainy","kor":"비가 (많이) 오는","kor_full":"비가 (많이) 오는"},{"eng":"snowy","kor":"눈이 (많이) 오는","kor_full":"눈이 (많이) 오는"},{"eng":"cloudy","kor":"흐린, 구름이 잔뜩 낀","kor_full":"흐린, 구름이 잔뜩 낀"},{"eng":"windy","kor":"바람이 (많이) 부는","kor_full":"바람이 (많이) 부는"},{"eng":"snowy day","kor":"눈 오는 날","kor_full":"눈 오는 날"}],"12":[{"eng":"play","kor":"놀다, (게임 등을) 하다","kor_full":"놀다, (게임 등을) 하다"},{"eng":"park","kor":"공원","kor_full":"공원"},{"eng":"come","kor":"오다","kor_full":"오다"},{"eng":"go","kor":"가다","kor_full":"가다"},{"eng":"up","kor":"위로, 위에","kor_full":"위로, 위에"},{"eng":"down","kor":"아래로, 아래에","kor_full":"아래로, 아래에"},{"eng":"hill","kor":"언덕","kor_full":"언덕"},{"eng":"mountain","kor":"산","kor_full":"산"},{"eng":"river","kor":"강","kor_full":"강"},{"eng":"lake","kor":"호수","kor_full":"호수"},{"eng":"skate","kor":"스케이트를 타다; 스케이트 화 (한 짝)","kor_full":"스케이트를 타다; 스케이트 화 (한 짝)"},{"eng":"sled","kor":"썰매를 타다; 썰매","kor_full":"썰매를 타다; 썰매"},{"eng":"have fun","kor":"재미있게 놀다, 즐거운 시간 을 보내다","kor_full":"재미있게 놀다, 즐거운 시간 을 보내다"}],"13":[{"eng":"pet","kor":"애완동물, 반려동물","kor_full":"애완동물, 반려동물"},{"eng":"meet","kor":"만나다","kor_full":"만나다"},{"eng":"pretty","kor":"예쁜, 귀여운","kor_full":"예쁜, 귀여운"},{"eng":"smart","kor":"똑똑한, 영리한","kor_full":"똑똑한, 영리한"},{"eng":"ugly","kor":"못생긴, 추한","kor_full":"못생긴, 추한"},{"eng":"handsome","kor":"잘생긴, 멋진","kor_full":"잘생긴, 멋진"},{"eng":"sit","kor":"앉다, 앉아 있다","kor_full":"앉다, 앉아 있다"},{"eng":"stand","kor":"서다, 서 있다","kor_full":"서다, 서 있다"},{"eng":"wait","kor":"기다리다","kor_full":"기다리다"},{"eng":"shake","kor":"흔들다, 털다","kor_full":"흔들다, 털다"},{"eng":"catch","kor":"(움직이는 물체를) 잡다","kor_full":"(움직이는 물체를) 잡다"},{"eng":"hug","kor":"포옹하다, 껴안다","kor_full":"포옹하다, 껴안다"},{"eng":"shake hands","kor":"악수를 하다","kor_full":"악수를 하다"}],"14":[{"eng":"in","kor":"~ 안에, ~ 속에","kor_full":"~ 안에, ~ 속에"},{"eng":"on","kor":"~ 위에 (표면에 닿아 있는 상태)","kor_full":"~ 위에 (표면에 닿아 있는 상태)"},{"eng":"under","kor":"~ (바로) 아래에","kor_full":"~ (바로) 아래에"},{"eng":"over","kor":"(표면에 닿지 않게) ~ 위에, ~ 위로","kor_full":"(표면에 닿지 않게) ~ 위에, ~ 위로"},{"eng":"beside","kor":"~ 옆에, ~ 쪽에","kor_full":"~ 옆에, ~ 쪽에"},{"eng":"behind","kor":"~ 뒤에","kor_full":"~ 뒤에"},{"eng":"mat","kor":"매트, 깔개","kor_full":"매트, 깔개"},{"eng":"hat","kor":"모자","kor_full":"모자"},{"eng":"cap","kor":"(앞부분에 챙이 달린) 모자","kor_full":"(앞부분에 챙이 달린) 모자"},{"eng":"shoe","kor":"신, 신발 (한 짝)","kor_full":"신, 신발 (한 짝)"},{"eng":"bad","kor":"나쁜, 안 좋은","kor_full":"나쁜, 안 좋은"},{"eng":"good","kor":"좋은, 착한","kor_full":"좋은, 착한"},{"eng":"on my lap","kor":"내 무릎 위에","kor_full":"내 무릎 위에"}],"15":[{"eng":"room","kor":"방","kor_full":"방"},{"eng":"bed","kor":"침대","kor_full":"침대"},{"eng":"door","kor":"문","kor_full":"문"},{"eng":"window","kor":"창문","kor_full":"창문"},{"eng":"ball","kor":"공","kor_full":"공"},{"eng":"doll","kor":"인형","kor_full":"인형"},{"eng":"toy","kor":"장난감","kor_full":"장난감"},{"eng":"teddy bear","kor":"곰 인형","kor_full":"곰 인형"},{"eng":"computer","kor":"컴퓨터","kor_full":"컴퓨터"},{"eng":"robot","kor":"로봇","kor_full":"로봇"},{"eng":"new","kor":"새로운, 새것의","kor_full":"새로운, 새것의"},{"eng":"old","kor":"1. 낡은, 오래된 2. 늙은","kor_full":"1. 낡은, 오래된 2. 늙은"},{"eng":"smart speaker","kor":"스마트 스피커, 인공지능 스 피커","kor_full":"스마트 스피커, 인공지능 스 피커"}],"16":[{"eng":"eat","kor":"먹다","kor_full":"먹다"},{"eng":"cookie","kor":"쿠키","kor_full":"쿠키"},{"eng":"drink","kor":"(음료를) 마시다; 음료","kor_full":"(음료를) 마시다; 음료"},{"eng":"milk","kor":"우유","kor_full":"우유"},{"eng":"brush","kor":"이를 닦다, 칫솔질을 하다; 솔, 솔질","kor_full":"이를 닦다, 칫솔질을 하다; 솔, 솔질"},{"eng":"tooth","kor":"이, 치아 (한 개)","kor_full":"이, 치아 (한 개)"},{"eng":"clean","kor":"깨끗한","kor_full":"깨끗한"},{"eng":"dirty","kor":"더러운, 지저분한","kor_full":"더러운, 지저분한"},{"eng":"wash","kor":"씻다","kor_full":"씻다"},{"eng":"shower","kor":"샤워(하기); 샤워를 하다","kor_full":"샤워(하기); 샤워를 하다"},{"eng":"homework","kor":"숙제","kor_full":"숙제"},{"eng":"do","kor":"(어떤 동작이나 행동을) 하 다","kor_full":"(어떤 동작이나 행동을) 하 다"},{"eng":"go to bed","kor":"잠자리에 들다, 자러 가다","kor_full":"잠자리에 들다, 자러 가다"}],"17":[{"eng":"school","kor":"학교","kor_full":"학교"},{"eng":"classroom","kor":"교실","kor_full":"교실"},{"eng":"teacher","kor":"교사, 선생님","kor_full":"교사, 선생님"},{"eng":"student","kor":"학생","kor_full":"학생"},{"eng":"map","kor":"지도","kor_full":"지도"},{"eng":"globe","kor":"지구본","kor_full":"지구본"},{"eng":"board","kor":"칠판, 게시판","kor_full":"칠판, 게시판"},{"eng":"clock","kor":"시계","kor_full":"시계"},{"eng":"desk","kor":"책상","kor_full":"책상"},{"eng":"chair","kor":"의자","kor_full":"의자"},{"eng":"many","kor":"많은, 여러","kor_full":"많은, 여러"},{"eng":"kid","kor":"아이, 청소년 (비격식)","kor_full":"아이, 청소년 (비격식)"},{"eng":"welcome to","kor":"~에 온 것을 환영하다","kor_full":"~에 온 것을 환영하다"}],"18":[{"eng":"English","kor":"영어, 영어 과목","kor_full":"영어, 영어 과목"},{"eng":"class","kor":"수업","kor_full":"수업"},{"eng":"math","kor":"수학","kor_full":"수학"},{"eng":"science","kor":"과학","kor_full":"과학"},{"eng":"music","kor":"음악","kor_full":"음악"},{"eng":"art","kor":"미술, 예술","kor_full":"미술, 예술"},{"eng":"P.E.","kor":"체육","kor_full":"체육"},{"eng":"playground","kor":"운동장, 놀이터","kor_full":"운동장, 놀이터"},{"eng":"sport","kor":"스포츠, 운동, 경기","kor_full":"스포츠, 운동, 경기"},{"eng":"favorite","kor":"가장 좋아하는","kor_full":"가장 좋아하는"},{"eng":"paint","kor":"(물감으로) 그리다, 페인트 를 칠하다; 페인트","kor_full":"(물감으로) 그리다, 페인트 를 칠하다; 페인트"},{"eng":"speak","kor":"말하다, 이야기를 주고받다","kor_full":"말하다, 이야기를 주고받다"},{"eng":"like to","kor":"~하는 것을 좋아하다","kor_full":"~하는 것을 좋아하다"}],"19":[{"eng":"bike","kor":"자전거 (비격식)","kor_full":"자전거 (비격식)"},{"eng":"ride","kor":"(탈것을) 타다, 타고 가다","kor_full":"(탈것을) 타다, 타고 가다"},{"eng":"helmet","kor":"헬멧","kor_full":"헬멧"},{"eng":"wear","kor":"입고 있다, 신고[쓰고/착용 하고] 있다","kor_full":"입고 있다, 신고[쓰고/착용 하고] 있다"},{"eng":"fast","kor":"빨리, 빠르게; 빠른","kor_full":"빨리, 빠르게; 빠른"},{"eng":"slowly","kor":"천천히, 느리게","kor_full":"천천히, 느리게"},{"eng":"skateboard","kor":"스케이트보드; 스케이트보 드를 타다","kor_full":"스케이트보드; 스케이트보 드를 타다"},{"eng":"snowboard","kor":"스노보드; 스노보드를 타다","kor_full":"스노보드; 스노보드를 타다"},{"eng":"pull","kor":"끌다, 끌어당기다","kor_full":"끌다, 끌어당기다"},{"eng":"push","kor":"밀다","kor_full":"밀다"},{"eng":"watch","kor":"(관심을 기울이며) 보다, 지 켜보다","kor_full":"(관심을 기울이며) 보다, 지 켜보다"},{"eng":"help","kor":"돕다, 도와주다","kor_full":"돕다, 도와주다"},{"eng":"watch out","kor":"조심하다, 주의하다","kor_full":"조심하다, 주의하다"}],"20":[{"eng":"singer","kor":"노래하는 사람, 가수","kor_full":"노래하는 사람, 가수"},{"eng":"dancer","kor":"무용수, 댄서","kor_full":"무용수, 댄서"},{"eng":"doctor","kor":"의사","kor_full":"의사"},{"eng":"nurse","kor":"간호사","kor_full":"간호사"},{"eng":"work","kor":"일하다, 작업하다; 일, 작업","kor_full":"일하다, 작업하다; 일, 작업"},{"eng":"hospital","kor":"병원","kor_full":"병원"},{"eng":"zookeeper","kor":"동물원 사육사, 동물원 관리 자","kor_full":"동물원 사육사, 동물원 관리 자"},{"eng":"zoo","kor":"동물원","kor_full":"동물원"},{"eng":"firefighter","kor":"소방관","kor_full":"소방관"},{"eng":"fire station","kor":"소방서","kor_full":"소방서"},{"eng":"police officer","kor":"경찰관","kor_full":"경찰관"},{"eng":"police station","kor":"경찰서","kor_full":"경찰서"},{"eng":"at home","kor":"집에, 집에서","kor_full":"집에, 집에서"}],"21":[{"eng":"spring","kor":"봄","kor_full":"봄"},{"eng":"summer","kor":"여름","kor_full":"여름"},{"eng":"fall","kor":"가을","kor_full":"가을"},{"eng":"winter","kor":"겨울","kor_full":"겨울"},{"eng":"bird","kor":"새","kor_full":"새"},{"eng":"tree","kor":"나무","kor_full":"나무"},{"eng":"butterfly","kor":"나비","kor_full":"나비"},{"eng":"flower","kor":"꽃","kor_full":"꽃"},{"eng":"leaf","kor":"잎, 나뭇잎","kor_full":"잎, 나뭇잎"},{"eng":"grass","kor":"풀, 잔디","kor_full":"풀, 잔디"},{"eng":"beautiful","kor":"아름다운, 멋진","kor_full":"아름다운, 멋진"},{"eng":"garden","kor":"정원","kor_full":"정원"},{"eng":"four seasons","kor":"사계절","kor_full":"사계절"}],"22":[{"eng":"live","kor":"(~에) 살다, 거주하다","kor_full":"(~에) 살다, 거주하다"},{"eng":"where","kor":"어디에, 어디에서","kor_full":"어디에, 어디에서"},{"eng":"here","kor":"여기에(서)","kor_full":"여기에(서)"},{"eng":"there","kor":"저기에(서), 거기에(서)","kor_full":"저기에(서), 거기에(서)"},{"eng":"house","kor":"집","kor_full":"집"},{"eng":"people","kor":"사람들","kor_full":"사람들"},{"eng":"cave","kor":"동굴, 굴","kor_full":"동굴, 굴"},{"eng":"bear","kor":"곰","kor_full":"곰"},{"eng":"nest","kor":"(새의) 둥지","kor_full":"(새의) 둥지"},{"eng":"hive","kor":"벌집","kor_full":"벌집"},{"eng":"ocean","kor":"대양, 바다","kor_full":"대양, 바다"},{"eng":"fish","kor":"물고기","kor_full":"물고기"},{"eng":"a lot of","kor":"많은","kor_full":"많은"}],"23":[{"eng":"delicious","kor":"아주 맛있는","kor_full":"아주 맛있는"},{"eng":"food","kor":"음식","kor_full":"음식"},{"eng":"rice","kor":"쌀, 밥","kor_full":"쌀, 밥"},{"eng":"bread","kor":"빵","kor_full":"빵"},{"eng":"hamburger","kor":"햄버거","kor_full":"햄버거"},{"eng":"sandwich","kor":"샌드위치","kor_full":"샌드위치"},{"eng":"chicken","kor":"치킨","kor_full":"치킨"},{"eng":"pizza","kor":"피자","kor_full":"피자"},{"eng":"ice cream","kor":"아이스크림","kor_full":"아이스크림"},{"eng":"cake","kor":"케이크","kor_full":"케이크"},{"eng":"share","kor":"(함께) 나누다, 나눠 갖다","kor_full":"(함께) 나누다, 나눠 갖다"},{"eng":"lunch","kor":"점심, 점심 식사","kor_full":"점심, 점심 식사"},{"eng":"Here you are","kor":"여기 있어(요). / 이거 받으 세요.","kor_full":"여기 있어(요). / 이거 받으 세요."}],"24":[{"eng":"beach","kor":"해변, 바닷가","kor_full":"해변, 바닷가"},{"eng":"sand","kor":"모래, 모래사장","kor_full":"모래, 모래사장"},{"eng":"sea","kor":"바다","kor_full":"바다"},{"eng":"water","kor":"물, (강, 바다의) 물","kor_full":"물, (강, 바다의) 물"},{"eng":"sunglasses","kor":"선글라스","kor_full":"선글라스"},{"eng":"swimsuit","kor":"수영복","kor_full":"수영복"},{"eng":"beach ball","kor":"비치 볼, 물놀이용 공","kor_full":"비치 볼, 물놀이용 공"},{"eng":"beach tube","kor":"비치 튜브, 물놀이용 튜브","kor_full":"비치 튜브, 물놀이용 튜브"},{"eng":"kite","kor":"연","kor_full":"연"},{"eng":"balloon","kor":"풍선","kor_full":"풍선"},{"eng":"fun","kor":"재미, 즐거움; 재미있는","kor_full":"재미, 즐거움; 재미있는"},{"eng":"activity","kor":"활동","kor_full":"활동"},{"eng":"How","kor":"얼마나 많은 ~? / ~이 몇 개?","kor_full":"얼마나 많은 ~? / ~이 몇 개?"}],"25":[{"eng":"bedroom","kor":"침실, 방","kor_full":"침실, 방"},{"eng":"living room","kor":"거실","kor_full":"거실"},{"eng":"kitchen","kor":"부엌, 주방","kor_full":"부엌, 주방"},{"eng":"table","kor":"탁자, 테이블","kor_full":"탁자, 테이블"},{"eng":"bathroom","kor":"욕실, 화장실","kor_full":"욕실, 화장실"},{"eng":"bath","kor":"1. 욕조 2. 목욕","kor_full":"1. 욕조 2. 목욕"},{"eng":"roof","kor":"지붕","kor_full":"지붕"},{"eng":"wall","kor":"벽, 담","kor_full":"벽, 담"},{"eng":"make","kor":"만들다","kor_full":"만들다"},{"eng":"bake","kor":"(빵, 과자 등을) 굽다","kor_full":"(빵, 과자 등을) 굽다"},{"eng":"cook","kor":"요리하다","kor_full":"요리하다"},{"eng":"dish","kor":"접시, 그릇","kor_full":"접시, 그릇"},{"eng":"do the dishes","kor":"설거지를 하다, 그릇을 씻다","kor_full":"설거지를 하다, 그릇을 씻다"}],"26":[{"eng":"happy","kor":"행복한, 기쁜","kor_full":"행복한, 기쁜"},{"eng":"sad","kor":"슬픈","kor_full":"슬픈"},{"eng":"hungry","kor":"배고픈","kor_full":"배고픈"},{"eng":"full","kor":"1. 배부른 2, (~이) 가득 찬","kor_full":"1. 배부른 2, (~이) 가득 찬"},{"eng":"angry","kor":"화난, 성난","kor_full":"화난, 성난"},{"eng":"sorry","kor":"미안한, 유감스러운","kor_full":"미안한, 유감스러운"},{"eng":"tired","kor":"피곤한","kor_full":"피곤한"},{"eng":"sleepy","kor":"졸리는, 졸음이 오는","kor_full":"졸리는, 졸음이 오는"},{"eng":"thirsty","kor":"목이 마른","kor_full":"목이 마른"},{"eng":"sick","kor":"아픈, 병든","kor_full":"아픈, 병든"},{"eng":"how","kor":"어떻게, 어떤 상태로","kor_full":"어떻게, 어떤 상태로"},{"eng":"fine","kor":"좋은, 건강한","kor_full":"좋은, 건강한"},{"eng":"look +","kor":"~처럼 보이다, ~해 보이다","kor_full":"~처럼 보이다, ~해 보이다"}],"27":[{"eng":"guess","kor":"추측하다, 알아맞히다","kor_full":"추측하다, 알아맞히다"},{"eng":"so","kor":"[강조] 정말로, 너무나, 대단 히","kor_full":"[강조] 정말로, 너무나, 대단 히"},{"eng":"snake","kor":"뱀","kor_full":"뱀"},{"eng":"ant","kor":"개미","kor_full":"개미"},{"eng":"small","kor":"1. (크기가) 작은 2. (양이) 적은","kor_full":"1. (크기가) 작은 2. (양이) 적은"},{"eng":"fat","kor":"뚱뚱한, 살찐","kor_full":"뚱뚱한, 살찐"},{"eng":"long","kor":"(길이, 거리가) 긴","kor_full":"(길이, 거리가) 긴"},{"eng":"short","kor":"1. (길이, 거리가) 짧은 2. 키 가 작은","kor_full":"1. (길이, 거리가) 짧은 2. 키 가 작은"},{"eng":"rabbit","kor":"토끼","kor_full":"토끼"},{"eng":"turtle","kor":"거북이","kor_full":"거북이"},{"eng":"fast","kor":"빠른; 빨리, 빠르게","kor_full":"빠른; 빨리, 빠르게"},{"eng":"slow","kor":"느린; 느리게","kor_full":"느린; 느리게"},{"eng":"Guess what!","kor":"맞혀 봐! / 있잖아, 너 그거 알아?","kor_full":"맞혀 봐! / 있잖아, 너 그거 알아?"}],"28":[{"eng":"Christmas","kor":"크리스마스","kor_full":"크리스마스"},{"eng":"dinner","kor":"저녁 식사, 만찬","kor_full":"저녁 식사, 만찬"},{"eng":"gift","kor":"선물","kor_full":"선물"},{"eng":"box","kor":"상자, 박스","kor_full":"상자, 박스"},{"eng":"open","kor":"(문, 뚜껑 등을) 열다","kor_full":"(문, 뚜껑 등을) 열다"},{"eng":"close","kor":"(문, 뚜껑 등을) 닫다","kor_full":"(문, 뚜껑 등을) 닫다"},{"eng":"for","kor":"~을 위해, ~을 위한","kor_full":"~을 위해, ~을 위한"},{"eng":"watch","kor":"손목시계","kor_full":"손목시계"},{"eng":"bone","kor":"뼈, 뼈다귀","kor_full":"뼈, 뼈다귀"},{"eng":"drone","kor":"드론","kor_full":"드론"},{"eng":"want","kor":"원하다, 바라다","kor_full":"원하다, 바라다"},{"eng":"please","kor":"부디, 제발 (정중하게 부탁할 때 덧붙이는 말)","kor_full":"부디, 제발 (정중하게 부탁할 때 덧붙이는 말)"},{"eng":"No,","kor":"아뇨, 괜찮습니다. / 고맙지 만 사양할게요.","kor_full":"아뇨, 괜찮습니다. / 고맙지 만 사양할게요."}],"29":[{"eng":"morning","kor":"아침, 오전","kor_full":"아침, 오전"},{"eng":"afternoon","kor":"오후","kor_full":"오후"},{"eng":"evening","kor":"저녁","kor_full":"저녁"},{"eng":"noon","kor":"정오, 낮 12시","kor_full":"정오, 낮 12시"},{"eng":"day","kor":"낮","kor_full":"낮"},{"eng":"night","kor":"밤","kor_full":"밤"},{"eng":"moon","kor":"달","kor_full":"달"},{"eng":"star","kor":"별","kor_full":"별"},{"eng":"shine","kor":"빛나다, 반짝이다","kor_full":"빛나다, 반짝이다"},{"eng":"sleep","kor":"잠을 자다; 잠","kor_full":"잠을 자다; 잠"},{"eng":"quiet","kor":"조용한","kor_full":"조용한"},{"eng":"loud","kor":"(소리가) 큰, 시끄러운","kor_full":"(소리가) 큰, 시끄러운"},{"eng":"go to sleep","kor":"잠이 들다, 잠을 자다","kor_full":"잠이 들다, 잠을 자다"}],"30":[{"eng":"snow","kor":"눈; 눈이 오다","kor_full":"눈; 눈이 오다"},{"eng":"rain","kor":"비; 비가 오다","kor_full":"비; 비가 오다"},{"eng":"wind","kor":"바람","kor_full":"바람"},{"eng":"cloud","kor":"구름","kor_full":"구름"},{"eng":"snowman","kor":"눈사람","kor_full":"눈사람"},{"eng":"snowball","kor":"눈 뭉치, 눈덩이","kor_full":"눈 뭉치, 눈덩이"},{"eng":"umbrella","kor":"우산","kor_full":"우산"},{"eng":"raincoat","kor":"비옷, 레인코트","kor_full":"비옷, 레인코트"},{"eng":"boot","kor":"장화, 부츠 (한 짝)","kor_full":"장화, 부츠 (한 짝)"},{"eng":"glove","kor":"장갑 (한 짝)","kor_full":"장갑 (한 짝)"},{"eng":"outside","kor":"밖에, 밖에서; ~의 밖에, ~의 바깥쪽에","kor_full":"밖에, 밖에서; ~의 밖에, ~의 바깥쪽에"},{"eng":"inside","kor":"안에, 안으로; ~의 안에","kor_full":"안에, 안으로; ~의 안에"},{"eng":"bad weather","kor":"안 좋은 날씨, 악천후","kor_full":"안 좋은 날씨, 악천후"}],"31":[{"eng":"bug","kor":"(작은) 벌레, 곤충","kor_full":"(작은) 벌레, 곤충"},{"eng":"ladybug","kor":"무당벌레","kor_full":"무당벌레"},{"eng":"black","kor":"검은, 검은색의; 검은색","kor_full":"검은, 검은색의; 검은색"},{"eng":"white","kor":"흰, 흰색의; 흰색","kor_full":"흰, 흰색의; 흰색"},{"eng":"beetle","kor":"딱정벌레","kor_full":"딱정벌레"},{"eng":"grasshopper","kor":"메뚜기, 베짱이","kor_full":"메뚜기, 베짱이"},{"eng":"spider","kor":"거미","kor_full":"거미"},{"eng":"crab","kor":"게","kor_full":"게"},{"eng":"frog","kor":"개구리","kor_full":"개구리"},{"eng":"lizard","kor":"도마뱀","kor_full":"도마뱀"},{"eng":"zero","kor":"0, 영, 제로","kor_full":"0, 영, 제로"},{"eng":"wing","kor":"날개","kor_full":"날개"},{"eng":"a pair of","kor":"(두 개로 된) 한 쌍의, 한 켤 레의","kor_full":"(두 개로 된) 한 쌍의, 한 켤 레의"}],"32":[{"eng":"shape","kor":"모양, 형태","kor_full":"모양, 형태"},{"eng":"size","kor":"크기, 치수, 사이즈","kor_full":"크기, 치수, 사이즈"},{"eng":"circle","kor":"원형, 동그라미","kor_full":"원형, 동그라미"},{"eng":"oval","kor":"계란형, 타원형; 계란형의, 타원형의","kor_full":"계란형, 타원형; 계란형의, 타원형의"},{"eng":"triangle","kor":"삼각형","kor_full":"삼각형"},{"eng":"rectangle","kor":"직사각형","kor_full":"직사각형"},{"eng":"game","kor":"게임, 경기, 시합","kor_full":"게임, 경기, 시합"},{"eng":"find","kor":"찾다, 발견하다","kor_full":"찾다, 발견하다"},{"eng":"picture","kor":"그림, 사진","kor_full":"그림, 사진"},{"eng":"square","kor":"정사각형; 정사각형 모양의","kor_full":"정사각형; 정사각형 모양의"},{"eng":"diamond","kor":"1. 다이아몬드 2. 다이아몬드 모양, 마름모꼴","kor_full":"1. 다이아몬드 2. 다이아몬드 모양, 마름모꼴"},{"eng":"heart","kor":"1. 심장 2. 하트 모양","kor_full":"1. 심장 2. 하트 모양"},{"eng":"Good job!","kor":"잘했어! / 참 잘했어요!","kor_full":"잘했어! / 참 잘했어요!"}]};
+
+/* === SEOLDAE STANDARD GRADING ENGINE v8.0 === */
+const SDV8_CROSS_BOOK_KOR={"activity":["(즐기기 위한) 활동","활동","활동, 움직임"],"arm":["팔","팔 / 무장하다, 무장시키다","팔; 무장하다, 무장시키다"],"art":["미술, 예술","예술"],"bad":["나쁜","나쁜, 안 좋은"],"bake":["(빵, 과자 등을) 굽다","굽다","굽다, 구워지다"],"balloon":["풍선","풍선, 열기구"],"bath":["1. 욕조 2. 목욕","목욕"],"bathroom":["욕실","욕실, 화장실"],"bear":["곰","곰, 참다, 낳다"],"beautiful":["아름다운","아름다운, 멋진"],"bedroom":["침실","침실, 방"],"behind":["~ 뒤에","뒤에"],"beside":["-의 곁에","~ 옆에","~ 옆에, ~ 쪽에","~옆에","~의 옆에/~에 비해/~을 벗어난","~의 옆에; ~에 비해; ~을 벗어난"],"big":["(크기가) 큰","큰","큰 / 크게","큰; 크게"],"bike":["자전거","자전거 (비격식)"],"black":["검은","검은, 검은색의; 검은색"],"board":["칠판, 게시판","판, 이사회, 탑승하다","판자; (게시)판; 탑승하다"],"body":["몸, 신체","신체"],"bone":["뼈","뼈, 뼈다귀"],"book":["책","책, 예약하다"],"boot":["목이 긴 신발, 부츠","장화, 부츠 (한 짝)"],"box":["상자, 박스","상자, 함, 네모, 칸"],"boy":["남자아이, 소년","소년"],"brother":["오빠, 형, 남동생 (남자 형제)","형제"],"brush":["붓, 솔","이를 닦다, 칫솔질을 하다; 솔, 솔질"],"bug":["(작은) 벌레, 곤충","곤충, 벌레","벌레"],"cap":["(앞부분에 챙이 달린) 모자","모자"],"catch":["(움직이는 물체를) 잡다","붙잡다, 포획하다","잡다","잡다[받다]"],"cave":["굴, 동굴","동굴, 굴"],"chicken":["닭","치킨"],"christmas":["크리스마스","크리스마스, 성탄절"],"circle":["동그라미, 원","동그라미를 그리다; 동그라 미, 원형","원형, 동그라미"],"class":["수업","학급[반]"],"clean":["깨끗한","깨끗한; (깨끗이) 닦다, 청소 하다","청결한"],"close":["(문, 뚜껑 등을) 닫다","가까운, 친한; (문 등을) 닫다","닫다"],"cloudy":["구름이 많은, 흐린","흐린, 구름이 잔뜩 낀"],"cold":["추운","추운, 차가운"],"color":["(~에) 색칠하다; 색, 색깔","(물감·페인트로) 칠하다","색, 색깔","색깔"],"come":["오다","오다, (일이) 일어나다"],"cook":["요리사; 요리하다","요리하다","요리하다, 요리사"],"cool":["1. 시원한 2. 멋진","선선한, 시원한","시원한, 서늘한"],"count":["(수를) 세다, 계산하다","세다, 중요하다, 계산","세다; 간주하다; 중요하다"],"cow":["암소","암소, 젖소"],"cut":["베다","자르다, 잘라 내다"],"dance":["춤을 추다 / 춤","춤을 추다; 춤"],"day":["1. 하루, 날 2. 낮","낮"],"delicious":["맛있는","아주 맛있는"],"diamond":["1. 다이아몬드 2. 다이아몬드 모양, 마름모꼴","다이아몬드","다이아몬드 / 마름모꼴"],"dinner":["저녁 식사, 만찬","저녁식사"],"dirty":["더러운","더러운, 지저분한"],"dish":["접시","접시, 그릇"],"do":["(어떤 동작이나 행동을) 하 다","하다"],"doctor":["박사","의사"],"down":["아래로","아래로, 아래에"],"draw":["(연필, 펜 등으로) 그리다","그리다, 끌다, 당기다","끌어당기다, 내다","당기다"],"drink":["(음료를) 마시다; 음료","마시다"],"eat":["먹다","식사하다, 먹다"],"fall":["1. 넘어지다 2. (눈·비가) 내리다, 떨어지다","1. 떨어지다 2. (눈·비가) 내리다; 가을","가을","떨어지다"],"fast":["빠른","빠른; 빨리, 빠르게","빨리, 빠르게; 빠른","신속히, 빨리"],"fat":["뚱뚱한, 살찐","뚱뚱한, 살찐 / 지방, 비계","뚱뚱한, 살찐; 지방, 비계","살찐"],"favorite":["가장 좋아하는","마음에 드는, 좋아하는","아주 좋아하는 / 특히 좋아하는 것","아주 좋아하는; 특히 좋아하는 것"],"find":["발견하다","찾다, 발견하다"],"fine":["건강한","벌금을 부과하다, 미세한","좋은, 건강한"],"fish":["물고기","생선, 물고기 / 낚시하다","생선, 물고기; 낚시하다"],"fly":["(하늘을) 날다","1. 날다 2. (연 등을) 날리다, 조종하다","날다","비행하다, 날다 / 비행","비행하다, 날다; 비행"],"for":["1. [대상] ~을 위한 2. [목적] ~을 위해 3. [시간] ~ 동안","~을 위해, ~을 위한"],"full":["1. (~이) 가득 찬, 가득한 2. 배부른","1. 배부른 2, (~이) 가득 찬","가득찬","가득한, 완전한, 배부른","가득한, 완전한, 배부른 / 가득한"],"garden":["뜰, 정원","정원","정원, 뜰"],"gift":["1. 선물 2. (타고난) 재능","선물","선물, (타고난) 재능"],"girl":["소녀","여자아이, 소녀"],"globe":["지구, 구","지구본"],"glove":["장갑","장갑 (한 짝)"],"go":["가다","가다, 떠나다","가다, 어울리다"],"good":["1. 좋은, 착한 2. 잘하는","좋은","좋은, 착한","착한 / 선","착한; 선"],"green":["녹색의, 초록색의; 녹색, 초 록색","초록색"],"guess":["추측(짐작)하다","추측하다, 알아맞히다"],"handsome":["잘생긴","잘생긴 / 잘생긴, 보기 좋은","잘생긴, 멋진"],"have":["1. 가지고있다 2. (경험을) 하다 3. 먹다","~ in common ~을 공통으로 가지다","가지다, (가지고) 있다"],"heart":["1. 심장 2. 하트 모양","심장, 가슴"],"help":["돕다","돕다, 도와주다"],"here":["여기에","여기에(서)"],"hive":["벌집","벌통; 발진; 붐비는 장소"],"hot":["1. 더운, 뜨거운 2. 매운","더운, 뜨거운","더운, 뜨거운, 매운","뜨거운","매운, 매콤한"],"house":["집","집, 주택"],"how":["어떻게","어떻게, 어떤 상태로","얼마나 많은 ~? / ~이 몇 개?"],"hug":["껴안다, 포옹하다 껴안기, 포옹","포옹하다, 껴안다"],"in":["charge of ~할 책임이 있는","~ 안에, ~ 속에","안으로, 속으로; ~ 안에"],"inside":["…의 안에","안에, 안으로; ~의 안에"],"it":["그것 (지금 이야기하고 있는 대상)","그것은"],"jump":["뛰다, 뛰어오르다 / 뛰기, 도약","뛰다, 뛰어오르다; 뛰기, 도약","점프하다, 뛰어오르다"],"kid":["아이","아이, 청소년 (비격식)"],"kitchen":["부엌","부엌, 주방"],"leaf":["잎","잎, 나뭇잎"],"like":["~과 같은","~와 같은, ~처럼; 좋아하다","좋아하다"],"little":["1. (양이) 거의 없는, 아주 적은 2. 작은, 어린","1. (크기가) 작은 2. 어린","작은"],"live":["(~에) 살다, 거주하다","살다"],"long":["(길이, 거리가) 긴","(길이, 시간 등) 긴","긴","긴 / 길게, 오래","긴; 길게, 오래"],"look":["(관심을 기울여) 보다, 바라 보다","1. ~처럼보이다, ~인 것 같 다 2. (바라)보다","보다"],"loud":["(소리가) 큰, 시끄러운","시끄러운, (소리가) 큰"],"love":["사랑","사랑하다, 아주 좋아하다; 사 랑"],"lunch":["점심","점심 식사","점심, 점심 식사"],"make":["1. 만들다 2. (어떤 결과가) 생기게하다","만들다"],"many":["(수가) 많은, 다수의","많은","많은, 여러"],"mix":["섞다, 섞이다 / 혼합물, 혼합","섞다, 섞이다; 혼합물, 혼합","섞다, 혼합하다","섞이다, 섞다"],"moon":["달","달, 위성"],"morning":["아침","아침, 오전"],"nest":["(새의) 둥지","(새의) 둥지 / (곤충 등의) 집, 보금자리"],"new":["새로운","새로운, 새","새로운, 새것의"],"noon":["정오","정오, 낮 12시"],"number":["수, 숫자","숫자, 수"],"ocean":["대양, 바다","바다, 대양"],"old":["1. 나이 든, 늙은 2. ~살[세] 의","1. 낡은, 오래된 2. 늙은","나이 든, 늙은, 나이가 ~인, 낡은, 오래된","늙은, 나이 많은","오래된"],"on":["(~이) 켜져 있는, 작동 중인","~ 위에 (표면에 닿아 있는 상태)","위에"],"one":["1, 하나","하나(의) (여러 개 중 아무거 나 하나); (앞서 언급한) 그것"],"open":["(문, 뚜껑 등을) 열다","열다","열린, 열려 있는 / 열다, 열리다","열린, 열려 있는; 열다, 열리다"],"paint":["(물감·페인트로) 칠하다 / 물감, 페인트","(물감·페인트로) 칠하다; 물감, 페인트","(물감으로) 그리다, 페인트 를 칠하다; 페인트"],"park":["공원","주차하다 / 공원","주차하다; 공원"],"people":["사람들","사람들, 국민"],"pet":["반려동물","애완동물, 반려동물"],"picture":["1. 그림 2. 사진; 그리다, 상상하다","그림","그림, 사진","사진"],"play":["1. 놀다 2. 연주하다, (레코드 등을) 틀다 3. (스포츠를) 하 다","1. 놀다, (경기를) 하다 2. (악 기를) 연주하다","놀다","놀다, (게임 등을) 하다"],"please":["기쁘게 하다","부디, 제발 (정중하게 부탁할 때 덧붙이는 말)"],"pretty":["예쁜, 귀여운","예쁜, 귀여운 / 꽤, 아주","예쁜, 귀여운; 꽤, 아주"],"pull":["끌다, 끌어당기다","당기다, 뽑다, 빼다"],"push":["밀다","밀다, 누르다","밀다, 누르다 / 밀다","밀다, 밀치다"],"rain":["비","비; 비가 오다"],"red":["붉은","빨간색의; 빨간색"],"rice":["밥, 쌀, 벼","쌀, 밥"],"ride":["(탈것 등을) 타다; 타기","(탈것을) 타다, 타고 가다","타다, 승마하다, 타고가기"],"river":["강","강, 하천"],"room":["방","방, ~실, 공간, 장소"],"run":["달리다","달리다, 뛰다, 운영하다","뛰다, 달리다"],"sand":["모래","모래, 모래사장"],"sea":["바다","바다, 대양"],"see":["보다","보다, (눈에) 보이다"],"shape":["모양, 모습 / (~한) 모양으로 만들다","모양, 모습; (~한) 모양으로 만들다","모양, 형태","형태, 모양","형태, 모양 / (건강) 상태, 몸매"],"share":["(함께) 나누다, 나눠 갖다","공유하다, 분배하다 / 몫","공유하다, 분배하다; 몫","나누다, 공유하다","몫","함께 쓰다, 공유하다","함께 쓰다, 공유하다 / 나누다"],"she":["그녀, 그 여자","그녀는"],"shoe":["구두","신, 신발 (한 짝)","신발 (한 짝)","신발, 구두"],"short":["1. (길이, 거리가) 짧은 2. 키 가 작은","짧은","짧은, 키가 작은","키가 작은"],"shower":["샤워","샤워 / 소나기","샤워(하기); 샤워를 하다","소나기, 샤워"],"sick":["아픈, 병든","아픈, 병든, 싫증난, 지친"],"sister":["언니, 누나, 여동생 (여자형제)","여자형제"],"sit":["앉다","앉다, 앉아 있다"],"size":["크기","크기, 치수, 사이즈"],"sled":["썰매; 썰매를 타다","썰매를 타다; 썰매"],"sleep":["잠을 자다; 잠","잠자다"],"sleepy":["졸리는","졸리는, 졸음이 오는"],"slow":["느린","느린; 느리게"],"small":["1. (크기가) 작은 2. (양이) 적은","작은, 적은"],"smart":["똑똑한, 영리한","영리한, 똑똑한"],"snow":["눈","눈; 눈이 오다"],"snowy":["눈이 (많이) 오는","눈이 내리는, 눈으로 덮인"],"speak":["말하다, 이야기를 주고받다","이야기하다","이야기하다, 말하다"],"spring":["봄","봄, 샘, 용수철","봄, 용수철, 샘, 수원지"],"square":["정사각형(의); 광장; 제곱","정사각형; 정사각형 모양의"],"stand":["서다","서다 / 서다, 참다, 견디다","서다, 서 있다"],"star":["별","별, 항성"],"sun":["태양, 해","태양, 해, 햇빛, 햇볕"],"sweet":["달콤한, 단","달콤한, 단 / 단 것","달콤한, 단; 단 것"],"swim":["수영하다, 헤엄치다","헤엄치다","헤엄치다, 수영하다 / 수영","헤엄치다, 수영하다; 수영"],"table":["탁자, 식탁, 표, 목록","탁자, 테이블","테이블"],"tall":["키가 큰","키가 큰, (건물이) 높은","키가 큰, 높은","키가 큰, 높은, 키가 ~인","키가 큰, 높은, 키가 ~인 / 키가 큰"],"teacher":["교사, 선생님","선생님, 교사"],"that":["1. 저것 2. 저 사람","저; 저것"],"there":["거기에","저기에(서), 거기에(서)"],"they":["그들, 그것들","그들은"],"this":["1. 이것 2. 이 사람","이; 이것"],"tired":["피곤한","피곤한, 지친, 싫증난"],"tooth":["이, 치아 (한 개)","이, 치아, 이빨"],"turtle":["(바다)거북","거북이"],"under":["-아래에","~ (바로) 아래에","~ 아래에, ~ 속에"],"up":["위로","위로, 위에"],"vegetable":["야채","채소, 야채"],"very":["매우","매우, 아주"],"walk":["1. 걷다 2. 산책하다, 산책시키다; 산책","걷다","산책 / 산책하다, 산책시키다, 걷다","산책; 산책하다, 산책시키다, 걷다"],"wall":["벽","벽, 담"],"warm":["따뜻한","따뜻한, 따스한"],"wash":["세탁하다, 씻다","씻다","씻다, 세탁하다, 세척하다"],"watch":["(관심을 기울이며) 보다, 지 켜보다","보다, 지켜보다; 손목시계","손목시계"],"watch out":["(for) (~을) 주의하다, 조심하다","조심하다, 주의하다"],"water":["(화초 등에) 물을 주다; 물","물","물, (강, 바다의) 물","물을 주다 / 물","물을 주다; 물"],"we":["우리","우리는"],"wear":["입고 있다, 신고[쓰고/착용 하고] 있다","입고[신고, 쓰고, 끼고] 있다","입다"],"white":["흰, 흰색의","흰, 흰색의; 흰색"],"windy":["바람이 (많이) 부는","바람이 많이 부는, 바람이 센"],"with":["1. ~로, ~을 이용하여 2. ~ 와 함께","~와 함께, ~를 가지고"],"work":["일","일하다, 근무하다; 직장, 일","일하다, 작업하다; 일, 작업","일하다; 일, 직장"],"you":["너(를)","너, 너희"]};
+const SDV8_EXTRA_KOR={"computer":["컴퓨터"]};
+const SDV8_STRICT=new Set(["i", "me", "my", "mine", "we", "us", "our", "ours", "you", "your", "yours", "he", "him", "his", "she", "her", "hers", "it", "its", "they", "them", "their", "theirs", "to", "in", "on", "at", "up", "down", "for", "of", "by", "with", "from", "into", "out", "off", "over", "under", "about", "as", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "zero", "borrow", "lend", "rise", "raise", "affect", "effect", "advice", "advise"]);
+const SDV8_ENG_SYNONYMS=[["begin", "start"], ["trip", "travel", "journey"], ["movie", "film"], ["kid", "child"], ["big", "large"], ["quick", "fast"], ["glad", "happy"], ["forest", "woods"], ["finish", "end", "complete"], ["choose", "select", "pick"], ["answer", "reply", "respond"], ["gift", "present"]];
+const SDV8_HINT_BY_ENG={};
+const SEOLDAE_V8=(function(){
+  function nEng(s){return String(s||'').toLowerCase().trim().replace(/[~～]/g,'').replace(/[.]+$/,'').replace(/\s+/g,' ');}
+  function basicKor(s){return String(s||'').toLowerCase().trim().replace(/[~～]/g,'').replace(/[①-⑳0-9]+[.)]?/g,'').replace(/[“”‘’'\"`]/g,'').replace(/[()（）\[\]{}]/g,'').replace(/[·•]/g,'').replace(/\s+/g,'');}
+  function splitKor(s){
+    let t=String(s||'').replace(/[~～]/g,'').replace(/\[[^\]]*\]/g,function(m){return ','+m.slice(1,-1).replace(/[\/|]/g,',')+',';});
+    return t.split(/[,;/|]|\s+(?:또는|혹은|및)\s+/).map(x=>x.replace(/^\s*\d+[.)]?\s*/, '').trim()).filter(Boolean);
+  }
+  const PN_PARTICLES=['에서','으로','부터','까지','에게','한테','로','에','을','를','이','가','은','는','와','과','의','도','만'];
+  function pnStripToken(t){
+    for(let i=0;i<PN_PARTICLES.length;i++){const p=PN_PARTICLES[i]; if(t.length>=p.length && t.endsWith(p)) return t.slice(0,-p.length);}
+    return t;
+  }
+  function particleNormalizedJoin(raw){
+    const cleaned=String(raw||'').toLowerCase().trim().replace(/[~～]/g,'').replace(/[①-⑳0-9]+[.)]?/g,'').replace(/[()（）\[\]{}]/g,'').replace(/[·•]/g,'');
+    if(!cleaned) return '';
+    const tokens=cleaned.split(/\s+/).filter(Boolean);
+    if(tokens.length<2) return '';
+    return tokens.map(pnStripToken).filter(Boolean).join('');
+  }
+  function variants(s){
+    const out=new Set();
+    function add(raw){
+      const x=basicKor(raw);if(!x)return;out.add(x);
+      const rules=[[/(을|를)$/,''],[/(이|가)$/,''],[/(은|는)$/,''],[/(에|에서)$/,''],[/(으로|로)$/,''],[/(와|과)$/,''],[/(의)$/,'']];
+      for(const r of rules){const y=x.replace(r[0],r[1]);if(y&&y!==x)out.add(y);}
+      if(x.endsWith('하다'))out.add(x.slice(0,-2));
+      if(x.endsWith('되다'))out.add(x.slice(0,-2));
+      if(x.endsWith('있는'))out.add(x.slice(0,-2));
+      const pn=particleNormalizedJoin(raw);
+      if(pn){
+        out.add(pn);
+        if(pn.endsWith('하다'))out.add(pn.slice(0,-2));
+        if(pn.endsWith('되다'))out.add(pn.slice(0,-2));
+      }
+    }
+    splitKor(s).forEach(add); splitKor(String(s||'').replace(/\([^)]*\)/g,'').replace(/（[^）]*）/g,'')).forEach(add); add(s); return Array.from(out);
+  }
+  function targetOverride(e, korFull){
+    const k=String(korFull||'');
+    if(e==='on' && /(켜져|작동)/.test(k)) return ['켜져 있는','켜져 있다','켜진','작동 중인','작동하는','작동 중이다','작동하고 있는'];
+    if(e==='off' && /(꺼져|작동이 안|작동하지)/.test(k)) return ['꺼져 있는','꺼져 있다','꺼진','작동이 안 되는','작동하지 않는','작동하지 않다','작동이 멈춘'];
+    return null;
+  }
+  function candidates(eng,korFull){
+    const e=nEng(eng), set=new Set();
+    const controlled=targetOverride(e,korFull);
+    const source=controlled||[korFull];
+    source.forEach(v=>variants(v).forEach(x=>set.add(x)));
+    if(!controlled && !SDV8_STRICT.has(e)) (SDV8_CROSS_BOOK_KOR[e]||[]).forEach(v=>variants(v).forEach(x=>set.add(x)));
+    (SDV8_EXTRA_KOR[e]||[]).forEach(v=>variants(v).forEach(x=>set.add(x)));
+    if(e==='his') ['그의','그남자의','그의것','그남자의것'].forEach(x=>set.add(basicKor(x)));
+    return Array.from(set).filter(Boolean);
+  }
+  function grade(opts){
+    opts=opts||{}; const direction=opts.direction||opts.type||'e2k';
+    const user=String(opts.userAnswer??opts.answer??'').trim(); const eng=opts.eng||''; const korFull=opts.korFull||opts.kor_full||opts.kor||''; const e=nEng(eng);
+    if(!user) return {correct:false,blank:true,reason:'blank',label:'답을 입력한 뒤 확인을 눌러주세요.'};
+    if(direction==='k2e'){
+      const u=nEng(user); if(u===e)return {correct:true,reason:'exact_eng',label:'정답',acceptedBy:'target'};
+      if(SDV8_STRICT.has(e))return {correct:false,reason:'strict_eng',label:'오답'};
+      for(const g0 of SDV8_ENG_SYNONYMS){const g=g0.map(nEng);if(g.includes(u)&&g.includes(e))return {correct:true,reason:'eng_synonym',label:'정답',acceptedBy:'approvedEnglishSynonym'};}
+      return {correct:false,reason:'eng_mismatch',label:'오답'};
+    }
+    const uv=variants(user); const cs=candidates(eng,korFull); const strictWord=SDV8_STRICT.has(e)||!!targetOverride(e,korFull);
+    for(const u of uv) for(const c of cs) if(u===c) return {correct:true,reason:'exact_or_expanded_kor',label:'정답',acceptedBy:'koreanMeaningExpansion'};
+    if(!strictWord){
+      for(const u of uv) for(const c of cs){
+        if(!u||!c||u.length<=2||c.length<=2)continue;
+        if(u.includes(c)||c.includes(u))return {correct:true,reason:'partial_kor',label:'정답',acceptedBy:'partialMeaning'};
+      }
+    }
+    return {correct:false,reason:strictWord?'target_or_strict_mismatch':'kor_mismatch',label:'오답'};
+  }
+  function getHint(eng,korFull){const e=nEng(eng); if(SDV8_HINT_BY_ENG[e])return SDV8_HINT_BY_ENG[e]; if(e==='on'&&/(켜져|작동)/.test(String(korFull||'')))return '힌트: 켜져 있거나 작동하는 상태의 뜻을 쓰세요.'; return '';}
+  return {grade:grade,candidates:candidates,getHint:getHint,nEng:nEng,variants:variants};
+})();
+
+/* === SEOLDAE STUDENT BROAD SEMANTIC ENGINE v9.0 ===
+   기본: 영→한은 의미를 알면 폭넓게 정답 인정.
+   예외: v8 STRICT / TARGET_MEANING 판정은 그대로 우선한다.
+*/
+const SEOLDAE_V9=(function(){
+  const BASE=SEOLDAE_V8;
+
+  const EXTRA_BY_ENG={
+    "skip":["건너뛰다","건너 뛰다","생략하다","빼먹다","넘기다"],
+    "continue":["계속하다","지속하다","이어가다","계속되다","지속되다"],
+    "hike":["하이킹하다","하이크하다","도보여행하다","도보 여행하다"],
+    "even":["심지어","조차","조차도","마저"],
+    "stay up":["안 자다","안자다","안 자고 있다","안자고있다","깨어 있다","깨어있다","늦게까지 깨어 있다","밤을 새우다"],
+    "everywhere":["어디에나","어디서나","어디든지","모든 곳에","모든곳에","어느 곳에나","곳곳에"],
+    "quickly":["빨리","빠르게","신속하게","재빨리","속히"],
+    "ghost":["유령","귀신","고스트"],
+    "monster":["괴물","몬스터"],
+    "television":["텔레비전","티브이","티비","TV","tv"],
+    "mr":["씨","님","선생님","남자 선생님"],
+    "mrs":["부인","여사","님","선생님","여자 선생님"],
+    "mr.":["씨","님","선생님","남자 선생님"],
+    "mrs.":["부인","여사","님","선생님","여자 선생님"],
+    "his":["그의","그 남자의","그의 것","그 남자의 것"],
+    "ocean animal":["바다동물","바다 동물","해양동물","해양 동물","바다에 사는 동물"],
+    "ocean animals":["바다동물","바다 동물","바다동물들","해양동물","해양 동물","해양동물들","바다에 사는 동물","바다에 사는 동물들"],
+    "look up":["찾아보다","찾아 보다","검색하다","올려다보다","위를 보다"],
+    "finish":["끝내다","마치다","완료하다","끝나다"],
+    "choose":["고르다","선택하다"],
+    "repair":["고치다","수리하다"],
+    "fix":["고치다","수리하다","바로잡다"],
+    "begin":["시작하다","시작되다"],
+    "start":["시작하다","시작되다","출발하다"],
+    "answer":["대답하다","응답하다","답하다","대답"],
+    "reply":["대답하다","응답하다","답장하다"],
+    "beautiful":["아름다운","예쁜","아름답다","예쁘다"],
+    "difficult":["어려운","힘든","어렵다","힘들다"],
+    "important":["중요한","중요하다"],
+    "smart":["똑똑한","영리한","똑똑하다","영리하다"],
+    "angry":["화난","화가 난","성난","화나다"],
+    "afraid":["두려운","두려워하는","무서워하는","겁내는"],
+    "help":["돕다","도와주다","도움","지원하다"],
+    "buy":["사다","구입하다","구매하다"],
+    "show":["보여주다","나타내다","전시하다"],
+    "talk":["말하다","이야기하다","대화하다"],
+    "job":["직업","일"],
+    "trip":["여행","짧은 여행"],
+    "movie":["영화","무비"],
+    "father":["아버지","아빠"],
+    "mother":["어머니","엄마"],
+    "child":["아이","어린이"],
+    "friend":["친구","벗"],
+    "shop":["가게","상점"],
+    "store":["가게","상점"],
+    "car":["자동차","차"],
+    "bicycle":["자전거","바이크"],
+    "bike":["자전거","바이크"],
+    "computer":["컴퓨터"],
+    "camera":["카메라"],
+    "radio":["라디오"],
+    "internet":["인터넷"],
+    "email":["이메일","전자우편"],
+    "club":["클럽","동아리","동호회"],
+    "card":["카드"],
+    "team":["팀","조"],
+    "game":["게임","경기"],
+    "quiz":["퀴즈"],
+    "test":["테스트","시험"],
+    "hotel":["호텔"],
+    "restaurant":["레스토랑","식당"],
+    "menu":["메뉴"],
+    "ticket":["티켓","표"],
+    "taxi":["택시"],
+    "bus":["버스"],
+    "pizza":["피자"],
+    "hamburger":["햄버거"],
+    "sandwich":["샌드위치"],
+    "chocolate":["초콜릿","초코렛"],
+    "coffee":["커피"],
+    "party":["파티"],
+    "festival":["축제","페스티벌"],
+    "music":["음악","뮤직"],
+    "sports":["스포츠","운동"]
+  };
+
+  const KOR_GROUPS=[
+    ["빨리","빠르게","신속하게","재빨리","속히"],
+    ["계속하다","지속하다","이어가다","계속되다","지속되다"],
+    ["건너뛰다","생략하다","넘기다","빼먹다"],
+    ["심지어","조차","조차도","마저"],
+    ["안자다","안자고있다","깨어있다","늦게까지깨어있다","밤을새우다"],
+    ["어디에나","어디서나","어디든지","모든곳에","어느곳에나","곳곳에"],
+    ["유령","귀신","고스트"],
+    ["괴물","몬스터"],
+    ["텔레비전","티브이","티비","tv"],
+    ["고치다","수리하다","바로잡다"],
+    ["고르다","선택하다"],
+    ["끝내다","마치다","완료하다"],
+    ["시작하다","시작되다"],
+    ["대답하다","응답하다","답하다"],
+    ["가게","상점"],
+    ["자동차","차"],
+    ["친구","벗"],
+    ["아이","어린이"],
+    ["아버지","아빠"],
+    ["어머니","엄마"],
+    ["영화","무비"],
+    ["여행","도보여행"],
+    ["구입하다","구매하다","사다"],
+    ["돕다","도와주다","지원하다"],
+    ["말하다","이야기하다","대화하다"],
+    ["아름다운","예쁜","아름답다","예쁘다"],
+    ["어려운","힘든","어렵다","힘들다"],
+    ["똑똑한","영리한","똑똑하다","영리하다"]
+  ];
+
+  function eNorm(s){
+    return BASE.nEng(s).replace(/\s+\d+\s*~?$/,'').replace(/\s+\d+$/,'').trim();
+  }
+  function kNorm(s){
+    return String(s||'').toLowerCase().normalize('NFKC')
+      .replace(/[~～]/g,'').replace(/[“”‘’'"`]/g,'')
+      .replace(/[()（）\[\]{}<>]/g,'').replace(/[·•ㆍ,.;:!?，。]/g,'')
+      .replace(/\s+/g,'').trim();
+  }
+  const V9_PN_PARTICLES=['에서','으로','부터','까지','에게','한테','로','에','을','를','이','가','은','는','와','과','의','도','만'];
+  function v9PnStripToken(t){
+    for(let i=0;i<V9_PN_PARTICLES.length;i++){const p=V9_PN_PARTICLES[i]; if(t.length>=p.length && t.endsWith(p)) return t.slice(0,-p.length);}
+    return t;
+  }
+  function v9ParticleNormalizedJoin(raw){
+    const cleaned=String(raw||'').toLowerCase().normalize('NFKC').trim()
+      .replace(/[~～]/g,'').replace(/[“”‘’'"`]/g,'')
+      .replace(/[()（）\[\]{}<>]/g,'').replace(/[·•ㆍ,.;:!?，。]/g,'');
+    if(!cleaned) return '';
+    const tokens=cleaned.split(/\s+/).filter(Boolean);
+    if(tokens.length<2) return '';
+    return tokens.map(v9PnStripToken).filter(Boolean).join('');
+  }
+  function kForms(s){
+    const seed=kNorm(s), out=new Set();
+    if(!seed)return [];
+    out.add(seed);
+    out.add(seed.replace(/들$/,''));
+    const pn=v9ParticleNormalizedJoin(s);
+    if(pn) out.add(pn);
+    const endings=[
+      ["합니다","하다"],["합니다",""],["한다","하다"],["하는","하다"],["해서","하다"],["하여","하다"],["하게","하다"],["함","하다"],
+      ["됩니다","되다"],["된다","되다"],["되는","되다"],["되어","되다"],["됨","되다"],
+      ["있습니다","있다"],["있어요","있다"],["있는","있다"],["있고","있다"],
+      ["없습니다","없다"],["없어요","없다"],["없는","없다"],
+      ["입니다","이다"],["이다",""],
+      ["적인",""],["적으로",""],["하게",""],["히",""]
+    ];
+    Array.from(out).forEach(x=>{
+      endings.forEach(([a,b])=>{if(x.endsWith(a)){const y=x.slice(0,-a.length)+b;if(y)out.add(y);}});
+      ["은","는","이","가","을","를","에","에서","로","으로","와","과","의","도","만"].forEach(p=>{
+        if(x.endsWith(p)&&x.length>p.length+1)out.add(x.slice(0,-p.length));
+      });
+    });
+    return Array.from(out).filter(Boolean);
+  }
+  function groupExpand(values){
+    const set=new Set();
+    values.forEach(v=>kForms(v).forEach(x=>set.add(x)));
+    let changed=true, rounds=0;
+    while(changed && rounds++<3){
+      changed=false;
+      KOR_GROUPS.forEach(g=>{
+        const ng=g.map(kNorm);
+        if(ng.some(x=>set.has(x))){
+          g.forEach(v=>kForms(v).forEach(x=>{if(!set.has(x)){set.add(x);changed=true;}}));
+        }
+      });
+    }
+    return Array.from(set);
+  }
+  function broadCandidates(eng,korFull){
+    const e=eNorm(eng);
+    let base=[];
+    try{base=BASE.candidates(eng,korFull)||[];}catch(_){}
+    const extra=EXTRA_BY_ENG[e]||EXTRA_BY_ENG[String(eng||'').toLowerCase().trim()]||[];
+    return groupExpand(base.concat(extra));
+  }
+  function grade(opts){
+    opts=opts||{};
+    const base=BASE.grade(opts);
+    if(base.correct || base.blank) return base;
+
+    const dir=opts.direction||opts.type||'e2k';
+    if(dir!=='e2k') return base;
+
+    // 핵심 의미·품사·방향을 반드시 구별해야 하는 항목은 절대 확장하지 않는다.
+    if(base.reason==='target_or_strict_mismatch' || base.reason==='strict_eng'){
+      return base;
+    }
+
+    const userForms=groupExpand(kForms(opts.userAnswer||opts.answer||''));
+    const cs=broadCandidates(opts.eng||'',opts.korFull||opts.kor_full||opts.kor||'');
+
+    for(const u of userForms){
+      for(const c of cs){
+        if(u===c){
+          return {correct:true,reason:'broad_semantic',label:'정답',acceptedBy:'broadSemantic'};
+        }
+      }
+    }
+
+    // 학생용 영→한은 3글자 이상이면 형태가 포함되는 자연스러운 설명형 답도 폭넓게 인정.
+    for(const u of userForms){
+      for(const c of cs){
+        if(!u||!c||u.length<3||c.length<3) continue;
+        if(u.includes(c)||c.includes(u)){
+          return {correct:true,reason:'broad_partial_semantic',label:'정답',acceptedBy:'broadSemanticPartial'};
+        }
+      }
+    }
+    return base;
+  }
+  return {grade,broadCandidates,kForms};
+})();
+
+
+
+
+const APP_BOOK_NAME="A-List VOCA 초등기본";
+const TEACHER_PASSWORD='0610';
+const SD_VERSION='v3.1-stable-no-conflict';
+const SD_STRICT_PRONOUNS={i:['나는'],me:['나를','나'],my:['나의','내'],mine:['나의것','내것'],we:['우리는'],us:['우리를'],our:['우리의','우리들의'],ours:['우리의것','우리들것'],you:['너는','너를','너희는','너희를','너'],your:['너의','네','너희의'],yours:['너의것','네것','너희의것'],he:['그는'],him:['그를'],his:['그의'],she:['그녀는'],her:['그녀를','그녀의'],hers:['그녀의것'],it:['그것은','그것'],its:['그것의'],they:['그들은','그것들은'],them:['그들을','그것들을'],their:['그들의','그것들의'],theirs:['그들의것','그것들의것']};
+const SD_NUMS={zero:['0','영','제로'],one:['1','하나','한','일'],two:['2','둘','두','이'],three:['3','셋','세','삼'],four:['4','넷','네','사'],five:['5','다섯','오'],six:['6','여섯','육'],seven:['7','일곱','칠'],eight:['8','여덟','팔'],nine:['9','아홉','구'],ten:['10','열','십'],eleven:['11','열하나','십일'],twelve:['12','열둘','십이'],thirteen:['13','열셋','십삼'],fourteen:['14','열넷','십사'],fifteen:['15','열다섯','십오'],sixteen:['16','열여섯','십육'],seventeen:['17','열일곱','십칠'],eighteen:['18','열여덟','십팔'],nineteen:['19','열아홉','십구'],twenty:['20','스물','이십']};
+const SD_BLOCKLIST=new Set(['i','me','my','mine','we','us','our','ours','you','your','yours','he','him','his','she','her','hers','it','its','they','them','their','theirs','to','in','on','at','up','down','for','of','by','with','from','into','out','off','over','under','about','as','one','two','three','four','five','six','seven','eight','nine','ten','zero']);
+const SD_SHORT_OK=new Set(['점','별','팀','조','집','곳','숲','웹','줄','눈','코','입','귀','팔','손','발','개','닭','말','양','책','색','차','봄','비','해','달','길','방','문','옷','컵','빵','물','밥','알','로','에','의','와','과','위','밑','아래','앞','뒤','안','밖','속','옆','내','네','나','너','둘','셋','넷','열','일','이','삼','사','오','육','칠','팔','구','십','0','1','2','3','4','5','6','7','8','9','10']);
+const SD_SYNGROUPS=[['begin','start'],['big','large','huge','giant'],['small','little','tiny'],['fast','quick','rapid'],['happy','glad','pleased','cheerful'],['sad','unhappy'],['buy','purchase'],['show','display'],['talk','speak','chat'],['look','watch','see'],['answer','reply','respond'],['finish','end','complete'],['gift','present'],['kid','child'],['scared','afraid','frightened'],['angry','mad'],['nice','kind','good','great'],['get','receive','obtain'],['make','create'],['choose','select','pick'],['fix','repair'],['ill','sick'],['shop','store'],['trip','travel','journey'],['photo','photograph','picture'],['father','dad'],['mother','mom'],['home','house']];
+const SD_KOR_SYNONYMS={mean:['못된','비열한','심술궂은','의미하다'],cheerful:['명랑한','쾌활한','밝은','활기찬'],remain:['남다','남아있다','계속있다','여전히있다'],repair:['수리하다','고치다'],fix:['수리하다','고치다'],scary:['무서운','겁나는'],afraid:['두려워하는','무서워하는','걱정하는'],scared:['두려워하는','겁먹은','무서워하는'],collect:['모으다','수집하다'],gather:['모으다','모이다'],answer:['대답하다','응답하다','대답'],respond:['대답하다','응답하다','반응하다'],reply:['대답하다','응답하다','답장하다'],allow:['허락하다','허용하다'],permit:['허락하다','허용하다'],important:['중요한'],valuable:['소중한','값비싼','귀중한'],precious:['소중한','귀중한'],difficult:['어려운','힘든'],hard:['어려운','힘든','딱딱한'],easy:['쉬운','편한'],simple:['간단한','단순한'],job:['일','직업'],work:['일','작업하다','일하다'],child:['아이','어린이'],kid:['아이','어린이'],father:['아버지','아빠'],dad:['아빠','아버지'],mother:['어머니','엄마'],mom:['엄마','어머니'],movie:['영화'],film:['영화'],trip:['여행'],travel:['여행','여행하다'],journey:['여행'],happy:['행복한','기쁜'],glad:['기쁜','반가운'],sad:['슬픈'],big:['큰','커다란'],large:['큰','대형의'],small:['작은'],little:['작은','어린'],quick:['빠른'],fast:['빠른','빨리'],smart:['영리한','똑똑한'],clever:['영리한','똑똑한'],sick:['아픈'],ill:['아픈'],beautiful:['아름다운','예쁜'],pretty:['예쁜','아름다운'],angry:['화난','성난'],finish:['끝내다','끝나다','완성하다'],complete:['완성하다','완료하다','완전한'],start:['시작하다','출발하다'],begin:['시작하다'],buy:['사다','구입하다'],purchase:['구입하다','사다'],show:['보여주다','전시하다'],display:['보여주다','전시하다'],talk:['말하다','이야기하다'],speak:['말하다'],chat:['수다떨다','이야기하다'],look:['보다','바라보다'],watch:['보다','지켜보다'],see:['보다','보이다'],make:['만들다'],create:['창조하다','만들다'],choose:['고르다','선택하다'],select:['선택하다'],pick:['고르다','선택하다'],give:['주다'],receive:['받다'],get:['얻다','받다'],help:['돕다','도움'],support:['지지하다','돕다','지원하다'],aid:['돕다','도움']};
+let appState={day:'',name:'',mode:'mix',queue:[],idx:0,wrongFirst:[],allWrong:[],answered:false,originalTotal:0,score:0,recommend:[]};
+let listenItems=[];let listenIndex=0;let autoTimer=null;
+function byId(id){return document.getElementById(id)}
+function setScreen(id){['setup','listen','quiz','result','teacher'].forEach(function(x){byId(x).classList.toggle('hidden',x!==id)})}
+function shuffleItems(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}
+function normEnglish(s){return String(s||'').toLowerCase().normalize('NFKC').replace(/[’‘`]/g,"'").replace(/[~…]/g,'').replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()}
+function cleanKorean(s){return String(s||'').toLowerCase().normalize('NFKC').replace(/\d+\s*\./g,'').replace(/[(){}\[\]<>~_＿－—–\-ㆍ·․….,;:!?，。"'“”‘’`]/g,'').replace(/\s+/g,'').trim()}
+function stripParticles(s){return String(s||'').replace(/^(을|를|이|가|은|는|에|에서|으로|로|와|과|의|도|만|까지|부터|에게|한테|께|처럼|만큼)+/,'')}
+function regularizeKorean(s){const c=cleanKorean(s);const set=new Set([c,stripParticles(c)]);Array.from(set).forEach(function(x){set.add(x.replace(/수다를떨다/g,'수다떨다').replace(/말을하다/g,'말하다').replace(/잠을자다/g,'잠자다').replace(/춤을추다/g,'춤추다').replace(/길을잃/g,'길잃'))});Array.from(set).forEach(function(x){set.add(stripParticles(x))});return Array.from(set).filter(Boolean)}
+function splitMeanings(full){const raw=String(full||'');const parts=new Set();if(raw.trim())parts.add(raw.trim());let m;const re=/[\[\(]([^\]\)]+)[\]\)]/g;while((m=re.exec(raw))){if(m[1].trim())parts.add(m[1].trim())}raw.replace(/[\[\(]/g,',').replace(/[\]\)]/g,',').split(/[\/;,，、]|\d+\s*\./).forEach(function(x){x=x.trim();if(x)parts.add(x)});return Array.from(parts)}
+function addKoreanCandidate(set,s){const c=cleanKorean(s);if(!c)return;set.add(c);regularizeKorean(c).forEach(function(v){set.add(v)});c.split(/(?:또는|혹은|및)/).forEach(function(x){if(x)set.add(x)});String(s||'').replace(/[(){}\[\]<>]/g,' ').split(/[\s,，;\/]+/).map(cleanKorean).filter(Boolean).forEach(function(t){if(t.length<=2||SD_SHORT_OK.has(t))set.add(t)})}
+function koreanCandidates(full,eng){const set=new Set();splitMeanings(full).forEach(function(p){addKoreanCandidate(set,p);const c=cleanKorean(p);if(c.length>=2){set.add(c.replace(/하다$/,''));set.add(c.replace(/되다$/,''));set.add(c.replace(/있는$/,''))}});const e=normEnglish(eng);if(SD_NUMS[e])SD_NUMS[e].forEach(function(n){set.add(cleanKorean(n))});(SD_KOR_SYNONYMS[e]||[]).forEach(function(k){regularizeKorean(k).forEach(function(v){set.add(v)})});return Array.from(set).filter(Boolean)}
+function gradeAnswer(opts){ return SEOLDAE_V9.grade(opts); }
+function speakEnglish(text){try{if(!('speechSynthesis' in window))return;window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(String(text||'').replace(/[~…]/g,''));u.lang='en-US';u.rate=.78;window.speechSynthesis.speak(u)}catch(e){}}
+function safeSet(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}}
+function safeGet(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch(e){return null}}
+function storageKey(name){return 'seoldae_'+APP_BOOK_NAME.replace(/\s+/g,'_')+'_'+name}
+function formatDay(d){return d==='all'?'전체 DAY':'DAY '+String(d).padStart(2,'0')}
+function getDayValue(){return byId('dayValue').value||Object.keys(VOCA).sort(function(a,b){return +a-+b})[0]}
+function setDayValue(day){byId('dayValue').value=day;const label=day==='all'?'전체 DAY':formatDay(day)+' ('+(VOCA[day]?VOCA[day].length:0)+'개)';byId('dayButton').textContent=label;Array.from(byId('dayList').querySelectorAll('button')).forEach(function(btn){btn.classList.toggle('active',btn.dataset.day===day)})}
+function populateDays(){const keys=Object.keys(VOCA).sort(function(a,b){return +a-+b});const list=byId('dayList');list.innerHTML='';keys.forEach(function(d){const btn=document.createElement('button');btn.type='button';btn.dataset.day=d;btn.textContent='DAY '+String(d).padStart(2,'0')+'\\n'+VOCA[d].length+'개';btn.addEventListener('click',function(){setDayValue(d);closeDayModal()});list.appendChild(btn)});const all=document.createElement('button');all.type='button';all.dataset.day='all';all.textContent='전체\\n'+keys.length+'DAY';all.addEventListener('click',function(){setDayValue('all');closeDayModal()});list.appendChild(all);setDayValue(keys[0]||'')}
+function openDayModal(){byId('dayModal').classList.remove('hidden')}
+function closeDayModal(){byId('dayModal').classList.add('hidden')}
+function chosenItems(){let d=getDayValue();let arr=d==='all'?Object.values(VOCA).flat():((VOCA[d]||[]).slice());if(byId('modeSelect').value==='wrong'){const saved=safeGet(storageKey('wrongbank'))||[];if(saved.length)arr=saved}return arr.map(function(x){return Object.assign({},x)})}
+function makeQueue(items){const mode=byId('modeSelect').value;let qs=items.map(function(it){const t=(mode==='mix'||mode==='wrong')?(Math.random()<.5?'e2k':'k2e'):mode;return {item:it,type:t,isRetry:false}});shuffleItems(qs);const lim=byId('limitSelect').value;if(lim!=='all')qs=qs.slice(0,Number(lim));return qs}
+function startQuiz(customItems){clearTimeout(autoTimer);const name=byId('studentName').value.trim()||'이름없음';const items=customItems||chosenItems();if(!items.length){alert('출제할 단어가 없습니다.');return}appState={day:getDayValue(),name:name,mode:byId('modeSelect').value,queue:makeQueue(items),idx:0,wrongFirst:[],allWrong:[],answered:false,originalTotal:0,score:0,recommend:[]};appState.originalTotal=appState.queue.length;appState.score=appState.originalTotal;setScreen('quiz');renderQuestion()}
+function renderQuestion(){clearTimeout(autoTimer);if(appState.idx>=appState.queue.length)return finishQuiz();const q=appState.queue[appState.idx];appState.answered=false;byId('answerInput').value='';byId('feedback').textContent='';byId('feedback').className='feedback';byId('correctAnswer').textContent='';byId('nextButton').classList.add('hidden');byId('submitButton').classList.remove('hidden');byId('progressText').textContent=(appState.idx+1)+' / '+appState.queue.length+(q.isRetry?' · 오답 재도전':'');if(q.type==='e2k'){byId('questionHint').textContent='영어 단어의 뜻을 쓰세요';byId('questionWord').textContent=q.item.eng;setTimeout(function(){speakEnglish(q.item.eng)},200)}else{byId('questionHint').textContent='뜻에 맞는 영어 단어를 쓰세요';byId('questionWord').textContent=q.item.kor}setTimeout(function(){byId('answerInput').focus()},80);safeSet(storageKey('resume'),appState)}
+function submitAnswer(){if(appState.answered)return;const q=appState.queue[appState.idx];const val=byId('answerInput').value;const grade=gradeAnswer({direction:q.type,userAnswer:val,eng:q.item.eng,korFull:q.item.kor_full||q.item.kor});const ok=!!grade.correct;appState.answered=true;if(ok){byId('feedback').textContent=(grade.label&&grade.label!=='정답')?'정답입니다 ('+grade.label+')':'정답입니다';byId('feedback').className='feedback ok'}else{byId('feedback').textContent='다시 외워야 합니다';byId('feedback').className='feedback bad';byId('correctAnswer').textContent='정답: '+q.item.eng+' = '+(q.item.kor_full||q.item.kor);if(!q.isRetry){appState.score--;appState.wrongFirst.push(q.item.eng)}appState.allWrong.push(q.item);appState.queue.push({item:q.item,type:q.type,isRetry:true})}byId('submitButton').classList.add('hidden');byId('nextButton').classList.remove('hidden');safeSet(storageKey('resume'),appState);autoTimer=setTimeout(nextQuestion,ok?700:1400)}
+function nextQuestion(){clearTimeout(autoTimer);appState.idx++;renderQuestion()}
+function recommendItems(){const wrong=Array.from(new Set(appState.allWrong.map(function(x){return normEnglish(x.eng)})));const all=Object.values(VOCA).flat();const rec=[];wrong.forEach(function(w){SD_SYNGROUPS.forEach(function(g){if(g.map(normEnglish).includes(w))g.forEach(function(e){const found=all.find(function(it){return normEnglish(it.eng)===normEnglish(e)});if(found)rec.push(found)})});const base=all.find(function(it){return normEnglish(it.eng)===w});if(base){const k=cleanKorean(base.kor).slice(0,2);if(k)all.forEach(function(it){if(it.eng!==base.eng&&cleanKorean(it.kor).includes(k))rec.push(it)})}});return rec.filter(function(v,i,a){return a.findIndex(function(x){return x.eng===v.eng})===i}).slice(0,12)}
+function finishQuiz(){try{localStorage.removeItem(storageKey('resume'))}catch(e){}const pct=Math.round(appState.score/appState.originalTotal*100);const today=new Date();const ds=today.getFullYear()+'.'+String(today.getMonth()+1).padStart(2,'0')+'.'+String(today.getDate()).padStart(2,'0');byId('resultName').textContent=appState.name+' · '+formatDay(appState.day);byId('resultScore').textContent=pct+'%';byId('resultDetail').textContent=appState.score+' / '+appState.originalTotal+' 정답';const wrongUnique=Array.from(new Set(appState.wrongFirst));byId('wrongList').innerHTML=wrongUnique.length?wrongUnique.map(function(w){const it=Object.values(VOCA).flat().find(function(x){return x.eng===w});return '<div class="wrong-item"><b>'+escapeHtml(w)+'</b><span>'+escapeHtml((it&&it.kor)||'')+'</span></div>'}).join(''):'<div class="small">오답 없음 - 완벽합니다!</div>';let report='[설대영어 단어시험 결과]\n이름: '+appState.name+'\n날짜: '+ds+'\n교재: '+APP_BOOK_NAME+'\nDAY: '+formatDay(appState.day).replace('DAY ','')+'\n점수: '+appState.score+' / '+appState.originalTotal+' ('+pct+'%)\n오답 단어: '+(wrongUnique.length?wrongUnique.join(', '):'오답 없음 - 완벽합니다!');report+='\n\n[추천복습]\n'+(wrongUnique.length?'1순위 오답 복습: '+wrongUnique.join(', '):'1순위 오답 복습: 없음')+'\n학습 권장: '+(pct<70?'오늘 DAY 전체를 다시 암기한 뒤 재시험':pct<90?'오답 단어 중심으로 5분 복습 후 재시험':'다음 DAY 진행 가능');byId('resultText').value=report;let bank=safeGet(storageKey('wrongbank'))||[];appState.allWrong.forEach(function(it){if(!bank.find(function(x){return x.eng===it.eng}))bank.push(it)});safeSet(storageKey('wrongbank'),bank.slice(-160));appState.recommend=recommendItems();byId('recommendList').innerHTML=appState.recommend.length?appState.recommend.map(function(it){return '<div class="rec-item"><b>'+escapeHtml(it.eng)+'</b><span>'+escapeHtml(it.kor)+'</span></div>'}).join(''):'<div class="small">추천복습 단어가 없습니다.</div>';byId('recommendQuizButton').disabled=!appState.recommend.length;setScreen('result')}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function startListen(){listenItems=chosenItems();if(!listenItems.length){alert('들을 단어가 없습니다.');return}listenIndex=0;setScreen('listen');renderListen()}
+function renderListen(){const it=listenItems[listenIndex];byId('listenProgress').textContent=(listenIndex+1)+' / '+listenItems.length;byId('listenWord').textContent=it.eng;byId('listenKor').textContent=it.kor;speakEnglish(it.eng)}
+function copyResult(){const text=byId('resultText').value;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){alert('복사되었습니다. 카톡에 붙여넣어 보내세요.')}).catch(function(){fallbackCopy()})}else fallbackCopy()}
+function fallbackCopy(){byId('resultText').select();document.execCommand('copy');alert('복사되었습니다.')}
+function parseReports(txt){return String(txt||'').split('[설대영어 단어시험 결과]').slice(1).map(function(b){const name=(b.match(/이름:\s*(.*)/)||[])[1]||'';const date=(b.match(/날짜:\s*(.*)/)||[])[1]||'';const day=(b.match(/DAY:\s*(.*)/)||[])[1]||'';const sc=b.match(/점수:\s*(\d+)\s*\/\s*(\d+)\s*\((\d+)%\)/);const wrong=(b.match(/오답 단어:\s*(.*)/)||[])[1]||'';if(!name||!date||!day||!sc)return null;return {name:name.trim(),date:date.trim(),day:day.trim(),score:Number(sc[1]),total:Number(sc[2]),pct:Number(sc[3]),wrong:wrong.trim()}}).filter(Boolean)}
+function analyzeReports(){const rows=parseReports(byId('pasteArea').value);if(!rows.length){alert('인식된 결과가 없습니다.');return}rows.sort(function(a,b){return b.date.localeCompare(a.date)});byId('analysisCard').classList.remove('hidden');byId('tableWrap').innerHTML='<table><tr><th>날짜</th><th>이름</th><th>DAY</th><th>점수</th><th>정답률</th><th>오답</th></tr>'+rows.map(function(r){return '<tr><td>'+escapeHtml(r.date)+'</td><td>'+escapeHtml(r.name)+'</td><td>'+escapeHtml(r.day)+'</td><td>'+r.score+'/'+r.total+'</td><td class="'+(r.pct>=80?'ok':'bad')+'">'+r.pct+'%</td><td>'+escapeHtml(r.wrong)+'</td></tr>'}).join('')+'</table>'}
+
+function bindEvents(){byId('dayButton').addEventListener('click',openDayModal);byId('dayCloseButton').addEventListener('click',closeDayModal);byId('dayModal').addEventListener('click',function(e){if(e.target===byId('dayModal'))closeDayModal()});byId('startButton').addEventListener('click',function(){startQuiz()});byId('listenButton').addEventListener('click',startListen);byId('submitButton').addEventListener('click',submitAnswer);byId('nextButton').addEventListener('click',nextQuestion);byId('answerInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();appState.answered?nextQuestion():submitAnswer()}});byId('prevListenButton').addEventListener('click',function(){listenIndex=(listenIndex-1+listenItems.length)%listenItems.length;renderListen()});byId('nextListenButton').addEventListener('click',function(){listenIndex=(listenIndex+1)%listenItems.length;renderListen()});byId('speakButton').addEventListener('click',function(){if(listenItems[listenIndex])speakEnglish(listenItems[listenIndex].eng)});byId('backButton').addEventListener('click',function(){setScreen('setup')});byId('copyButton').addEventListener('click',copyResult);byId('retryButton').addEventListener('click',function(){setScreen('setup')});byId('recommendQuizButton').addEventListener('click',function(){startQuiz(appState.recommend)});byId('teacherLink').addEventListener('click',function(e){e.preventDefault();const pw=prompt('선생님 모드 비밀번호');if(pw===TEACHER_PASSWORD)setScreen('teacher');else if(pw)alert('비밀번호가 맞지 않습니다.')});byId('studentButton').addEventListener('click',function(){setScreen('setup')});byId('analyzeButton').addEventListener('click',analyzeReports);byId('resumeButton').addEventListener('click',function(){const saved=safeGet(storageKey('resume'));if(saved){appState=saved;setScreen('quiz');renderQuestion()}})}
+function initApp(){document.documentElement.setAttribute('data-seoldae-mobile-safe','1');populateDays();bindEvents();bindGuideClose();if(safeGet(storageKey('resume')))byId('resumeButton').classList.remove('hidden')}
+function bindGuideClose(){var guide=byId('browserGuide');var closeBtn=byId('guideClose');if(!guide||!closeBtn)return;if(localStorage.getItem('wm_guide_dismissed'))guide.classList.add('hidden');closeBtn.addEventListener('click',function(){guide.classList.add('hidden');localStorage.setItem('wm_guide_dismissed','1')})}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initApp);else initApp();
+</script>
+<script>
+/* ===== TTS 안정성 + 인앱브라우저 대응 패치 (제작가이드 §9, §11 반영, 2026-07) ===== */
+(function(){
+  var ttsVoice=null;
+  function loadTtsVoice(){try{var voices=speechSynthesis.getVoices();ttsVoice=voices.find(function(v){return v.lang==='en-US'})||voices.find(function(v){return v.lang&&v.lang.toLowerCase().indexOf('en')===0})||null}catch(e){}}
+  if('speechSynthesis' in window){
+    loadTtsVoice();
+    if('onvoiceschanged' in speechSynthesis) speechSynthesis.onvoiceschanged=loadTtsVoice;
+    try{
+      var _origSpeak=speechSynthesis.speak.bind(speechSynthesis);
+      speechSynthesis.speak=function(utterance){
+        if(utterance && !utterance.voice && ttsVoice) utterance.voice=ttsVoice;
+        return _origSpeak(utterance);
+      };
+    }catch(e){}
+  }
+
+  function detectEnv(){
+    var ua=navigator.userAgent||'';
+    var isKakao=/KAKAOTALK/i.test(ua);
+    var isNaver=/NAVER\(/i.test(ua);
+    var isLine=/Line\//i.test(ua);
+    var isFB=/FBAN|FBAV/i.test(ua);
+    var isInsta=/Instagram/i.test(ua);
+    var isBand=/\bBand\//i.test(ua);
+    var isInApp=isKakao||isNaver||isLine||isFB||isInsta||isBand;
+    var isAndroid=/Android/i.test(ua);
+    return {isInApp:isInApp,isKakao:isKakao,isAndroid:isAndroid};
+  }
+  function copyLinkAndInstruct(){
+    try{navigator.clipboard.writeText(location.href);
+      alert('링크가 복사되었습니다. 우측 상단 메뉴(≡ 또는 ···)에서 "다른 브라우저로 열기"를 눌러 Chrome/Safari에 붙여넣어 주세요.');
+    }catch(e){prompt('아래 주소를 복사해서 Chrome/Safari에 붙여넣어 주세요.', location.href);}
+  }
+  function openExternal(){
+    var env=detectEnv(); var url=location.href;
+    if(env.isKakao){ location.href='kakaotalk://web/openExternal?url='+encodeURIComponent(url); setTimeout(copyLinkAndInstruct,1200); return; }
+    if(env.isAndroid){ var noProtocol=url.replace(/^https?:\/\//,''); location.href='intent://'+noProtocol+'#Intent;scheme=https;package=com.android.chrome;end'; return; }
+    copyLinkAndInstruct();
+  }
+
+  function testSound(btn,diag){
+    try{
+      loadTtsVoice();
+      if(!('speechSynthesis' in window)){if(btn)btn.textContent='⚠️ 이 브라우저는 음성 기능을 지원하지 않습니다';return}
+      var voices=speechSynthesis.getVoices();
+      if(diag)diag.textContent='감지된 음성 '+voices.length+'개 · 선택된 음성: '+(ttsVoice?(ttsVoice.name+' ('+ttsVoice.lang+')'):'없음(기본값 사용)');
+      if(btn)btn.textContent='🔊 재생 중...';
+      var u=new SpeechSynthesisUtterance('hello'); u.lang='en-US'; u.rate=.82;
+      var done=false;
+      u.onend=function(){done=true;if(btn)btn.textContent='✅ 소리 확인 완료 (다시 테스트하려면 탭)'};
+      u.onerror=function(e){done=true;if(btn)btn.textContent='⚠️ 소리 재생 실패: '+(e&&e.error?e.error:'알 수 없음')};
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+      setTimeout(function(){if(!done&&btn)btn.textContent='⚠️ 응답 없음 - 이 기기의 음성 엔진이 작동하지 않는 것 같습니다'},3000);
+    }catch(e){if(btn)btn.textContent='⚠️ 오류: '+e.message}
+  }
+
+  function insertSoundTestButton(){
+    if(document.getElementById('soundTestBtn')) return;
+    var setupSection=document.getElementById('setup')||document.getElementById('setup-screen');
+    if(!setupSection) return;
+    var card=setupSection.querySelector('.card')||setupSection;
+    var diag=document.createElement('div');
+    diag.id='soundDiag'; diag.className='small'; diag.style.margin='0 0 10px';
+    var btn=document.createElement('button');
+    btn.type='button'; btn.id='soundTestBtn'; btn.className='light';
+    btn.textContent='🔊 소리 확인 (시작 전 먼저 눌러보세요)';
+    btn.onclick=function(){testSound(btn,diag)};
+    card.insertBefore(diag, card.firstChild);
+    card.insertBefore(btn, card.firstChild);
+  }
+
+  function ensureGuideElement(){
+    var guide=document.getElementById('browserGuide');
+    if(guide) return guide;
+    var setupSection=document.getElementById('setup')||document.getElementById('setup-screen');
+    if(!setupSection) return null;
+    guide=document.createElement('div');
+    guide.id='browserGuide';
+    guide.style.cssText='position:relative;background:#fff4df;border:1px solid #f0c36b;color:#654000;border-radius:14px;padding:12px 38px 12px 12px;margin:10px 0 14px;font-size:13px;line-height:1.55;font-weight:700';
+    var closeBtn=document.createElement('button');
+    closeBtn.type='button'; closeBtn.id='guideCloseAuto'; closeBtn.setAttribute('aria-label','닫기');
+    closeBtn.textContent='✕';
+    closeBtn.style.cssText='position:absolute;right:8px;top:8px;width:26px;height:26px;padding:0;margin:0;border-radius:50%;background:#fff;color:#654000;border:1px solid #f0c36b;font-size:14px';
+    var textDiv=document.createElement('div');
+    textDiv.id='guideTextAuto';
+    textDiv.textContent='📌 카카오톡 미리보기·문서뷰어에서는 저장/발음이 불안정할 수 있어요. Chrome·Safari로 열어주세요.';
+    guide.appendChild(closeBtn); guide.appendChild(textDiv);
+    if(localStorage.getItem('wm_guide_dismissed_auto')) guide.classList.add('hidden');
+    closeBtn.onclick=function(){guide.classList.add('hidden');localStorage.setItem('wm_guide_dismissed_auto','1')};
+    setupSection.insertBefore(guide, setupSection.firstChild);
+    return guide;
+  }
+  function applyInAppBanner(){
+    var env=detectEnv();
+    var guide=ensureGuideElement();
+    if(!guide) return;
+    if(env.isInApp){
+      guide.classList.remove('hidden');
+      guide.style.background='#fdecea'; guide.style.borderColor='#e53935'; guide.style.color='#7a1a1a';
+      if(!document.getElementById('openExternalBtn')){
+        var warn=document.createElement('div');
+        warn.style.marginTop='6px'; warn.style.fontWeight='800';
+        warn.textContent='⚠️ 지금 카카오톡 등 인앱 브라우저로 열려 있어 발음(소리)이 재생되지 않습니다! 아래 버튼을 눌러 Chrome/Safari로 열어주세요.';
+        var ob=document.createElement('button');
+        ob.type='button'; ob.id='openExternalBtn';
+        ob.textContent='↗ Chrome/Safari로 열기 (발음 재생 필수)';
+        ob.style.cssText='margin-top:8px;background:#b45309;color:#fff;border:0;border-radius:10px;padding:10px;font-weight:900;width:100%';
+        ob.onclick=openExternal;
+        guide.appendChild(warn); guide.appendChild(ob);
+      }
+    }
+  }
+
+  function initPatch(){ insertSoundTestButton(); applyInAppBanner(); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initPatch);
+  else initPatch();
+})();
+</script>
+<script>
+/* ===== 단어 듣기 자동진행 패치 (제작가이드 §9-3 반영, 2026-07) ===== */
+(function(){
+  var listenAutoTimer=null, autoplayOn=true;
+  function clearListenAutoTimer(){if(listenAutoTimer){clearTimeout(listenAutoTimer);listenAutoTimer=null}}
+  function findListenNextBtn(){return document.getElementById('nextListenBtn')||document.getElementById('nextListenButton')||document.getElementById('listen-next-btn')}
+  function findListenSection(){return document.getElementById('listen')||document.getElementById('listen-screen')}
+  function scheduleListenAuto(){
+    clearListenAutoTimer();
+    if(!autoplayOn) return;
+    var btn=findListenNextBtn(), sec=findListenSection();
+    if(!btn||!sec||sec.classList.contains('hidden')) return;
+    listenAutoTimer=setTimeout(function(){
+      var s=findListenSection();
+      if(s && !s.classList.contains('hidden')) btn.click();
+    },2200);
+  }
+  function updateToggleLabel(toggle){toggle.textContent=autoplayOn?'⏸ 자동재생 정지':'▶ 자동재생 시작'}
+  function attachAutoAdvance(){
+    var sec=findListenSection(), btn=findListenNextBtn();
+    if(!sec||!btn) return;
+    var wordEl=sec.querySelector('.word');
+    if(wordEl){
+      var mo=new MutationObserver(function(){ if(!sec.classList.contains('hidden')) scheduleListenAuto(); });
+      mo.observe(wordEl,{childList:true,characterData:true,subtree:true});
+    }
+    var mo2=new MutationObserver(function(){ if(!sec.classList.contains('hidden')) scheduleListenAuto(); else clearListenAutoTimer(); });
+    mo2.observe(sec,{attributes:true, attributeFilter:['class']});
+    sec.addEventListener('click', function(e){
+      var id=(e.target && e.target.id)||'';
+      if(/prev|next|speak/i.test(id)){ clearListenAutoTimer(); setTimeout(scheduleListenAuto,50); }
+    });
+    if(!document.getElementById('listenAutoToggle')){
+      var toggle=document.createElement('button');
+      toggle.type='button'; toggle.id='listenAutoToggle'; toggle.className='secondary';
+      updateToggleLabel(toggle);
+      toggle.onclick=function(){ autoplayOn=!autoplayOn; updateToggleLabel(toggle); if(autoplayOn) scheduleListenAuto(); else clearListenAutoTimer(); };
+      var row=btn.closest('.row')||btn.parentElement;
+      if(row && row.parentElement) row.parentElement.insertBefore(toggle,row);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attachAutoAdvance);
+  else attachAutoAdvance();
+})();
+</script>
+
+<script>
+(function(){
+  function applySDV8Hint(){
+    try{
+      var wordEl=document.getElementById('questionWord')||document.getElementById('qword')||document.getElementById('q-word')||document.getElementById('qword')||document.getElementById('q-word')||document.getElementById('q-word');
+      var hintEl=document.getElementById('questionHint')||document.getElementById('qhint')||document.getElementById('q-hint');
+      if(!wordEl||!hintEl)return;
+      var e=SEOLDAE_V8.nEng(wordEl.textContent||''); var h=SDV8_HINT_BY_ENG[e];
+      if(h && wordEl.offsetParent!==null) hintEl.textContent=h;
+    }catch(_e){}
+  }
+  var obs=new MutationObserver(applySDV8Hint); obs.observe(document.body,{subtree:true,childList:true,characterData:true});
+  setTimeout(applySDV8Hint,200);
+})();
+</script>
+<script>
+/* ===== Seoldae v11 universal grading wrapper: broad Korean natural variants ===== */
+(function(){
+ if(typeof SEOLDAE_V9==='undefined'||!SEOLDAE_V9.grade||SEOLDAE_V9.__v11wrapped)return;
+ const base=SEOLDAE_V9.grade.bind(SEOLDAE_V9);
+ function variants(s){
+   const raw=String(s||'').trim(), out=new Set([raw]);
+   const clean=raw.replace(/[~～…·ㆍ,.;:：；!?？!"'’“”`()[\]{}<>/\\|_-]/g,' ').replace(/\s+/g,' ').trim();
+   if(clean)out.add(clean);
+   const words=[...out];
+   words.forEach(x=>{
+     if(x.endsWith('하게'))out.add(x.slice(0,-2)+'히');
+     if(x.endsWith('히'))out.add(x.slice(0,-1)+'하게');
+     if(x.endsWith('한'))out.add(x.slice(0,-1)+'하다');
+     if(x.endsWith('하다'))out.add(x.slice(0,-2)+'한');
+     if(x.endsWith('되다'))out.add(x.slice(0,-2)+'됨');
+   });
+   const pairs=[
+    ['엄격하게','엄격히'],['철저하게','철저히'],['정확하게','정확히'],['완전하게','완전히'],['조용하게','조용히'],['안전하게','안전히'],['신속하게','신속히'],['격렬하게','격렬히'],['난폭하게','난폭히'],
+    ['도와주다','돕다'],['선택하다','고르다'],['구매하다','사다'],['판매하다','팔다'],['제거하다','없애다'],['종료하다','끝내다'],['종료하다','마치다'],['시작하다','개시하다'],['계속하다','지속하다'],['남아있다','남다'],['가지고있다','가지다'],['갖다','가지다'],['안자다','자지않다'],['안자고있다','깨어있다']
+   ];
+   let changed=true,guard=0;
+   while(changed&&guard++<4){changed=false;[...out].forEach(x=>pairs.forEach(([a,b])=>{if(x.includes(a)){let y=x.replace(a,b);if(!out.has(y)){out.add(y);changed=true}}if(x.includes(b)){let y=x.replace(b,a);if(!out.has(y)){out.add(y);changed=true}}}));}
+   return [...out];
+ }
+ SEOLDAE_V9.grade=function(o){
+   let r=base(o); if(r&&r.correct)return r;
+   if(!o||o.direction!=='e2k'||!String(o.userAnswer||'').trim())return r;
+   for(const v of variants(o.userAnswer)){
+     if(v===o.userAnswer)continue;
+     const rr=base(Object.assign({},o,{userAnswer:v}));
+     if(rr&&rr.correct)return Object.assign({},rr,{acceptedBy:'v11NaturalKoreanVariant'});
+   }
+   return r;
+ };
+ SEOLDAE_V9.__v11wrapped=true;
+})();
+</script>
+</body>
+</html>
