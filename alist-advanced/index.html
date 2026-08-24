@@ -809,4 +809,116 @@ document.addEventListener('DOMContentLoaded',initApp);
 })();
 </script>
 
+
+<script>
+/* ===== SEOLDAE QUIZ PRONUNCIATION POLICY v13 =====
+   - e2k (English shown, Korean meaning entered): automatically pronounce English once per new question.
+   - k2e (Korean shown, English entered): do not auto-pronounce.
+   - Avoid duplicate playback if the app's own renderer already pronounced the same word.
+*/
+(function(){
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+
+  var _sdLastSpeech = { text:'', time:0 };
+  try {
+    var _sdOrigSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+    if (!window.__SEOLDAE_V13_SPEAK_WRAPPED__) {
+      window.speechSynthesis.speak = function(utterance){
+        try {
+          var t = String((utterance && utterance.text) || '').trim().toLowerCase();
+          if (t) _sdLastSpeech = {text:t, time:Date.now()};
+        } catch(e){}
+        return _sdOrigSpeak(utterance);
+      };
+      window.__SEOLDAE_V13_SPEAK_WRAPPED__ = true;
+    }
+  } catch(e){}
+
+  var lastQuestionKey = '';
+  var timer = null;
+
+  function isVisible(el){
+    if(!el) return false;
+    var s = window.getComputedStyle(el);
+    return s.display !== 'none' && s.visibility !== 'hidden' && !el.classList.contains('hidden');
+  }
+
+  function visibleQuiz(){
+    var ids = ['quiz','quiz-screen'];
+    for(var i=0;i<ids.length;i++){
+      var q=document.getElementById(ids[i]);
+      if(isVisible(q)) return q;
+    }
+    return null;
+  }
+
+  function getQuestionNode(root){
+    var ids=['questionWord','qword','q-word','qWord','word'];
+    for(var i=0;i<ids.length;i++){
+      var e=document.getElementById(ids[i]);
+      if(e && root.contains(e) && String(e.textContent||'').trim()) return e;
+    }
+    var c=root.querySelector('.word,.qword');
+    return c || null;
+  }
+
+  function looksEnglish(text){
+    text=String(text||'').trim();
+    if(!/[A-Za-z]/.test(text)) return false;
+    var latin=(text.match(/[A-Za-z]/g)||[]).length;
+    var hangul=(text.match(/[가-힣]/g)||[]).length;
+    return latin >= 1 && latin >= hangul;
+  }
+
+  function pronounceOnce(text){
+    var normalized=String(text||'').replace(/[~…]/g,'').trim();
+    if(!normalized) return;
+    var key=normalized.toLowerCase();
+    var now=Date.now();
+
+    // If existing renderer already pronounced it, don't play twice.
+    if(_sdLastSpeech.text===key && now-_sdLastSpeech.time < 1400) return;
+
+    try{
+      window.speechSynthesis.cancel();
+      var u=new SpeechSynthesisUtterance(normalized);
+      u.lang='en-US';
+      u.rate=0.8;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  function check(){
+    clearTimeout(timer);
+    timer=setTimeout(function(){
+      var root=visibleQuiz();
+      if(!root) return;
+      var n=getQuestionNode(root);
+      if(!n) return;
+      var text=String(n.textContent||'').trim();
+
+      // This is the decisive policy:
+      // English visible => e2k => pronounce.
+      // Korean visible => k2e => silence.
+      if(!looksEnglish(text)) return;
+
+      var progress='';
+      var p=root.querySelector('.progress');
+      if(p) progress=String(p.textContent||'');
+      var key=progress+'|'+text;
+      if(key===lastQuestionKey) return;
+      lastQuestionKey=key;
+      pronounceOnce(text);
+    },260);
+  }
+
+  var obs=new MutationObserver(check);
+  obs.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
+
+  document.addEventListener('click',function(){ setTimeout(check,80); },true);
+  document.addEventListener('keydown',function(e){ if(e.key==='Enter') setTimeout(check,180); },true);
+  setTimeout(check,500);
+})();
+</script>
+
 </body></html>
