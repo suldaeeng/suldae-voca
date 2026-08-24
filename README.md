@@ -1,0 +1,311 @@
+[index.html](https://github.com/user-attachments/files/31373815/index.html)
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>설대영어 학습실 · 채점엔진 v8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6F1;
+    --paper-line:#E4E6DC;
+    --ink:#21262B;
+    --ink-soft:#5B6169;
+    --navy:#223A5E;
+    --elem:#3F8F5F;
+    --elem-soft:#E6F1E9;
+    --mid:#33629B;
+    --mid-soft:#E5EDF6;
+    --high:#7A4E9E;
+    --high-soft:#EFE6F5;
+    --gold:#D98E2B;
+    --card-bg:#FFFFFF;
+    --shadow: 0 1px 2px rgba(33,38,43,0.06), 0 6px 16px rgba(33,38,43,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 40px;
+    color:var(--ink);
+    font-family:'Noto Sans KR','Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:36px 20px 64px;
+  }
+  header.hero{
+    padding:8px 4px 28px;
+    border-bottom:2px solid var(--ink);
+    margin-bottom:32px;
+  }
+  .eyebrow{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.14em;
+    color:var(--navy);
+    text-transform:uppercase;
+  }
+  h1{
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    font-size:34px;
+    line-height:1.25;
+    margin:10px 0 12px;
+    color:var(--ink);
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--gold);
+  }
+  .hero p{
+    font-size:15px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    margin:0;
+  }
+  .level-section{
+    margin-bottom:34px;
+  }
+  .level-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:14px;
+    padding-left:2px;
+  }
+  .level-tab{
+    display:inline-block;
+    font-size:12px;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:4px 4px 0 0;
+    letter-spacing:.02em;
+  }
+  .level-tab.elem{ background:var(--elem); color:#fff; }
+  .level-tab.mid{ background:var(--mid); color:#fff; }
+  .level-tab.high{ background:var(--high); color:#fff; }
+  .level-head h2{
+    font-family:'Gowun Batang', serif;
+    font-size:19px;
+    font-weight:700;
+    margin:0;
+    color:var(--ink);
+  }
+  .level-count{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-left:auto;
+    padding-right:2px;
+  }
+  .card-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+  a.card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    min-height:104px;
+    background:var(--card-bg);
+    border-radius:10px;
+    padding:16px 14px 14px;
+    text-decoration:none;
+    color:var(--ink);
+    box-shadow:var(--shadow);
+    border:1px solid rgba(33,38,43,0.06);
+    border-top:4px solid var(--tab-color, var(--navy));
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  a.card:active{
+    transform:translateY(1px) scale(0.99);
+    box-shadow:0 1px 2px rgba(33,38,43,0.08);
+  }
+  a.card:focus-visible{
+    outline:3px solid var(--gold);
+    outline-offset:2px;
+  }
+  .card-title{
+    font-size:15px;
+    font-weight:700;
+    line-height:1.35;
+    letter-spacing:-0.01em;
+  }
+  .card-meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+  }
+  .card-range{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:500;
+  }
+  .card-arrow{
+    font-size:16px;
+    color:var(--ink-soft);
+  }
+  .elem-card{ --tab-color: var(--elem); }
+  .mid-card{ --tab-color: var(--mid); }
+  .high-card{ --tab-color: var(--high); }
+
+  footer{
+    margin-top:40px;
+    padding-top:18px;
+    border-top:1px solid var(--paper-line);
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+  footer .brand{
+    font-family:'Gowun Batang', serif;
+    font-weight:700;
+    color:var(--navy);
+    font-size:13px;
+    display:block;
+    margin-bottom:4px;
+  }
+
+  @media (max-width:360px){
+    h1{font-size:28px;}
+    .card-grid{gap:10px;}
+    a.card{padding:14px 12px 12px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">SEOLDAE ENGLISH · VOCABULARY LAB</div>
+    <h1>오늘은 어떤 <em>단어</em>를<br>공부할까요?</h1>
+    <p>교재를 먼저 선택한 다음, 원하는 DAY(또는 STEP)를 골라 시험을 시작하세요.</p>
+  </header>
+
+  <section class="level-section">
+    <div class="level-head">
+      <span class="level-tab elem">초등</span>
+      <h2>초등 교재</h2>
+      <span class="level-count">6종</span>
+    </div>
+    <div class="card-grid">
+      <a class="card elem-card" href="./junior-voca-basic/">
+        <span class="card-title">주니어능률VOCA<br>기본</span>
+        <span class="card-meta"><span class="card-range">DAY 01–60</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card elem-card" href="./junior-voca-advanced/">
+        <span class="card-title">주니어능률VOCA<br>실력</span>
+        <span class="card-meta"><span class="card-range">DAY 01–60</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card elem-card" href="./alist-basic/">
+        <span class="card-title">A-List<br>초등기본</span>
+        <span class="card-meta"><span class="card-range">전체 DAY</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card elem-card" href="./alist-essential/">
+        <span class="card-title">A-List<br>초등필수</span>
+        <span class="card-meta"><span class="card-range">전체 DAY</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card elem-card" href="./alist-advanced/">
+        <span class="card-title">A-List<br>초등고난도</span>
+        <span class="card-meta"><span class="card-range">전체 DAY</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card elem-card" href="./1hour-elementary/">
+        <span class="card-title">1hour Voca<br>초등</span>
+        <span class="card-meta"><span class="card-range">STEP 01–36</span><span class="card-arrow">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="level-section">
+    <div class="level-head">
+      <span class="level-tab mid">중등</span>
+      <h2>중등 교재</h2>
+      <span class="level-count">1종</span>
+    </div>
+    <div class="card-grid">
+      <a class="card mid-card" href="./hackers-middle/">
+        <span class="card-title">해커스보카<br>중학필수</span>
+        <span class="card-meta"><span class="card-range">DAY 01–40</span><span class="card-arrow">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <section class="level-section">
+    <div class="level-head">
+      <span class="level-tab high">고등</span>
+      <h2>고등 교재</h2>
+      <span class="level-count">3종</span>
+    </div>
+    <div class="card-grid">
+      <a class="card high-card" href="./voca-highschool-basic/">
+        <span class="card-title">능률VOCA<br>고교기본</span>
+        <span class="card-meta"><span class="card-range">DAY 01–69</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card high-card" href="./voca-highschool-essential/">
+        <span class="card-title">능률VOCA<br>고교필수편</span>
+        <span class="card-meta"><span class="card-range">DAY 01–69</span><span class="card-arrow">→</span></span>
+      </a>
+      <a class="card high-card" href="./wordmaster-highschool-basic/">
+        <span class="card-title">워드마스터<br>고등베이직</span>
+        <span class="card-meta"><span class="card-range">전체 DAY</span><span class="card-arrow">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <span class="brand">설대영어</span>
+    이 페이지 주소를 즐겨찾기 해두면 다음부터 바로 들어올 수 있어요.
+  </footer>
+
+</div>
+<script>
+/* ===== Seoldae v11 universal grading wrapper: broad Korean natural variants ===== */
+(function(){
+ if(typeof SEOLDAE_V9==='undefined'||!SEOLDAE_V9.grade||SEOLDAE_V9.__v11wrapped)return;
+ const base=SEOLDAE_V9.grade.bind(SEOLDAE_V9);
+ function variants(s){
+   const raw=String(s||'').trim(), out=new Set([raw]);
+   const clean=raw.replace(/[~～…·ㆍ,.;:：；!?？!"'’“”`()[\]{}<>/\\|_-]/g,' ').replace(/\s+/g,' ').trim();
+   if(clean)out.add(clean);
+   const words=[...out];
+   words.forEach(x=>{
+     if(x.endsWith('하게'))out.add(x.slice(0,-2)+'히');
+     if(x.endsWith('히'))out.add(x.slice(0,-1)+'하게');
+     if(x.endsWith('한'))out.add(x.slice(0,-1)+'하다');
+     if(x.endsWith('하다'))out.add(x.slice(0,-2)+'한');
+     if(x.endsWith('되다'))out.add(x.slice(0,-2)+'됨');
+   });
+   const pairs=[
+    ['엄격하게','엄격히'],['철저하게','철저히'],['정확하게','정확히'],['완전하게','완전히'],['조용하게','조용히'],['안전하게','안전히'],['신속하게','신속히'],['격렬하게','격렬히'],['난폭하게','난폭히'],
+    ['도와주다','돕다'],['선택하다','고르다'],['구매하다','사다'],['판매하다','팔다'],['제거하다','없애다'],['종료하다','끝내다'],['종료하다','마치다'],['시작하다','개시하다'],['계속하다','지속하다'],['남아있다','남다'],['가지고있다','가지다'],['갖다','가지다'],['안자다','자지않다'],['안자고있다','깨어있다']
+   ];
+   let changed=true,guard=0;
+   while(changed&&guard++<4){changed=false;[...out].forEach(x=>pairs.forEach(([a,b])=>{if(x.includes(a)){let y=x.replace(a,b);if(!out.has(y)){out.add(y);changed=true}}if(x.includes(b)){let y=x.replace(b,a);if(!out.has(y)){out.add(y);changed=true}}}));}
+   return [...out];
+ }
+ SEOLDAE_V9.grade=function(o){
+   let r=base(o); if(r&&r.correct)return r;
+   if(!o||o.direction!=='e2k'||!String(o.userAnswer||'').trim())return r;
+   for(const v of variants(o.userAnswer)){
+     if(v===o.userAnswer)continue;
+     const rr=base(Object.assign({},o,{userAnswer:v}));
+     if(rr&&rr.correct)return Object.assign({},rr,{acceptedBy:'v11NaturalKoreanVariant'});
+   }
+   return r;
+ };
+ SEOLDAE_V9.__v11wrapped=true;
+})();
+</script>
+</body>
+</html>
