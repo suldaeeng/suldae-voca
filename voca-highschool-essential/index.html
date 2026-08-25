@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<!-- SEOLDAE_BUILD_V21_FINAL_ROUTE_20260824 -->
+<!-- SEOLDAE_BUILD_V23_STABLE_20260825 -->
 <!-- SEOLDAE_BUILD_V19_CORE_20260824 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -644,92 +644,7 @@ function gradeK2E(item, userInput){
 function gradeAnswerV1(item, direction, userInput){ const r=SEOLDAE_ENGINE.grade({direction:direction,userAnswer:userInput,eng:item.eng,korFull:item.kor_full||item.kor}); return !!r.correct; }
 
 /* ================= TTS ================= */
-function speak(word){
-  try{
-    speechSynthesis.cancel();
-    let clean = String(word).replace(/~/g,'').replace(/[()[\]]/g,'').replace(/\s{2,}/g,' ').trim();
-    let u = new SpeechSynthesisUtterance(clean);
-    u.lang='en-US'; u.rate=state.speed;
-    speechSynthesis.speak(u);
-  }catch(e){}
-}
-
-/* ================= 오답뱅크 ================= */
-function loadWrongbank(){
-  try{ return JSON.parse(localStorage.getItem(LS_WRONGBANK) || '[]'); }catch(e){ return []; }
-}
-function saveWrongbank(list){
-  try{
-    const trimmed = list.slice(-200);
-    localStorage.setItem(LS_WRONGBANK, JSON.stringify(trimmed));
-  }catch(e){}
-}
-function addToWrongbank(item){
-  const bank = loadWrongbank();
-  bank.push({eng:item.eng, kor:item.kor, kor_full:item.kor_full, day:item.day});
-  saveWrongbank(bank);
-}
-
-/* ================= 큐 생성 ================= */
-function shuffle(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-function poolForDay(day){
-  if(day==='all'){
-    let all=[];
-    for(const d of DAY_KEYS){
-      VOCA[d].forEach(w=>all.push(Object.assign({day:d}, w)));
-    }
-    return all;
-  }
-  if(Array.isArray(day)){
-    let all=[];
-    day.forEach(d=>{
-      (VOCA[d]||[]).forEach(w=>all.push(Object.assign({day:d}, w)));
-    });
-    return all;
-  }
-  return (VOCA[day]||[]).map(w=>Object.assign({day:day}, w));
-}
-
-function buildQueue(){
-  let pool;
-  if(state.mode==='wrongonly'){
-    pool = loadWrongbank();
-    if(pool.length===0){
-      alert('저장된 오답이 없습니다. 먼저 일반 모드로 시험을 한 번 보세요.');
-      return null;
-    }
-  } else {
-    pool = poolForDay(state.day);
-  }
-  pool = shuffle(pool);
-  if(state.count!=='all'){
-    pool = pool.slice(0, parseInt(state.count));
-  }
-  const effectiveMode = (state.mode==='wrongonly') ? 'mix' : state.mode;
-  return pool.map(w=>{
-    let dir;
-    if(effectiveMode==='mix') dir = Math.random()<0.5 ? 'e2k':'k2e';
-    else dir = effectiveMode;
-    return Object.assign({}, w, {direction:dir, isRetry:false});
-  });
-}
-
-/* ================= 화면 전환 ================= */
-function show(id){
-  ['setup-screen','listen-screen','quiz-screen','result-screen','teacher-screen'].forEach(s=>{
-    $(s).classList.toggle('hidden', s!==id);
-  });
-}
-
-/* ================= 시험 시작/진행 ================= */
+function speak(word){try{if(!('speechSynthesis' in window)||!('SpeechSynthesisUtterance' in window))return false;let clean=String(word||'').replace(/~/g,'').replace(/[()[\]]/g,'').trim();if(!clean)return false;speechSynthesis.cancel();speechSynthesis.resume();let u=new SpeechSynthesisUtterance(clean);u.lang='en-US';u.rate=.82;u.volume=1;speechSynthesis.speak(u);return true;}catch(e){console.error('TTS',e);return false;}}
 function startQuiz(){
   const name = $('nameInput').value.trim();
   if(!name){
