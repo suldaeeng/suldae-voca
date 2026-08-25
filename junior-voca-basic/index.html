@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<!-- SEOLDAE_BUILD_V23_STABLE_20260825 -->
+<!-- SEOLDAE_BUILD_V24_JUNIOR_20260825 -->
 <!-- SEOLDAE_BUILD_V19_CORE_20260824 -->
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -695,15 +695,20 @@ dayModal.addEventListener('click', e => { if (e.target === dayModal) closeDayMod
 let listenState = { day: null, idx: 0, words: [], autoplayTimer: null };
 
 function speakWord(word) {
-  if (!('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(word);
-  utter.lang = 'en-US';
-  const speedEl = document.getElementById('listen-speed');
-  utter.rate = speedEl ? parseFloat(speedEl.value) : 0.8;
-  window.speechSynthesis.speak(utter);
+  try {
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+    const clean = String(word || '').replace(/~/g,'').trim();
+    if (!clean) return;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
+    const utter = new SpeechSynthesisUtterance(clean);
+    utter.lang = 'en-US';
+    const speedEl = document.getElementById('listen-speed');
+    utter.rate = speedEl ? parseFloat(speedEl.value) : 0.8;
+    utter.volume = 1;
+    window.speechSynthesis.speak(utter);
+  } catch(e) { console.error('TTS', e); }
 }
-
 function renderListenWord() {
   const w = listenState.words[listenState.idx];
   document.getElementById('listen-progress').textContent =
@@ -1163,7 +1168,10 @@ function korMeaningMatch(userAns, full, eng){
 function synonymMatch(a,b){
   var r=gradeAnswerV22({direction:"k2e", userAnswer:a, eng:b}); SEOLDAE_LAST_GRADE=r; return !!r.correct;
 }
-function gradeAnswer(opts){ var r=gradeAnswerV22(opts); SEOLDAE_LAST_GRADE=r; return r; }
+var SDV24_EXTRA={"constant":["끊임없는","계속되는","지속적인","일정한","변함없는"],"constantly":["항상","늘","계속","끊임없이"],"consistent":["꾸준한","일관된","한결같은"],"trail":["흔적","자취","오솔길"],"consume":["소비하다","소모하다"],"assume":["가정하다","추정하다","추측하다"],"distress":["고민","번민","고통"],"instance":["예","사례","경우"],"establishment":["설립","수립","기관"],"intensely":["강렬하게","강하게"],"strictly":["엄격하게","엄격히"],"restrictive":["제한하는","한정하는"],"have ~ in common":["공통점이 있다","공통적으로 가지다","공유하다"]};
+function sd24n(s){return String(s||'').toLowerCase().replace(/[()[\]{}<>]/g,' ').replace(/[,:;\/|·ㆍ~～\-]/g,' ').replace(/\s+/g,' ').trim();}
+function sd24parts(s){return String(s||'').replace(/\([^)]*\)/g,' ').split(/[;,\/|·ㆍ]/).map(sd24n).filter(Boolean);}
+function gradeAnswer(opts){try{opts=opts||{};if(opts.direction==='k2e'){let a=String(opts.userAnswer||'').toLowerCase().trim().replace(/[.?!,;:]+$/g,''),e=String(opts.eng||'').toLowerCase().trim();return{correct:a===e,reason:a===e?'exact':'wrong',label:a===e?'정답':'오답'};}let u=sd24n(opts.userAnswer),us=u.replace(/\s/g,''),cand=[];sd24parts(opts.korFull||'').forEach(x=>cand.push(x));(SDV24_EXTRA[String(opts.eng||'').toLowerCase().trim()]||[]).forEach(x=>cand.push(sd24n(x)));let ok=cand.some(x=>x===u||x.replace(/\s/g,'')===us);return{correct:ok,reason:ok?'similar-wordbook':'wrong',label:ok?'유사어 인정':'오답'};}catch(e){console.error('grade',e);return{correct:false,reason:'wrong',label:'오답'};}}
 function gradingReasonLabel(reason){
   var labels={exact:"정답","partial-meaning":"부분 의미 인정","similar-wordbook":"유사어 인정","english-synonym":"영어 유의어 인정","strict-pronoun":"대명사 엄격 정답","one-char-approved":"짧은 뜻 인정",wrong:"오답",blank:"미입력"};
   return labels[reason]||reason;
@@ -1270,8 +1278,8 @@ function checkAnswer() {
 
   const c = state.current;
   const correctDisplay = (c.direction === 'e2k') ? c.korFull : c.eng;
-  const grade = gradeAnswer({direction: c.direction, userAnswer: userAns, eng: c.eng, korFull: c.korFull});
-  const isCorrect = !!grade.correct;
+  let grade; try { grade = gradeAnswer({direction: c.direction, userAnswer: userAns, eng: c.eng, korFull: c.korFull}); } catch(e) { console.error(e); grade={correct:false,reason:'wrong',label:'오답'}; }
+  const isCorrect = !!(grade && grade.correct);
 
   state.answered = true;
   state.attemptLog.push({
