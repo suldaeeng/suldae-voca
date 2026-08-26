@@ -21,7 +21,7 @@
 <div class="app">
 <h1>설대영어 단어시험</h1>
 <div class="sub">원아워 초등영단어 · DAY 01~60 </div>
-<div class="browser-guide" id="browserGuide"><button id="guideClose" class="guide-close" aria-label="닫기">✕</button><b>📌 시험 시작 전 꼭 확인하세요.</b><br>① 먼저 <b>🔊 소리 확인</b>을 눌러 영어 발음이 들리는지 확인하세요.<br>② 소리가 들리지 않으면 화면 메뉴에서 <b>다른 앱으로 열기 / 다른 앱으로 변경</b>을 선택한 뒤 Chrome · Safari · Samsung Internet으로 열어주세요.<br>③ 이 HTML 파일을 기기에 저장하면 <b>인터넷 없이도 단어시험과 채점</b>을 할 수 있습니다.<br><span style="font-weight:500">※ 영어 발음은 휴대폰의 음성 기능에 따라 인터넷 연결이 필요할 수 있습니다.</span></div>
+<div class="browser-guide" id="browserGuide"><button id="guideClose" class="guide-close" aria-label="닫기">✕</button><b>📌 시험 시작 전 꼭 확인하세요.</b><br>① 먼저 <b>🔊 소리 확인</b>을 눌러 <b>Hello</b>가 들리는지 확인하세요.<br>② 소리가 들리지 않으면 화면 메뉴에서 <b>다른 앱으로 열기 / 다른 앱으로 변경</b>을 선택한 뒤 Chrome · Safari · Samsung Internet으로 열어주세요.<br>③ <b>GitHub 링크로 접속할 때는 인터넷 연결이 필요합니다.</b><br>④ HTML 파일 자체를 기기에 저장해 받은 경우에는 <b>인터넷 없이도 단어시험과 채점</b>을 할 수 있습니다.<br><span style="font-weight:500">※ 영어 발음은 휴대폰의 음성 기능에 따라 인터넷 연결이 필요할 수 있습니다.</span></div>
 <div class="top"><a href="#" id="teacherLink">선생님 모드</a></div>
 <section id="setup"><div class="card"><label for="studentName">이름</label><input id="studentName" type="text" placeholder="이름을 입력하세요" autocomplete="name"><label for="dayValue">DAY 선택</label><input type="hidden" id="dayValue" value=""><button type="button" id="dayButton" class="day-trigger">DAY 선택</button><label for="modeSelect">시험 방식</label><select id="modeSelect"><option value="mix">영어→한글 / 한글→영어 랜덤</option><option value="e2k">영어→한글만</option><option value="k2e">한글→영어만</option><option value="wrong">저장된 오답만</option></select><label for="limitSelect">문항 수</label><select id="limitSelect"><option value="all">DAY 전체</option><option value="20">랜덤 20문제</option><option value="30">랜덤 30문제</option><option value="50">랜덤 50문제</option></select><div class="row"><button id="listenButton" class="secondary" type="button">🔊 발음 듣기</button><button id="startButton" type="button">시험 시작</button></div><button id="resumeButton" type="button" class="light hidden">이어서 풀기</button></div><div class="small">오답은 뒤에 다시 출제됩니다. 최종 점수는 첫 풀이 기준입니다.<br>Enter 또는 확인을 누르면 자동으로 다음 문제로 넘어갑니다.</div><div class="notice">아이폰은 처음 한 번 버튼을 눌러야 발음이 재생됩니다. </div></section>
 <div id="dayModal" class="day-modal hidden"><div class="day-modal-inner"><div class="day-modal-header"><span>DAY 선택</span><button type="button" id="dayCloseButton">닫기</button></div><div id="dayList" class="day-list"></div></div></div>
@@ -99,15 +99,35 @@ function speakEnglish(text){
 function testSoundV8(btn,diag){
   try{
     if(!('speechSynthesis' in window)){
-      if(diag)diag.textContent='이 기기에서는 음성 기능을 사용할 수 없습니다. Chrome·Safari에서 다시 열어주세요.';
+      if(diag)diag.textContent='이 기기에서는 음성 기능을 사용할 수 없습니다. 다른 앱으로 열어 Chrome·Safari·Samsung Internet에서 다시 확인하세요.';
       return;
     }
-    primeEnglishVoices();
-    try{window.speechSynthesis.cancel();window.speechSynthesis.resume()}catch(e){}
-    const ok=speakEnglish('Hello. Garage sale.');
-    if(diag){diag.textContent=ok?'“Hello. Garage sale.”이 들리면 시험을 시작하세요.':'소리가 안 들리면 Chrome·Safari에서 다시 열어주세요.';}
+    const synth=window.speechSynthesis;
+    const u=new SpeechSynthesisUtterance('Hello');
+    u.lang='en-US'; u.rate=.82; u.pitch=1.0; u.volume=1;
+    const v=primeEnglishVoices(); if(v)u.voice=v;
+    let started=false;
+    u.onstart=function(){started=true;if(diag)diag.textContent='Hello가 들리면 정상입니다. 시험을 시작하세요.';};
+    u.onend=function(){if(diag)diag.textContent='Hello가 들렸다면 정상입니다. 시험을 시작하세요.';};
+    u.onerror=function(){if(diag)diag.textContent='소리가 재생되지 않았습니다. 다른 앱으로 열어 Chrome·Safari·Samsung Internet에서 다시 확인하세요.';};
+    try{synth.cancel()}catch(e){}
+    // 반드시 학생의 버튼 클릭 동작 안에서 즉시 speak()를 호출한다.
+    synth.speak(u);
+    setTimeout(function(){
+      try{
+        if(!started && !synth.speaking && !synth.pending){
+          const r=new SpeechSynthesisUtterance('Hello');
+          r.lang='en-US'; r.rate=.82; r.pitch=1.0; r.volume=1;
+          const rv=primeEnglishVoices(); if(rv)r.voice=rv;
+          r.onstart=function(){if(diag)diag.textContent='Hello가 들리면 정상입니다. 시험을 시작하세요.';};
+          r.onerror=function(){if(diag)diag.textContent='소리가 재생되지 않았습니다. 다른 앱으로 열어 Chrome·Safari·Samsung Internet에서 다시 확인하세요.';};
+          synth.speak(r);
+        }
+      }catch(e){}
+    },350);
+    if(diag)diag.textContent='소리 재생을 확인하는 중입니다…';
     try{localStorage.setItem('seoldae_sound_checked','1')}catch(e){}
-  }catch(e){if(diag)diag.textContent='소리가 안 들리면 Chrome·Safari에서 다시 열어주세요.';}
+  }catch(e){if(diag)diag.textContent='소리가 재생되지 않았습니다. 다른 앱으로 열어 다시 확인하세요.';}
 }
 function insertSoundTestButtonV8(){
   if(document.getElementById('soundTestBtn'))return;
