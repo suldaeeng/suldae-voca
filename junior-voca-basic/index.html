@@ -16,6 +16,16 @@
 /* v7 stability: next buttons are not student controls */
 #nextBtn,#nextButton,#next-btn{display:none!important}
 </style>
+
+<style>
+.sd-wrong-speak{
+  width:auto!important; min-width:92px!important; flex:0 0 auto!important;
+  margin:0 0 0 8px!important; padding:7px 9px!important;
+  border-radius:9px!important; font-size:12px!important; line-height:1.15!important;
+  white-space:nowrap!important;
+}
+.wrong-item{align-items:center!important}
+</style>
 </head>
 <body>
 <div class="app">
@@ -123,6 +133,10 @@ function sdRelatedHeadword(a,b){a=normEnglish(a).replace(/\s+/g,'');b=normEnglis
 function sdPosConflict(userVariants,targetEng){for(const it of sdAllVocaItems()){if(!sdRelatedHeadword(targetEng,it.eng))continue;const other=koreanCandidates(it.kor_full||it.kor,it.eng);for(const u of userVariants){if(other.includes(u))return {word:displayEnglishHeadword?displayEnglishHeadword(it.eng):it.eng,meaning:it.kor_full||it.kor}}}return null}
 function gradeAnswer(opts){const direction=opts.direction;const userAnswer=opts.userAnswer||'';const eng=opts.eng||'';const korFull=opts.korFull||'';const targets=englishAnswerVariants(eng);const e=targets[0]||normEnglish(eng);if(direction==='k2e'){const u=normEnglish(userAnswer);if(!u)return {correct:false,reason:'blank',label:'미입력'};if(targets.includes(u))return {correct:true,reason:'exact-or-editorial-variant',label:'정답'};if(SD_BLOCKLIST.has(e))return {correct:false,reason:'strict-word-wrong',label:'엄격채점 오답'};for(const group of SD_SYNGROUPS){const g=group.map(normEnglish);if(g.includes(u)&&targets.some(function(t){return g.includes(t)}))return {correct:true,reason:'english-synonym',label:'영어 유의어 인정'}}return {correct:false,reason:'wrong',label:'오답'}}const users=regularizeKorean(userAnswer);if(!users.length)return {correct:false,reason:'blank',label:'미입력'};if(SD_STRICT_PRONOUNS[e]){const allowed=[];SD_STRICT_PRONOUNS[e].forEach(function(x){regularizeKorean(x).forEach(function(v){allowed.push(v)})});const ok=users.some(function(u){return allowed.includes(u)});return {correct:ok,reason:ok?'strict-pronoun':'strict-pronoun-wrong',label:ok?'대명사 엄격 정답':'대명사 엄격 오답'}}const cands=koreanCandidates(korFull,eng);for(const u of users){if(cands.includes(u))return {correct:true,reason:'approved-candidate',label:'정답'}}const posHit=sdPosConflict(users,eng);if(posHit)return {correct:false,reason:'pos-conflict',label:'품사가 다른 뜻입니다',conflictWord:posHit.word,conflictMeaning:posHit.meaning};return {correct:false,reason:'wrong',label:'오답'}}
 let SD_ENGLISH_VOICE=null;
+let SD_TTS_SEQ=0;
+let SD_TTS_LAST_TEXT='';
+let SD_TTS_LAST_STARTED=0;
+
 function primeEnglishVoices(){
   try{
     if(!('speechSynthesis' in window))return null;
@@ -136,29 +150,96 @@ function primeEnglishVoices(){
     return SD_ENGLISH_VOICE;
   }catch(e){return null}
 }
+
+function sdBuildUtterance(cleaned, seq){
+  const u=new SpeechSynthesisUtterance(cleaned);
+  u.lang='en-US';
+  u.rate=.78;
+  u.pitch=1.0;
+  u.volume=1;
+  const v=SD_ENGLISH_VOICE||primeEnglishVoices();
+  if(v)u.voice=v;
+  u.onstart=function(){
+    if(seq===SD_TTS_SEQ){
+      SD_TTS_LAST_STARTED=Date.now();
+      SD_TTS_LAST_TEXT=cleaned;
+    }
+  };
+  return u;
+}
+
+function sdTtsHardReset(){
+  try{
+    if(!('speechSynthesis' in window))return;
+    const synth=window.speechSynthesis;
+    try{synth.cancel()}catch(e){}
+    try{synth.resume()}catch(e){}
+  }catch(e){}
+}
+
 function speakEnglish(text){
   try{
     if(!('speechSynthesis' in window)) return false;
     const synth=window.speechSynthesis;
     const cleaned=displayEnglishHeadword(text);
     if(!cleaned) return false;
+
+    const seq=++SD_TTS_SEQ;
     primeEnglishVoices();
-    try{synth.cancel()}catch(e){}
-    const u=new SpeechSynthesisUtterance(cleaned);
-    u.lang='en-US'; u.rate=.78; u.pitch=1.0; u.volume=1;
-    const v=SD_ENGLISH_VOICE||primeEnglishVoices(); if(v)u.voice=v;
-    try{synth.resume()}catch(e){}
-    synth.speak(u);
-    // Some Android/Samsung engines occasionally drop the first utterance after load.
-    setTimeout(function(){
-      try{
-        if(!synth.speaking && !synth.pending){
-          const r=new SpeechSynthesisUtterance(cleaned); r.lang='en-US'; r.rate=.78; r.pitch=1.0; r.volume=1;
-          const rv=SD_ENGLISH_VOICE||primeEnglishVoices(); if(rv)r.voice=rv;
-          synth.speak(r);
-        }
-      }catch(e){}
-    },220);
+
+    // 이전 DAY/단어의 큐가 실제로 남아 있을 때만 취소한다.
+    // 매 호출마다 무조건 cancel()하면 일부 iPhone/Samsung TTS가 정지하는 현상을 줄인다.
+    try{
+      if(synth.speaking || synth.pending || synth.paused){
+        synth.cancel();
+      }
+      synth.resume();
+    }catch(e){}
+
+    const first=sdBuildUtterance(cleaned,seq);
+    let began=false;
+    first.onstart=function(){
+      if(seq!==SD_TTS_SEQ)return;
+      began=true;
+      SD_TTS_LAST_STARTED=Date.now();
+      SD_TTS_LAST_TEXT=cleaned;
+    };
+    first.onerror=function(){
+      if(seq!==SD_TTS_SEQ)return;
+      // 음성엔진이 꼬였을 때 한 번 강제 초기화 후 재시도
+      setTimeout(function(){
+        if(seq!==SD_TTS_SEQ)return;
+        try{
+          sdTtsHardReset();
+          primeEnglishVoices();
+          synth.speak(sdBuildUtterance(cleaned,seq));
+        }catch(e){}
+      },120);
+    };
+
+    synth.speak(first);
+
+    // Android/Samsung/iOS에서 첫 발화가 조용히 유실되는 경우를 2단계로 복구한다.
+    [280, 900].forEach(function(delay){
+      setTimeout(function(){
+        if(seq!==SD_TTS_SEQ || began)return;
+        try{
+          if(!synth.speaking && !synth.pending){
+            try{synth.resume()}catch(e){}
+            primeEnglishVoices();
+            const retry=sdBuildUtterance(cleaned,seq);
+            retry.onstart=function(){
+              if(seq!==SD_TTS_SEQ)return;
+              began=true;
+              SD_TTS_LAST_STARTED=Date.now();
+              SD_TTS_LAST_TEXT=cleaned;
+            };
+            synth.speak(retry);
+          }
+        }catch(e){}
+      },delay);
+    });
+
     return true;
   }catch(e){return false}
 }
@@ -205,27 +286,43 @@ function insertSoundTestButtonV8(){
   card.insertBefore(diag,card.firstChild); card.insertBefore(btn,card.firstChild);
 }
 
-try{if('speechSynthesis' in window){window.speechSynthesis.onvoiceschanged=primeEnglishVoices;setTimeout(primeEnglishVoices,50);setTimeout(primeEnglishVoices,500)}}catch(e){}
+try{
+  if('speechSynthesis' in window){
+    window.speechSynthesis.onvoiceschanged=primeEnglishVoices;
+    setTimeout(primeEnglishVoices,50);
+    setTimeout(primeEnglishVoices,500);
+    document.addEventListener('visibilitychange',function(){
+      if(!document.hidden){
+        try{window.speechSynthesis.resume()}catch(e){}
+        primeEnglishVoices();
+      }
+    });
+    window.addEventListener('pageshow',function(){
+      try{window.speechSynthesis.resume()}catch(e){}
+      primeEnglishVoices();
+    });
+  }
+}catch(e){}
 function safeSet(key,value){try{localStorage.setItem(key,JSON.stringify(value))}catch(e){}}
 function safeGet(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null}catch(e){return null}}
 function storageKey(name){return 'seoldae_'+APP_BOOK_NAME.replace(/\s+/g,'_')+'_'+name}
 function formatDay(d){return d==='all'?'전체 DAY':'DAY '+String(d).padStart(2,'0')}
 function getDayValue(){return byId('dayValue').value||Object.keys(VOCA).sort(function(a,b){return +a-+b})[0]}
-function setDayValue(day){byId('dayValue').value=day;const label=day==='all'?'전체 DAY':formatDay(day)+' ('+(VOCA[day]?VOCA[day].length:0)+'개)';byId('dayButton').textContent=label;Array.from(byId('dayList').querySelectorAll('button')).forEach(function(btn){btn.classList.toggle('active',btn.dataset.day===day)})}
+function setDayValue(day){SD_TTS_SEQ++;sdTtsHardReset();byId('dayValue').value=day;const label=day==='all'?'전체 DAY':formatDay(day)+' ('+(VOCA[day]?VOCA[day].length:0)+'개)';byId('dayButton').textContent=label;Array.from(byId('dayList').querySelectorAll('button')).forEach(function(btn){btn.classList.toggle('active',btn.dataset.day===day)})}
 function populateDays(){const keys=Object.keys(VOCA).sort(function(a,b){return +a-+b});const list=byId('dayList');list.innerHTML='';keys.forEach(function(d){const btn=document.createElement('button');btn.type='button';btn.dataset.day=d;btn.textContent='DAY '+String(d).padStart(2,'0')+'\\n'+VOCA[d].length+'개';btn.addEventListener('click',function(){setDayValue(d);closeDayModal()});list.appendChild(btn)});const all=document.createElement('button');all.type='button';all.dataset.day='all';all.textContent='전체\\n'+keys.length+'DAY';all.addEventListener('click',function(){setDayValue('all');closeDayModal()});list.appendChild(all);setDayValue(keys[0]||'')}
 function openDayModal(){byId('dayModal').classList.remove('hidden')}
 function closeDayModal(){byId('dayModal').classList.add('hidden')}
 function chosenItems(){let d=getDayValue();let arr=d==='all'?Object.values(VOCA).flat():((VOCA[d]||[]).slice());if(byId('modeSelect').value==='wrong'){const saved=safeGet(storageKey('wrongbank'))||[];if(saved.length)arr=saved}return arr.map(function(x){return Object.assign({},x)})}
 function makeQueue(items){const mode=byId('modeSelect').value;let qs=items.map(function(it){const t=(mode==='mix'||mode==='wrong')?(Math.random()<.5?'e2k':'k2e'):mode;return {item:it,type:t,isRetry:false}});shuffleItems(qs);const lim=byId('limitSelect').value;if(lim!=='all')qs=qs.slice(0,Number(lim));return qs}
 function startQuiz(customItems){clearTimeout(autoTimer);const name=byId('studentName').value.trim()||'이름없음';const items=customItems||chosenItems();if(!items.length){alert('출제할 단어가 없습니다.');return}appState={day:getDayValue(),name:name,mode:byId('modeSelect').value,queue:makeQueue(items),idx:0,wrongFirst:[],allWrong:[],answered:false,locked:false,originalTotal:0,score:0,recommend:[]};appState.originalTotal=appState.queue.length;appState.score=appState.originalTotal;setScreen('quiz');renderQuestion()}
-function renderQuestion(){clearTimeout(autoTimer);if(appState.idx>=appState.queue.length)return finishQuiz();const q=appState.queue[appState.idx];appState.answered=false;appState.locked=false;byId('submitButton').disabled=false;byId('answerInput').readOnly=false;byId('answerInput').value='';byId('feedback').textContent='';byId('feedback').className='feedback';byId('correctAnswer').textContent='';byId('nextButton').classList.add('hidden');byId('submitButton').classList.remove('hidden');byId('progressText').textContent=(appState.idx+1)+' / '+appState.queue.length+(q.isRetry?' · 오답 재도전':'');if(q.type==='e2k'){byId('questionHint').textContent='영어 단어의 뜻을 쓰세요';byId('questionWord').textContent=displayEnglishHeadword(q.item.eng);setTimeout(function(){speakEnglish(displayEnglishHeadword(q.item.eng))},200)}else{byId('questionHint').textContent='뜻에 맞는 영어 단어를 쓰세요';byId('questionWord').textContent=q.item.kor}setTimeout(function(){byId('answerInput').focus()},80);safeSet(storageKey('resume'),appState)}
+function renderQuestion(){clearTimeout(autoTimer);if(appState.idx>=appState.queue.length)return finishQuiz();const q=appState.queue[appState.idx];appState.answered=false;appState.locked=false;byId('submitButton').disabled=false;byId('answerInput').readOnly=false;byId('answerInput').value='';byId('feedback').textContent='';byId('feedback').className='feedback';byId('correctAnswer').textContent='';byId('nextButton').classList.add('hidden');byId('submitButton').classList.remove('hidden');byId('progressText').textContent=(appState.idx+1)+' / '+appState.queue.length+(q.isRetry?' · 오답 재도전':'');if(q.type==='e2k'){byId('questionHint').textContent='영어 단어의 뜻을 쓰세요';byId('questionWord').textContent=displayEnglishHeadword(q.item.eng);try{__sdSpeak(displayEnglishHeadword(q.item.eng),.78)}catch(e){try{speakEnglish(displayEnglishHeadword(q.item.eng))}catch(x){}}}else{byId('questionHint').textContent='뜻에 맞는 영어 단어를 쓰세요';byId('questionWord').textContent=q.item.kor}setTimeout(function(){byId('answerInput').focus()},80);safeSet(storageKey('resume'),appState)}
 function submitAnswer(){if(appState.answered||appState.locked)return;const q=appState.queue[appState.idx];const val=byId('answerInput').value;if(!String(val||'').trim()){byId('feedback').textContent='정답을 입력한 뒤 확인을 눌러주세요.';byId('feedback').className='feedback';byId('correctAnswer').textContent='';byId('answerInput').focus();return;}appState.locked=true;byId('submitButton').disabled=true;byId('answerInput').readOnly=true;const grade=gradeAnswer({direction:q.type,userAnswer:val,eng:q.item.eng,korFull:q.item.kor_full||q.item.kor});const ok=!!grade.correct;appState.answered=true;if(ok){byId('feedback').textContent='정답입니다';byId('feedback').className='feedback ok'}else{byId('feedback').textContent=(grade.reason==='pos-conflict'?'품사가 다른 뜻입니다':'다시 외워야 합니다');byId('feedback').className='feedback bad';byId('correctAnswer').textContent='정답: '+displayEnglishHeadword(q.item.eng)+' = '+(q.item.kor_full||q.item.kor);if(!q.isRetry){appState.score--;appState.wrongFirst.push(q.item.eng)}appState.allWrong.push(q.item);appState.queue.push({item:q.item,type:q.type,isRetry:true})}byId('submitButton').classList.add('hidden');byId('nextButton').classList.add('hidden');safeSet(storageKey('resume'),appState);autoTimer=setTimeout(nextQuestion,ok?700:1400)}
 function nextQuestion(){clearTimeout(autoTimer);appState.idx++;renderQuestion()}
 function recommendItems(){const wrong=Array.from(new Set(appState.allWrong.map(function(x){return normEnglish(x.eng)})));const all=Object.values(VOCA).flat();const rec=[];wrong.forEach(function(w){SD_SYNGROUPS.forEach(function(g){if(g.map(normEnglish).includes(w))g.forEach(function(e){const found=all.find(function(it){return normEnglish(it.eng)===normEnglish(e)});if(found)rec.push(found)})});const base=all.find(function(it){return normEnglish(it.eng)===w});if(base){const k=cleanKorean(base.kor).slice(0,2);if(k)all.forEach(function(it){if(it.eng!==base.eng&&cleanKorean(it.kor).includes(k))rec.push(it)})}});return rec.filter(function(v,i,a){return a.findIndex(function(x){return x.eng===v.eng})===i}).slice(0,12)}
 function finishQuiz(){try{localStorage.removeItem(storageKey('resume'))}catch(e){}const pct=Math.round(appState.score/appState.originalTotal*100);const today=new Date();const ds=today.getFullYear()+'.'+String(today.getMonth()+1).padStart(2,'0')+'.'+String(today.getDate()).padStart(2,'0');byId('resultName').textContent=appState.name+' · '+formatDay(appState.day);byId('resultScore').textContent=pct+'%';byId('resultDetail').textContent=appState.score+' / '+appState.originalTotal+' 정답';const wrongUnique=Array.from(new Set(appState.wrongFirst));byId('wrongList').innerHTML=wrongUnique.length?wrongUnique.map(function(w){const it=Object.values(VOCA).flat().find(function(x){return x.eng===w});return '<div class="wrong-item"><b>'+escapeHtml(w)+'</b><span>'+escapeHtml((it&&it.kor)||'')+'</span></div>'}).join(''):'<div class="small">오답 없음 - 완벽합니다!</div>';let report='[설대영어 단어시험 결과]\n이름: '+appState.name+'\n날짜: '+ds+'\n교재: '+APP_BOOK_NAME+'\nDAY: '+formatDay(appState.day).replace('DAY ','')+'\n점수: '+appState.score+' / '+appState.originalTotal+' ('+pct+'%)\n오답 단어: '+(wrongUnique.length?wrongUnique.join(', '):'오답 없음 - 완벽합니다!');report+='\n\n[추천복습]\n'+(wrongUnique.length?'1순위 오답 복습: '+wrongUnique.join(', '):'1순위 오답 복습: 없음')+'\n학습 권장: '+(pct<70?'오늘 DAY 전체를 다시 암기한 뒤 재시험':pct<90?'오답 단어 중심으로 5분 복습 후 재시험':'다음 DAY 진행 가능');byId('resultText').value=report;let bank=safeGet(storageKey('wrongbank'))||[];appState.allWrong.forEach(function(it){if(!bank.find(function(x){return x.eng===it.eng}))bank.push(it)});safeSet(storageKey('wrongbank'),bank.slice(-160));appState.recommend=recommendItems();byId('recommendList').innerHTML=appState.recommend.length?appState.recommend.map(function(it){return '<div class="rec-item"><b>'+escapeHtml(it.eng)+'</b><span>'+escapeHtml(it.kor)+'</span></div>'}).join(''):'<div class="small">추천복습 단어가 없습니다.</div>';byId('recommendQuizButton').disabled=!appState.recommend.length;setScreen('result')}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function startListen(){listenItems=chosenItems();if(!listenItems.length){alert('들을 단어가 없습니다.');return}listenIndex=0;setScreen('listen');renderListen()}
-function renderListen(){const it=listenItems[listenIndex];byId('listenProgress').textContent=(listenIndex+1)+' / '+listenItems.length;byId('listenWord').textContent=displayEnglishHeadword(it.eng);byId('listenKor').textContent=it.kor;speakEnglish(displayEnglishHeadword(it.eng))}
+function startListen(){listenItems=chosenItems();if(!listenItems.length){alert('들을 단어가 없습니다.');return}listenIndex=0;SD_TTS_SEQ++;sdTtsHardReset();primeEnglishVoices();setScreen('listen');renderListen()}
+function renderListen(){const it=listenItems[listenIndex];if(!it)return;byId('listenProgress').textContent=(listenIndex+1)+' / '+listenItems.length;byId('listenWord').textContent=displayEnglishHeadword(it.eng);byId('listenKor').textContent=it.kor;primeEnglishVoices();speakEnglish(displayEnglishHeadword(it.eng))}
 function copyResult(){const text=byId('resultText').value;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){alert('복사되었습니다. 카톡에 붙여넣어 보내세요.')}).catch(function(){fallbackCopy()})}else fallbackCopy()}
 function fallbackCopy(){byId('resultText').select();document.execCommand('copy');alert('복사되었습니다.')}
 function parseReports(txt){return String(txt||'').split('[설대영어 단어시험 결과]').slice(1).map(function(b){const name=(b.match(/이름:\s*(.*)/)||[])[1]||'';const date=(b.match(/날짜:\s*(.*)/)||[])[1]||'';const day=(b.match(/DAY:\s*(.*)/)||[])[1]||'';const sc=b.match(/점수:\s*(\d+)\s*\/\s*(\d+)\s*\((\d+)%\)/);const wrong=(b.match(/오답 단어:\s*(.*)/)||[])[1]||'';if(!name||!date||!day||!sc)return null;return {name:name.trim(),date:date.trim(),day:day.trim(),score:Number(sc[1]),total:Number(sc[2]),pct:Number(sc[3]),wrong:wrong.trim()}}).filter(Boolean)}
@@ -238,8 +335,162 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 <script>
-/* SEOLDAE_V7_STABILITY_MARKER: 2026-08-26
+/* SEOLDAE_TTS_STABILITY_PATCH: 2026-09-02\n   DAY-change TTS reset / silent-drop retry / pageshow-resume\n   SEOLDAE_V7_STABILITY_MARKER: 2026-08-26
    unified auto-next / blank guard / anti-double-submit / e2k pronunciation */
+
+
+/* === SEOLDAE PRONUNCIATION LEARNING PATCH v2 ===
+   - 영어→한글: 기존 자동발음 유지
+   - 한글→영어: 제출 후 정답/오답 모두 목표 영어 자동발음
+   - 결과화면: 오답 단어마다 🔊 다시 듣기
+*/
+(function(){
+  function currentInfo(){
+    try{
+      if(typeof state!=='undefined' && state){
+        const c=state.current || (state.queue && typeof state.idx==='number' ? state.queue[state.idx] : null);
+        if(c){
+          if(c.item && c.item.eng)return {eng:c.item.eng,dir:c.type||c.direction};
+          if(c.eng)return {eng:c.eng,dir:c.type||c.direction};
+        }
+      }
+    }catch(e){}
+    try{
+      if(typeof appState!=='undefined' && appState){
+        const c=appState.current || appState.currentQuestion || (appState.queue && typeof appState.index==='number' ? appState.queue[appState.index] : null);
+        if(c){
+          if(c.item&&c.item.eng)return {eng:c.item.eng,dir:c.type||c.direction};
+          if(c.eng)return {eng:c.eng,dir:c.type||c.direction};
+        }
+      }
+    }catch(e){}
+    try{
+      if(typeof app!=='undefined' && app && app.current){
+        return {eng:app.current.eng||(app.current.item&&app.current.item.eng),dir:app.current.type||app.current.direction};
+      }
+    }catch(e){}
+    try{
+      if(typeof current!=='undefined' && current){
+        return {eng:current.eng||(current.item&&current.item.eng),dir:current.type||current.direction};
+      }
+    }catch(e){}
+    return {eng:'',dir:''};
+  }
+
+  function postSubmitPronounce(){
+    const info=currentInfo();
+    if(info && info.eng && String(info.dir).toLowerCase()==='k2e'){
+      setTimeout(()=>{try{window.__sdSpeak(info.eng,.78)}catch(e){}},90);
+    }
+  }
+
+  function decorateWrongItems(root){
+    const scope=root||document;
+    scope.querySelectorAll('.wrong-item').forEach(function(row){
+      if(row.querySelector('.sd-wrong-speak'))return;
+      let wordEl=row.querySelector('.w')||row.querySelector('b')||row.querySelector('strong')||row.querySelector('span');
+      if(!wordEl)return;
+      const eng=String(wordEl.textContent||'').trim();
+      if(!/[A-Za-z]/.test(eng))return;
+      const b=document.createElement('button');
+      b.type='button';
+      b.className='sd-wrong-speak';
+      b.textContent='🔊 다시 듣기';
+      b.setAttribute('aria-label',eng+' 발음 다시 듣기');
+      b.addEventListener('click',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        try{window.__sdSpeak(eng,.78)}catch(e){}
+      });
+      row.appendChild(b);
+    });
+  }
+
+  function install(){
+    const submitIds=['submitBtn','submit-btn','checkBtn','check-btn'];
+    submitIds.forEach(function(id){
+      const b=document.getElementById(id);
+      if(b&&!b.dataset.sdPronHook){
+        b.dataset.sdPronHook='1';
+        b.addEventListener('click',postSubmitPronounce);
+      }
+    });
+    decorateWrongItems(document);
+    const obs=new MutationObserver(function(ms){
+      let need=false;
+      ms.forEach(m=>{if(m.addedNodes&&m.addedNodes.length)need=true});
+      if(need)decorateWrongItems(document);
+    });
+    obs.observe(document.body,{childList:true,subtree:true});
+    document.querySelectorAll('#dayList button,#day-list button,[data-day]').forEach(function(b){
+      b.addEventListener('click',function(){try{window.__sdTtsReset()}catch(e){}});
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+
+
+
+/* === SEOLDAE QUIZ AUDIO FAIL-SAFE v3 === */
+(function(){
+  function info(){
+    try{
+      if(typeof appState!=='undefined'&&appState&&appState.queue&&typeof appState.idx==='number'){
+        const q=appState.queue[appState.idx];
+        if(q){const it=q.item||q;return {dir:q.type||q.direction,eng:it.eng||q.eng};}
+      }
+    }catch(e){}
+    try{
+      if(typeof state!=='undefined'&&state&&state.current){
+        const c=state.current; return {dir:c.type||c.direction,eng:(c.item&&c.item.eng)||c.eng};
+      }
+    }catch(e){}
+    try{
+      if(typeof app!=='undefined'&&app&&app.current){
+        return {dir:app.current.type||app.current.direction,eng:(app.current.item&&app.current.item.eng)||app.current.eng};
+      }
+    }catch(e){}
+    try{
+      if(typeof current!=='undefined'&&current){
+        return {dir:current.type||current.direction,eng:(current.item&&current.item.eng)||current.eng};
+      }
+    }catch(e){}
+    return {dir:'',eng:''};
+  }
+
+  function ensureBtn(){
+    let b=document.getElementById('sdQuizSpeakBtn');
+    if(!b){
+      b=document.createElement('button');
+      b.id='sdQuizSpeakBtn'; b.type='button';
+      b.textContent='🔊 다시 듣기';
+      b.style.cssText='display:none;margin:10px auto 0;padding:9px 14px;border-radius:10px;font-size:14px;width:auto;min-width:110px;';
+      b.addEventListener('click',function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        const x=info();
+        if(String(x.dir).toLowerCase()==='e2k'&&x.eng){
+          try{window.__sdSpeak(x.eng,.78)}catch(e){}
+        }
+      });
+      const q=document.getElementById('questionWord')||document.getElementById('q-word')||document.getElementById('qword');
+      if(q&&q.parentNode) q.parentNode.insertBefore(b,q.nextSibling);
+      else document.body.appendChild(b);
+    }
+    return b;
+  }
+  function refresh(){
+    const b=ensureBtn(), x=info();
+    b.style.display=(String(x.dir).toLowerCase()==='e2k'&&x.eng)?'block':'none';
+  }
+  function install(){
+    refresh();
+    const mo=new MutationObserver(refresh);
+    mo.observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class']});
+    document.addEventListener('click',function(){setTimeout(refresh,0)},true);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+
 </script>
 </body>
 </html>
