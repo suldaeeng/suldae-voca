@@ -241,7 +241,7 @@ function gradeAnswer(ans,item,type){
 function speak(word){try{speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(String(word).replace(/~/g,''));u.lang='en-US';u.rate=.82;speechSynthesis.speak(u);}catch(e){}}
 function startQuiz(custom){state.name=$('name').value.trim(); if(!state.name){alert('이름을 입력하세요.');$('name').focus();return;} state.queue=custom||buildQueue(); if(!state.queue.length){alert(state.mode==='wrong'?'저장된 오답이 없습니다. 먼저 일반 시험을 보세요.':'선택한 범위에 단어가 없습니다.');return;} state.originalTotal=state.queue.length; state.firstTry=0; state.wrongWords=[]; state.everWrong=[]; state.locked=false; show('quiz'); renderQuestion();}
 function renderQuestion(){state.locked=false;$('answer').value='';$('fb').textContent='';$('fb').className='feedback';$('correct').textContent='';state.current=state.queue.shift();let done=state.originalTotal-state.queue.filter(x=>!x.isRetry).length-(state.current.isRetry?0:1);$('prog').textContent=`${dayLabel(state.current.day)} · ${Math.max(1,done)} / ${state.originalTotal}`;if(state.current.type==='e2k'){$('qhint').textContent='다음 영어 단어의 뜻을 쓰세요.';$('qword').textContent=state.current.eng;try{__sdSpeak(state.current.eng,.78)}catch(e){}}else{$('qhint').textContent='다음 우리말에 알맞은 영어 단어를 쓰세요.';$('qword').textContent=state.current.kor;}setTimeout(()=>$('answer').focus(),80);}
-function submitAnswer(){if(state.locked||!state.current)return;let ans=$('answer').value.trim();if(!ans)return;state.locked=true;let g=gradeAnswer(ans,state.current,state.current.type);if(g.correct){$('fb').textContent='정답입니다.';$('fb').className='feedback ok';if(!state.current.isRetry)state.firstTry++;setTimeout(nextAfter,650);}else{$('fb').textContent='다시 확인하세요.';$('fb').className='feedback bad';$('correct').textContent='정답: '+(state.current.type==='e2k'?state.current.kor_full:state.current.eng);if(!state.current.isRetry){state.wrongWords.push(state.current);state.everWrong.push(state.current);}state.queue.push({...state.current,isRetry:true});setTimeout(nextAfter,1350);}}
+function submitAnswer(){if(state.locked||!state.current)return;let ans=$('answer').value.trim();if(!ans)return;state.locked=true;let g=gradeAnswer(ans,state.current,state.current.type);setTimeout(()=>{try{__sdSpeak(state.current.eng,.86)}catch(e){}},80);if(g.correct){$('fb').textContent='정답입니다.';$('fb').className='feedback ok';if(!state.current.isRetry)state.firstTry++;setTimeout(nextAfter,650);}else{$('fb').textContent='다시 확인하세요.';$('fb').className='feedback bad';$('correct').textContent='정답: '+(state.current.type==='e2k'?state.current.kor_full:state.current.eng);if(!state.current.isRetry){state.wrongWords.push(state.current);state.everWrong.push(state.current);}state.queue.push({...state.current,isRetry:true});setTimeout(nextAfter,1350);}}
 function nextAfter(){if(state.queue.length)renderQuestion();else showResult();}
 function showResult(){saveWrongBank(state.everWrong);show('result');let pct=Math.round(state.firstTry/state.originalTotal*100);$('resName').textContent=state.name+' · '+dayLabel(state.day);$('resScore').textContent=pct+'%';$('resDetail').textContent=`${state.firstTry} / ${state.originalTotal}`;let uniq=[...new Map(state.everWrong.map(w=>[w.eng,w])).values()];let wrongText=uniq.length?uniq.map(w=>w.eng).join(', '):'오답 없음 - 완벽합니다!';let date=new Date();let ds=`${date.getFullYear()}.${String(date.getMonth()+1).padStart(2,'0')}.${String(date.getDate()).padStart(2,'0')}`;$('resText').value=`[설대영어 단어시험 결과]\n이름: ${state.name}\n날짜: ${ds}\nDAY: ${dayLabel(state.day)}\n점수: ${state.firstTry} / ${state.originalTotal} (${pct}%)\n오답 단어: ${wrongText}`;$('wrongList').innerHTML=uniq.length?uniq.map(w=>`<div class="wrong-item"><b>${esc(w.eng)}</b><span>${esc(w.kor)}</span></div>`).join(''):'<div class="small">오답 없음</div>';$('retryWrongBtn').disabled=!uniq.length;}
 function setupDays(){let box=$('dayList');box.innerHTML='';Object.keys(VOCA).sort((a,b)=>+a-+b).forEach(d=>{let b=document.createElement('button');b.type='button';b.textContent='DAY '+String(d).padStart(2,'0');b.onclick=()=>selectDay(d);box.appendChild(b);});let all=document.createElement('button');all.type='button';all.className='wide';all.textContent='전체 DAY';all.onclick=()=>selectDay('all');box.appendChild(all);}
@@ -393,9 +393,7 @@ setupDays();bind();
 
   function postSubmitPronounce(){
     const info=currentInfo();
-    if(info && info.eng && String(info.dir).toLowerCase()==='k2e'){
-      setTimeout(()=>{try{window.__sdSpeak(info.eng,.78)}catch(e){}},90);
-    }
+    /* v4: 실제 제출 함수에서 모든 방향의 제출 후 발음을 직접 처리함 */
   }
 
   function decorateWrongItems(root){
@@ -503,6 +501,91 @@ setupDays();bind();
     document.addEventListener('click',function(){setTimeout(refresh,0)},true);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+})();
+
+
+
+/* === SEOLDAE SOUND CHECK BOOST v4 ===
+   SpeechSynthesis volume is fixed at the browser maximum (1.0).
+   A longer, clearer phrase is used so students can verify media volume.
+*/
+(function(){
+  function sdRunLoudSoundCheck(btn,diag){
+    try{
+      if(!('speechSynthesis' in window)){
+        if(diag)diag.textContent='이 기기에서는 음성 기능을 사용할 수 없습니다. Chrome · Safari · Samsung Internet에서 다시 열어주세요.';
+        return;
+      }
+      try{ if(window.__sdTtsReset) window.__sdTtsReset(); }catch(e){}
+      if(diag)diag.textContent='소리를 확인하는 중입니다. 작게 들리면 휴대폰의 미디어 음량을 올려주세요.';
+      if(btn)btn.disabled=true;
+      setTimeout(function(){
+        try{
+          if(window.__sdSpeak) window.__sdSpeak('Hello! Hello! Sound check.',.92);
+          else {
+            const u=new SpeechSynthesisUtterance('Hello! Hello! Sound check.');
+            u.lang='en-US'; u.rate=.92; u.pitch=1.0; u.volume=1.0;
+            window.speechSynthesis.speak(u);
+          }
+        }catch(e){}
+      },60);
+      setTimeout(function(){
+        if(btn)btn.disabled=false;
+        if(diag)diag.textContent='Hello가 잘 들렸다면 준비 완료입니다. 소리가 작으면 기기의 미디어 음량을 더 올려주세요.';
+      },1750);
+    }catch(e){
+      if(btn)btn.disabled=false;
+      if(diag)diag.textContent='소리 재생에 실패했습니다. 브라우저를 다시 열고 확인해 주세요.';
+    }
+  }
+
+  function installSoundCheck(){
+    let old=document.getElementById('soundTestBtn');
+    if(old){
+      /* 기존 버튼의 오래된 이벤트를 제거하기 위해 같은 모양의 새 버튼으로 교체 */
+      const fresh=old.cloneNode(true);
+      fresh.textContent='🔊 소리 확인';
+      old.parentNode.replaceChild(fresh,old);
+      let diag=document.getElementById('soundDiag');
+      if(!diag){
+        diag=document.createElement('div');
+        diag.id='soundDiag';
+        diag.className='small';
+        diag.style.marginTop='7px';
+        fresh.insertAdjacentElement('afterend',diag);
+      }
+      fresh.addEventListener('click',function(){sdRunLoudSoundCheck(fresh,diag)});
+      return;
+    }
+
+    const setup=document.getElementById('setup')||document.getElementById('setup-screen');
+    if(!setup)return;
+    const card=setup.querySelector('.card')||setup;
+    const wrap=document.createElement('div');
+    wrap.className='sd-sound-check-wrap';
+    wrap.style.marginTop='12px';
+
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.id='soundTestBtn';
+    btn.className='secondary light';
+    btn.textContent='🔊 소리 확인';
+    btn.style.width='100%';
+
+    const diag=document.createElement('div');
+    diag.id='soundDiag';
+    diag.className='small';
+    diag.style.marginTop='7px';
+    diag.textContent='시험 전 소리가 잘 들리는지 확인하세요.';
+
+    wrap.appendChild(btn);
+    wrap.appendChild(diag);
+    card.appendChild(wrap);
+    btn.addEventListener('click',function(){sdRunLoudSoundCheck(btn,diag)});
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',installSoundCheck);
+  else installSoundCheck();
 })();
 
 </script></body></html>
