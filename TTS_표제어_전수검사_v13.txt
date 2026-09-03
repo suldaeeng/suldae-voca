@@ -1,0 +1,150 @@
+설대영어 9개 단어퀴즈앱 TTS 표제어 전수검사 v13
+기호/긴구/A·B 자리표시/비ASCII가 포함된 표제어를 별도 점검한 목록입니다.
+이 목록의 표제어는 화면 표기는 유지하되 v13 spokenHeadword 정규화 후 발음됩니다.
+
+1hour-elementary	put on ~	기호
+1hour-elementary	find out ~	기호
+1hour-elementary	think up ~	기호
+1hour-elementary	be famous for ~	기호
+1hour-elementary	because of ~	기호
+1hour-elementary	take out 1 ~	기호
+1hour-elementary	be different from ~	기호
+1hour-elementary	pick up 1 ~	기호
+1hour-elementary	take care of ~	기호
+1hour-elementary	not ~ anymore	기호
+1hour-elementary	cut ~ into pieces ~	기호, 긴구
+1hour-elementary	get along with ~	기호
+1hour-elementary	get to ~	기호
+1hour-elementary	take away ~	기호
+1hour-elementary	have ~ in common	기호
+1hour-elementary	be covered with ~	기호
+1hour-elementary	look through ~	기호
+1hour-elementary	throw away ~	기호
+1hour-elementary	hang out with ~	기호
+1hour-elementary	care for 1 ~	기호
+1hour-elementary	not ~ at all	기호
+1hour-elementary	make fun of ~	기호
+1hour-elementary	hand out ~	기호
+1hour-elementary	ask ~ for … ~	기호, 긴구, 비ASCII
+1hour-elementary	turn ~ into … ~	기호, 긴구, 비ASCII
+1hour-elementary	check out 1 ~	기호
+1hour-elementary	fill out ~	기호
+1hour-elementary	more than ~	기호
+1hour-elementary	hand in ~	기호
+1hour-elementary	instead of ~	기호
+1hour-elementary	would like to-v ~	기호
+1hour-elementary	set up 1 ~	기호
+1hour-elementary	ahead of 1 ~	기호
+1hour-elementary	be filled with ~	기호
+1hour-elementary	be familiar with ~	기호
+1hour-elementary	get used to ~	기호
+1hour-elementary	take part in ~	기호
+1hour-elementary	keep in mind ~	기호
+1hour-elementary	run across ~	기호
+1hour-elementary	sign up for ~	기호
+1hour-elementary	such as ~	기호
+1hour-elementary	put up ~	기호
+1hour-elementary	be related to ~	기호
+1hour-elementary	use up ~	기호
+1hour-elementary	account for 1 ~	기호
+1hour-elementary	in case of ~	기호
+1hour-elementary	put together ~	기호
+1hour-elementary	be stuck in ~	기호
+1hour-elementary	tell ~ from … ~	기호, 긴구, 비ASCII
+1hour-elementary	watch over ~	기호
+1hour-elementary	bring back 1 ~	기호
+alist-advanced	arrive at[in]	기호
+alist-advanced	do one’s best	비ASCII
+alist-advanced	too ~ to…	기호, 비ASCII
+alist-advanced	How about…?	기호, 비ASCII
+alist-advanced	Why don’t	비ASCII
+alist-advanced	keep one’s word	비ASCII
+alist-advanced	Would you like to…?	기호, 비ASCII
+alist-advanced	I’d like to	A/B자리표시, 비ASCII
+alist-basic	I	A/B자리표시
+alist-basic	This is…	기호, 비ASCII
+alist-basic	Let's…	기호, 비ASCII
+alist-basic	There is…	기호, 비ASCII
+alist-basic	There are…	기호, 비ASCII
+alist-basic	P.E.	A/B자리표시
+hackers-middle	tell A from B	A/B자리표시
+hackers-middle	hold on (to)	기호
+hackers-middle	ask A for B	A/B자리표시
+hackers-middle	have trouble ~ing	기호
+hackers-middle	prevent A from B	A/B자리표시
+hackers-middle	hang out (with)	기호
+hackers-middle	spend one's money on ~ing	기호, 긴구
+hackers-middle	sign up (for)	기호
+hackers-middle	turn A into B	A/B자리표시
+hackers-middle	adapt to ~	기호
+hackers-middle	provide A with B	A/B자리표시
+hackers-middle	accuse A of B	A/B자리표시
+junior-voca-advanced	on one’s feet	비ASCII
+junior-voca-advanced	talk behind one’s back	비ASCII
+junior-voca-advanced	B as well as A	긴구, A/B자리표시
+junior-voca-advanced	allow A to	A/B자리표시
+junior-voca-advanced	keep A in mind :	기호, 긴구, A/B자리표시
+junior-voca-advanced	not only A but also B	긴구, A/B자리표시
+junior-voca-advanced	put A in danger:	기호, A/B자리표시
+junior-voca-advanced	as ~ as possible	기호
+junior-voca-advanced	take A for granted	A/B자리표시
+junior-voca-advanced	be free of[from]	기호
+junior-voca-basic	put on ~	기호
+junior-voca-basic	find out ~	기호
+junior-voca-basic	think up ~	기호
+junior-voca-basic	be famous for ~	기호
+junior-voca-basic	because of ~	기호
+junior-voca-basic	take out 1 ~	기호
+junior-voca-basic	be different from ~	기호
+junior-voca-basic	pick up 1 ~	기호
+junior-voca-basic	take care of ~	기호
+junior-voca-basic	not ~ anymore	기호
+junior-voca-basic	cut ~ into pieces ~	기호, 긴구
+junior-voca-basic	get along with ~	기호
+junior-voca-basic	get to ~	기호
+junior-voca-basic	take away ~	기호
+junior-voca-basic	have ~ in common	기호
+junior-voca-basic	be covered with ~	기호
+junior-voca-basic	look through ~	기호
+junior-voca-basic	throw away ~	기호
+junior-voca-basic	hang out with ~	기호
+junior-voca-basic	care for 1 ~	기호
+junior-voca-basic	not ~ at all	기호
+junior-voca-basic	make fun of ~	기호
+junior-voca-basic	hand out ~	기호
+junior-voca-basic	ask ~ for … ~	기호, 긴구, 비ASCII
+junior-voca-basic	turn ~ into … ~	기호, 긴구, 비ASCII
+junior-voca-basic	check out 1 ~	기호
+junior-voca-basic	fill out ~	기호
+junior-voca-basic	more than ~	기호
+junior-voca-basic	hand in ~	기호
+junior-voca-basic	instead of ~	기호
+junior-voca-basic	would like to-v ~	기호
+junior-voca-basic	set up 1 ~	기호
+junior-voca-basic	ahead of 1 ~	기호
+junior-voca-basic	be filled with ~	기호
+junior-voca-basic	be familiar with ~	기호
+junior-voca-basic	get used to ~	기호
+junior-voca-basic	take part in ~	기호
+junior-voca-basic	keep in mind ~	기호
+junior-voca-basic	run across ~	기호
+junior-voca-basic	sign up for ~	기호
+junior-voca-basic	such as ~	기호
+junior-voca-basic	put up ~	기호
+junior-voca-basic	be related to ~	기호
+junior-voca-basic	use up ~	기호
+junior-voca-basic	account for 1 ~	기호
+junior-voca-basic	in case of ~	기호
+junior-voca-basic	put together ~	기호
+junior-voca-basic	be stuck in ~	기호
+junior-voca-basic	tell ~ from … ~	기호, 긴구, 비ASCII
+junior-voca-basic	watch over ~	기호
+junior-voca-basic	bring back 1 ~	기호
+voca-highschool-basic	judg(e)ment	기호
+voca-highschool-basic	be made (up) of	기호
+voca-highschool-basic	regard A as B	A/B자리표시
+voca-highschool-basic	B as well as A	긴구, A/B자리표시
+voca-highschool-basic	not only A but (also) B	기호, 긴구, A/B자리표시
+voca-highschool-basic	until[up to] now	기호
+wordmaster-highschool-basic	in addition (to)	기호
+wordmaster-highschool-basic	chances are that~	기호

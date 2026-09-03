@@ -603,60 +603,87 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
 
 
 
-/* === SEOLDAE TTS CORE v7 — iOS FIRST ===
-   핵심:
-   - speak 직전에 cancel()하지 않음 (iOS Safari 무음 방지)
-   - SpeechSynthesisUtterance 참조를 보관
-   - 확인/다시듣기/시험시작 pointerdown에서 음성 세션 prime
-   - 결과 오답 버튼은 data-eng에 실제 영어를 직접 저장
+
+/* === SEOLDAE TTS CORE v13 — FAST START / STALL RECOVERY ===
+   목적:
+   - therapist처럼 평범한 단어도 음성이 늦게 시작되거나 무음이 되는 현상 방지
+   - 가능하면 기기 내장(localService) 영어 음성을 우선 사용
+   - pending 상태가 오래 걸리면 자동으로 stale queue를 정리하고 재시도
+   - 괄호/대괄호가 있는 학습용 표제어는 실제 발음형으로 변환
 */
 (function(){
   if(!('speechSynthesis' in window)) return;
 
   const synth = window.speechSynthesis;
-  let held = [];
   let voice = null;
+  let held = [];
+  let seq = 0;
 
-  function cleanText(x){
-    return String(x || '')
-      .replace(/[~…]/g,' ')
-      .replace(/\s+/g,' ')
-      .trim();
+  function spokenHeadword(raw){
+    let s=String(raw||'').trim();
+    if(!s) return s;
+
+    /* judg(e)ment -> judgement */
+    s=s.replace(/([A-Za-z])\(([A-Za-z]+)\)(?=[A-Za-z])/g,'$1$2');
+
+    /* 선택 요소는 자연스러운 대표형으로 */
+    s=s.replace(/\(to\)/gi,' to ')
+       .replace(/\(with\)/gi,' with ')
+       .replace(/\(for\)/gi,' for ')
+       .replace(/\(up\)/gi,' up ')
+       .replace(/\(also\)/gi,' also ');
+
+    /* arrive at[in] -> arrive at / until[up to] now -> until now */
+    s=s.replace(/([A-Za-z]+)\[([A-Za-z ]+)\]/g,'$1');
+
+    /* 학습용 기호 정리 */
+    s=s.replace(/[()[\]]/g,' ')
+       .replace(/[~…]/g,' ')
+       .replace(/\s+/g,' ')
+       .trim();
+    return s;
   }
 
   function pickVoice(){
     try{
-      const vs = synth.getVoices() || [];
+      const vs=synth.getVoices()||[];
+      const english=vs.filter(v=>/^en(?:-|$)/i.test(v.lang||''));
+      const local=english.filter(v=>v.localService===true);
+
       voice =
-        vs.find(v => /^en-US$/i.test(v.lang) && /Samantha|Ava|Siri|Google|Microsoft|English/i.test(v.name)) ||
-        vs.find(v => /^en-US/i.test(v.lang)) ||
-        vs.find(v => /^en-/i.test(v.lang)) ||
-        vs.find(v => /^en/i.test(v.lang)) ||
+        local.find(v=>/^en-US$/i.test(v.lang) && /Samantha|Ava|Siri|Microsoft|English/i.test(v.name)) ||
+        local.find(v=>/^en-US/i.test(v.lang)) ||
+        local[0] ||
+        english.find(v=>/^en-US$/i.test(v.lang) && /Samantha|Ava|Siri|Google|Microsoft|English/i.test(v.name)) ||
+        english.find(v=>/^en-US/i.test(v.lang)) ||
+        english[0] ||
         null;
-    }catch(e){ voice = null; }
+    }catch(e){ voice=null; }
     return voice;
   }
 
-  function keep(u){
+  function hold(u){
     held.push(u);
-    if(held.length > 12) held = held.slice(-12);
-    const done = () => {
-      const i = held.indexOf(u);
-      if(i >= 0) held.splice(i,1);
+    if(held.length>18) held=held.slice(-18);
+    const done=function(){
+      const i=held.indexOf(u);
+      if(i>=0) held.splice(i,1);
     };
-    u.onend = done;
-    u.onerror = done;
+    u.onend=done;
+    u.onerror=done;
   }
 
-  function makeUtterance(text, rate){
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US';
-    u.rate = Number(rate) || 0.86;
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    const v = voice || pickVoice();
-    if(v) u.voice = v;
-    keep(u);
+  function makeUtt(text,rate,useVoice){
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US';
+    u.rate=Number(rate)||0.86;
+    u.pitch=1.0;
+    u.volume=1.0;
+    if(useVoice){
+      const v=voice||pickVoice();
+      if(v) u.voice=v;
+    }
+    hold(u);
     return u;
   }
 
@@ -664,149 +691,142 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
     try{
       synth.resume();
       pickVoice();
-      /* iOS: 사용자 제스처 안에서 빈 utterance로 세션 활성화 */
       if(!synth.speaking && !synth.pending){
-        const u = new SpeechSynthesisUtterance('');
-        u.lang='en-US'; u.volume=1; u.rate=1;
-        keep(u);
+        const u=new SpeechSynthesisUtterance('');
+        u.lang='en-US'; u.rate=1; u.volume=1;
+        hold(u);
         synth.speak(u);
       }
       return true;
     }catch(e){ return false; }
   }
 
-  function speakNow(text, rate){
-    const t = cleanText(text);
-    if(!t) return false;
+  function launch(text,rate,mySeq,useVoice,retryLevel){
+    if(mySeq!==seq) return false;
+    let started=false;
+    let u;
+    try{
+      synth.resume();
+      u=makeUtt(text,rate,useVoice);
+      const oldEnd=u.onend, oldErr=u.onerror;
+
+      u.onstart=function(){ started=true; };
+      u.onend=function(ev){ started=true; if(oldEnd) oldEnd.call(this,ev); };
+      u.onerror=function(ev){ if(oldErr) oldErr.call(this,ev); };
+
+      synth.speak(u);
+    }catch(e){ return false; }
+
+    const wait = retryLevel===0 ? 420 : 900;
+    setTimeout(function(){
+      if(mySeq!==seq) return;
+
+      /* 실제로 시작했거나 현재 말하고 있으면 건드리지 않는다. */
+      if(started || synth.speaking) return;
+
+      /* pending만 오래 지속되는 경우가 therapist 같은 '한참 뒤 발음'의 핵심 원인 */
+      try{ synth.cancel(); }catch(e){}
+      try{ synth.resume(); }catch(e){}
+
+      if(retryLevel===0){
+        /* 첫 재시도: 짧게 비운 뒤 같은 로컬 영어 음성 */
+        setTimeout(function(){
+          if(mySeq!==seq) return;
+          launch(text,rate,mySeq,true,1);
+        },110);
+      }else if(retryLevel===1){
+        /* 두 번째 재시도: 특정 voice 지정 없이 브라우저 기본 영어 TTS 사용 */
+        setTimeout(function(){
+          if(mySeq!==seq) return;
+          launch(text,rate,mySeq,false,2);
+        },130);
+      }
+    },wait);
+    return true;
+  }
+
+  function speakNow(raw,rate){
+    const text=spokenHeadword(raw);
+    if(!text) return false;
+    const mySeq=++seq;
+
     try{
       synth.resume();
       pickVoice();
-      /* 중요: 여기서는 cancel()하지 않는다. */
-      const u = makeUtterance(t, rate);
-      synth.speak(u);
 
-      /* iOS에서 조용히 누락되는 경우 한 번만 재시도.
-         기존 utterance가 실제 시작되지 않았을 때만 실행한다. */
-      let started = false;
-      const oldStart = u.onstart;
-      u.onstart = function(ev){
-        started = true;
-        if(oldStart) oldStart.call(this,ev);
-      };
-      setTimeout(function(){
-        try{
-          if(started) return;
-          if(!synth.speaking && !synth.pending){
-            synth.resume();
-            const u2 = makeUtterance(t, rate);
-            synth.speak(u2);
-          }
-        }catch(e){}
-      }, 260);
-      return true;
-    }catch(e){ return false; }
-  }
-
-  function speakFresh(text, rate){
-    const t = cleanText(text);
-    if(!t) return false;
-    try{
-      synth.resume();
-      /* 이미 다른 발음이 진행 중인 경우에만 정리하고,
-         바로 speak하지 않고 짧게 기다린다. */
+      /* 이전 단어가 실제 재생 중/대기 중이면 새 단어가 몇 초 뒤 밀리지 않도록
+         queue를 먼저 정리한다. cancel 직후 즉시 speak하지 않고 짧은 간격을 둔다. */
       if(synth.speaking || synth.pending){
-        synth.cancel();
-        setTimeout(function(){ speakNow(t,rate); }, 180);
+        try{synth.cancel();}catch(e){}
+        setTimeout(function(){
+          if(mySeq!==seq) return;
+          launch(text,rate,mySeq,true,0);
+        },95);
         return true;
       }
-      return speakNow(t,rate);
+      return launch(text,rate,mySeq,true,0);
     }catch(e){ return false; }
   }
 
-  window.__sdPrimeAudio = prime;
-  window.__sdSpeak = speakNow;
-  window.__sdSpeakNow = speakNow;
-  window.__sdSpeakFresh = speakFresh;
-  window.__sdTtsReset = function(){
-    try{ synth.resume(); pickVoice(); }catch(e){}
-  };
-  window.__sdTtsPrime = pickVoice;
+  function reset(){
+    seq++;
+    try{
+      if(synth.pending && !synth.speaking) synth.cancel();
+      synth.resume();
+      pickVoice();
+    }catch(e){}
+  }
+
+  window.__sdSpokenHeadword=spokenHeadword;
+  window.__sdPrimeAudio=prime;
+  window.__sdSpeak=speakNow;
+  window.__sdSpeakNow=speakNow;
+  window.__sdSpeakFresh=speakNow;
+  window.__sdTtsReset=reset;
+  window.__sdTtsPrime=pickVoice;
+  window.SEOLDAE_TTS_VERSION='13-fast-start';
 
   try{
-    synth.onvoiceschanged = pickVoice;
+    synth.onvoiceschanged=pickVoice;
     pickVoice();
-    setTimeout(pickVoice,100);
-    setTimeout(pickVoice,700);
+    setTimeout(pickVoice,80);
+    setTimeout(pickVoice,400);
+    setTimeout(pickVoice,1200);
   }catch(e){}
 
-  document.addEventListener('visibilitychange', function(){
-    if(!document.hidden){
-      try{synth.resume();}catch(e){}
-      pickVoice();
-    }
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden) reset();
   });
-  window.addEventListener('pageshow', function(){
-    try{synth.resume();}catch(e){}
-    pickVoice();
-  });
+  window.addEventListener('pageshow',reset);
 
-  /* 실제 탭이 시작되는 순간 세션을 깨운다. */
-  document.addEventListener('pointerdown', function(ev){
-    const b = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+  /* 시험 시작/확인/다시듣기 등의 실제 터치 순간 TTS 세션을 미리 깨운다. */
+  document.addEventListener('pointerdown',function(ev){
+    const b=ev.target&&ev.target.closest?ev.target.closest('button'):null;
     if(!b) return;
-    const txt = (b.textContent || '').trim();
-    if(
-      /확인|제출|시험 시작|시작|다시 듣기|정답 발음|소리 확인/.test(txt) ||
-      /submit|start|sound|speak/i.test(b.id || '')
-    ){
+    const txt=(b.textContent||'').trim();
+    if(/확인|제출|시험 시작|시작|다시 듣기|정답 발음|소리 확인/.test(txt) ||
+       /submit|start|sound|speak/i.test(b.id||'')){
       prime();
     }
-  }, true);
+  },true);
 
-  /* 오답 다시듣기: data-eng를 직접 읽는다. */
-  document.addEventListener('click', function(ev){
-    const b = ev.target && ev.target.closest ? ev.target.closest('.sd-wrong-speak') : null;
+  /* 오답 다시 듣기 */
+  document.addEventListener('click',function(ev){
+    const b=ev.target&&ev.target.closest?ev.target.closest('.sd-wrong-speak'):null;
     if(!b) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
-    const eng = cleanText(b.dataset.eng || '');
+    const eng=(b.dataset.eng||'').trim();
     if(eng){
       try{
-        const a = document.activeElement;
-        if(a && /INPUT|TEXTAREA/.test(a.tagName)) a.blur();
+        const a=document.activeElement;
+        if(a&&/INPUT|TEXTAREA/.test(a.tagName)) a.blur();
       }catch(e){}
       prime();
       speakNow(eng,0.86);
     }
-  }, true);
-
-  /* 결과화면 오답 행에 버튼 및 data-eng를 확실히 부착 */
-  function ensureWrongButtons(){
-    document.querySelectorAll('.wrong-item').forEach(function(row){
-      const wordEl = row.querySelector('.w') || row.querySelector('b') || row.querySelector('strong');
-      const eng = cleanText(wordEl ? wordEl.textContent : '');
-      if(!eng || !/[A-Za-z]/.test(eng)) return;
-      let b = row.querySelector('.sd-wrong-speak');
-      if(!b){
-        b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'sd-wrong-speak';
-        b.textContent = '🔊 다시 듣기';
-        row.appendChild(b);
-      }
-      b.dataset.eng = eng;
-    });
-  }
-
-  function boot(){
-    ensureWrongButtons();
-    new MutationObserver(ensureWrongButtons).observe(document.body,{childList:true,subtree:true});
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-  else boot();
+  },true);
 })();
-
 
 
 /* =========================================================
@@ -855,7 +875,9 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
     ['곤경','고통','괴로움','고난'],
     ['설립','설치','창립','설정'],
     ['엄격하게','엄하게','철저하게'],
-    ['강렬하게','격렬하게','강하게']
+    ['강렬하게','격렬하게','강하게'],
+    ['근처','인근','가까운곳','가까이','주변'],
+    ['해외','외국']
   ];
 
   const ENG_GROUPS = [
@@ -943,7 +965,7 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
     expandSquare(full).forEach(v=>{
       stripParenNotes(v).forEach(x=>{
         if(x.trim()) set.add(x.trim());
-        x.split(/[\/;,，、]|\d+\s*\./).forEach(p=>{ if(p.trim()) set.add(p.trim()); });
+        x.split(/[\/,;,，、]|\d+\s*\./).forEach(p=>{ if(p.trim()) set.add(p.trim()); });
       });
     });
     return [...set];
@@ -964,6 +986,18 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
     if(!c) return [];
     set.add(c);
     set.add(dropInnerParticles(c));
+    /* 한국어 의미어근 후보:
+       근처의 / 근처에 / 근처에서 → 근처
+       해외의 / 해외에 / 해외로 → 해외
+       단, 최종 판정에서는 기존 품사 안전장치를 유지한다. */
+    let stem=c;
+    for(const pt of PARTICLES){
+      if(stem.length>pt.length+1 && stem.endsWith(pt)){
+        stem=stem.slice(0,-pt.length);
+        break;
+      }
+    }
+    if(stem.length>=2) set.add(stem);
     set.add(c.replace(/(을|를)(?=받은|하는|하다|되다|된|시키다)/g,''));
     set.add(c.replace(/(이|가|은|는)(?=있는|없는|되는|된|하다|하는)/g,''));
     /* 하다류는 명사어근도 후보로 보존하되, 최종 판정에서 품사를 확인한다. */
@@ -971,6 +1005,8 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
       set.add(c.replace(/하다$/,''));
       set.add(c.replace(/되다$/,''));
       set.add(c.replace(/시키다$/,''));
+      /* 활용형 표면문자열이 달라도 핵심 의미어근을 후보로 보존 */
+      set.add(c.replace(/(받은|되는|된|하는|한|있는|없는|로운|스러운|적인|같은|많은|적은|좋은|나쁜|큰|작은|긴|짧은|높은|낮은|빠른|느린)$/,''));
     }
     return [...set].filter(Boolean);
   }
@@ -1105,5 +1141,9 @@ function gradeAnswer(ans,item,type){
   if(r.correct) return 'correct';
   return 'wrong';
 }
+
+
+
+
 
 </script></body></html>

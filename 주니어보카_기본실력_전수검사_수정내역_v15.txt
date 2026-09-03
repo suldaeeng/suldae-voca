@@ -1,0 +1,98 @@
+주니어보카 기본/실력 전수검사 및 수정 v15
+
+[실제 변경 항목]
+junior-voca-basic	put on ~ -> put on	을 입다[신다, 쓰다] -> 을 입다[신다, 쓰다]
+junior-voca-basic	find out ~ -> find out	을 알아내다 -> 을 알아내다
+junior-voca-basic	think up ~ -> think up	을 생각해내다 -> 을 생각해내다
+junior-voca-basic	be famous for ~ -> be famous for	로 유명하다 -> 로 유명하다
+junior-voca-basic	because of ~ -> because of	때문에 -> 때문에
+junior-voca-basic	take out 1 ~ -> take out 1	을 꺼내다 -> 을 꺼내다
+junior-voca-basic	get out of 1 -> get out of	(장소에서) 나가다 -> (장소에서) 나가다
+junior-voca-basic	fill in 1 -> fill in	(빈칸 등에) 기입하다, 써넣다 -> (빈칸 등에) 기입하다, 써넣다
+junior-voca-basic	be different from ~ -> be different from	와 다르다 -> 와 다르다
+junior-voca-basic	pick up 1 ~ -> pick up 1	을 집어 들다 -> 을 집어 들다
+junior-voca-basic	take care of ~ -> take care of	을 돌보다 -> 을 돌보다
+junior-voca-basic	pass through 1 -> pass through	지나가다, 통과하다 -> 지나가다, 통과하다
+junior-voca-basic	look up 1 -> look up	(정보를) 찾아보다 -> (정보를) 찾아보다
+junior-voca-basic	cut ~ into pieces ~ -> cut ~ into pieces	을 여러 조각으로 자르다 -> 을 여러 조각으로 자르다
+junior-voca-basic	get along with ~ -> get along with	와 잘 지내다 -> 와 잘 지내다
+junior-voca-basic	get to ~ -> get to	에 도착하다, ~에 이르다 -> 에 도착하다, ~에 이르다
+junior-voca-basic	take away ~ -> take away	을 치우다 -> 을 치우다
+junior-voca-basic	be covered with ~ -> be covered with	로 덮여 있다 -> 로 덮여 있다
+junior-voca-basic	look through ~ -> look through	을 훑어보다 -> 을 훑어보다
+junior-voca-basic	throw away ~ -> throw away	을 버리다 -> 을 버리다
+junior-voca-basic	hang out with ~ -> hang out with	와 어울리다, ~와 함께 다니다 -> 와 어울리다, ~와 함께 다니다
+junior-voca-basic	care for 1 ~ -> care for 1	을 돌보다 -> 을 돌보다
+junior-voca-basic	make up 1 -> make up	(인구 등을) 이루다, 구성하다 -> (인구 등을) 이루다, 구성하다
+junior-voca-basic	make fun of ~ -> make fun of	을 놀리다 -> 을 놀리다
+junior-voca-basic	hand out ~ -> hand out	을 나눠주다 -> 을 나눠주다
+junior-voca-basic	ask ~ for … ~ -> ask ~ for …	에게 …을 요청하다[부탁하다] -> 에게 …을 요청하다[부탁하다]
+junior-voca-basic	turn ~ into … ~ -> turn ~ into …	을 …으로 바꾸다 -> 을 …으로 바꾸다
+junior-voca-basic	check out 1 ~ -> check out 1	을 확인[점검]하다 -> 을 확인[점검]하다
+junior-voca-basic	fill out ~ -> fill out	을 작성하다, ~을 기입하다 -> 을 작성하다, ~을 기입하다
+junior-voca-basic	more than ~ -> more than	보다 많이 -> 보다 많이
+junior-voca-basic	hand in ~ -> hand in	을 제출하다 -> 을 제출하다
+junior-voca-basic	instead of ~ -> instead of	대신에 -> 대신에
+junior-voca-basic	would like to-v ~ -> would like to-v	하고 싶다 -> 하고 싶다
+junior-voca-basic	set up 1 ~ -> set up 1	을 세우다, 건립하다 -> 을 세우다, 건립하다
+junior-voca-basic	ahead of 1 ~ -> ahead of 1	앞에 -> 앞에
+junior-voca-basic	be filled with ~ -> be filled with	로 가득 차다 -> 로 가득 차다
+junior-voca-basic	cut down 1 -> cut down	베어 쓰러뜨리다 -> 베어 쓰러뜨리다
+junior-voca-basic	be familiar with ~ -> be familiar with	에 익숙하다, ~을 잘 알다 -> 에 익숙하다, ~을 잘 알다
+junior-voca-basic	hang on 1 -> hang on	매달리다, 붙잡다 -> 매달리다, 붙잡다
+junior-voca-basic	get used to ~ -> get used to	에 익숙해지다 -> 에 익숙해지다
+junior-voca-basic	take part in ~ -> take part in	에 참여[참가]하다 -> 에 참여[참가]하다
+junior-voca-basic	pull out 1 -> pull out	(이․마개 등을) 빼다, 뽑다 -> (이․마개 등을) 빼다, 뽑다
+junior-voca-basic	keep in mind ~ -> keep in mind	을 명심하다, ~을 기억하다 -> 을 명심하다, ~을 기억하다
+junior-voca-basic	run across ~ -> run across	을 우연히 마주치다 -> 을 우연히 마주치다
+junior-voca-basic	make it 1 -> make it	성공하다, 해내다 -> 성공하다, 해내다
+junior-voca-basic	sign up for ~ -> sign up for	을 신청하다 -> 을 신청하다
+junior-voca-basic	such as ~ -> such as	와 같은 -> 와 같은
+junior-voca-basic	give away 1 -> give away	(비밀을) 폭로하다 -> (비밀을) 폭로하다
+junior-voca-basic	put up ~ -> put up	을 (높이) 올리다 -> 을 (높이) 올리다
+junior-voca-basic	be related to ~ -> be related to	와 관계가 있다 -> 와 관계가 있다
+junior-voca-basic	work out 1 -> work out	운동하다 -> 운동하다
+junior-voca-basic	use up ~ -> use up	을 다 쓰다 -> 을 다 쓰다
+junior-voca-basic	account for 1 ~ -> account for 1	에 대해 설명하다 -> 에 대해 설명하다
+junior-voca-basic	in case of ~ -> in case of	의 경우에는 -> 의 경우에는
+junior-voca-basic	put together ~ -> put together	을 조립하다, (모아서) 만들다 -> 을 조립하다, (모아서) 만들다
+junior-voca-basic	be stuck in ~ -> be stuck in	에 갇히다, 꼼짝 못하다 -> 에 갇히다, 꼼짝 못하다
+junior-voca-basic	tell ~ from … ~ -> tell ~ from …	와 …을 구분하다 -> 와 …을 구분하다
+junior-voca-basic	watch over ~ -> watch over	을 보살피다, ~을 보호하다 -> 을 보살피다, ~을 보호하다
+junior-voca-basic	bring back 1 ~ -> bring back 1	을 가져다 주다 -> 을 가져다 주다
+junior-voca-advanced	lay -> lay	놓다, 두다; (알을) 낳다(lay-laid-laid) -> 놓다, 두다; (알을) 낳다
+junior-voca-advanced	B as well as A -> B as well as A	A뿐만 아니라 B도 -> A뿐만 아니라 B도
+junior-voca-advanced	allow A to -> allow A to	가 ~하는 것을 허락하다 -> A가 ~하는 것을 허락하다
+junior-voca-advanced	keep A in mind : -> keep A in mind	를명심하다, 잊지 않고 기억해 두다 -> A를 명심하다
+junior-voca-advanced	put A in danger: -> put A in danger	를 위험에 빠뜨리다 -> A를 위험에 빠뜨리다
+junior-voca-advanced	take A for granted -> take A for granted	를 당연한 일로 여기다 -> A를 당연한 일로 여기다
+
+[수정 후 구조검사]
+junior-voca-basic entries=1200, empty=0, numbered_headword=8, trailing_symbol=0, malformed_AB=0
+  duplicate examples=[]
+  Latin-in-Korean candidates=[('watch out', '(for) (~을) 주의하다, 조심하다')]
+junior-voca-advanced entries=1200, empty=0, numbered_headword=0, trailing_symbol=0, malformed_AB=0
+  duplicate examples=[]
+  Latin-in-Korean candidates=[('military', '군(軍)의, 군사의; (the-) 군, 군대'), ('prefer', '(~보다) ···을 좋아하다 과거시제:preferred'), ('facility', '(-ies) 시설, 설비'), ('thirst', '목마름, 갈증 (thirsty:목마른:형용사)'), ('disappointed', '실망한, 낙담한(disappointing:실망시키는)'), ('destination', '목적지, (물품의) 도착지 (*destiny:운명)'), ('abstract', '추상적인(<->구체적인:concrete)'), ('difficulty', '곤란, 어려움 (difficult :어려운)'), ('sew', '바느질하다, 꿰매다(sew-sewed-sewed)'), ('wisdom', '현명함, 지혜 (wise현명한)'), ('despite', '~에도 불구하고 =in spite of'), ('instead', '그 대신에 (instead of ~의 대신에)'), ('threaten', '위협[협박]하다 (threat:위협)'), ('enable', '~할 수 있게 하다 (able:할 수 있는)'), ('architecture', '건축학; 건축 양식 (architect:건축가)'), ('punish', '처벌하다, 벌주다 (punishment:처벌)'), ('physics', '물리학 (physicist:물리학자)'), ('assign', '(일 등을) 맡기다, 부여하다(assignment:숙제, 할당)'), ('public', '대중의; 공공의; (the-) 대중, 일반 사람들'), ('length', '길이; 시간, 기간 (long: 길이가 긴)'), ('in place', '제자리에 (있는) (out of place:제자리에 없는)'), ('crisis', '위기, 고비 (crises:위기들)'), ('indoor', '실내(용)의 (outdoor: 실외의)'), ('forbid', '금하다, 금지하다(forbid-forbade-forbidden)'), ('reserve', '예약하다 (reservation:예약)'), ('discussion', '논의, 토론 (discuss:토론하다)'), ('sudden', '갑작스러운 (suddenly:갑자기)'), ('discourage', '낙담시키다; 막다, 말리다 (encourage:장려하다)'), ('injury', '부상, 상해 (injure:다치게하다)'), ('loosen', '느슨하게 하다, 헐겁게 하다 (loose:헐거운)'), ('permit', '허락[허가]하다; 허가(증) (permission:허락허가)'), ('propose', '제안하다; 청혼하다 (proposal:제안,청혼)'), ('urban', '도시의 (rural:시골의)'), ('conscious', '1 알고 있는; 의식이 있는(unconscious:무의식의)'), ('sweep', '청소하다,쓸다2 (태풍 등이)휩쓸다(sweep-swept-swept)'), ('behave', '행동하다, 처신하다 (behavior:행동)'), ('expect', '기대[예상]하다; 기다리다(expectation:예상, 기대)'), ('transportation', '1운송,수송 2수송[교통] 수단(transport:수송하다)'), ('encouragement', '격려, 장려(courage:용기/encourage:격려하다)'), ('latter', '후자의; 나중의, 후반의; (the-) 후자 (former:전자)')]
+
+[핵심 회귀검사]
+junior-voca-basic
+  look up 1 remains: False
+  take out 1 remains: True
+  keep A in mind fixed: False
+  put A in danger fixed: False
+  take A for granted fixed: False
+  allow A to fixed: False
+  B as well as A fixed: False
+junior-voca-advanced
+  look up 1 remains: False
+  take out 1 remains: False
+  keep A in mind fixed: True
+  put A in danger fixed: True
+  take A for granted fixed: True
+  allow A to fixed: True
+  B as well as A fixed: True
+
+[최종 2차 검사]
+기본편 잔존 숫자표제어 8건 추가 정리: take out, pick up, care for, check out, set up, ahead of, account for, bring back
+기본/실력 각각 1200개, 빈 항목 0, 숫자 꼬리표 0, 끝 콜론/물결표 0, A/B 자리누락 0 확인.
