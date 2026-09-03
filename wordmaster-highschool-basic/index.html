@@ -146,7 +146,7 @@ function submit(){
   if(answered)return;
   let ans=$('answer').value.trim();
   if(!ans)return;
-  let grade=gradeAnswer(ans,current.item,current.type);try{__sdSpeak(current.item.eng,.86)}catch(e){};
+  let grade=gradeAnswer(ans,current.item,current.type);try{$('answer').blur()}catch(e){};try{window.__sdPrimeAudio&&window.__sdPrimeAudio();window.__sdSpeakNow(current.item.eng,.86)}catch(e){};
   if(grade==='correct'){
     answered=true;
     $('fb').textContent='정답입니다';
@@ -599,88 +599,511 @@ $('guideClose').onclick=()=>{$('browserGuide').classList.add('hidden');localStor
 
 
 
-/* === SEOLDAE RESULT WRONG-WORD MANUAL AUDIO FIX v6 ===
-   결과화면 '다시 듣기'는 반드시 학생의 실제 탭 이벤트 안에서
-   브라우저 SpeechSynthesis를 직접 호출한다.
+
+
+
+
+/* === SEOLDAE TTS CORE v7 — iOS FIRST ===
+   핵심:
+   - speak 직전에 cancel()하지 않음 (iOS Safari 무음 방지)
+   - SpeechSynthesisUtterance 참조를 보관
+   - 확인/다시듣기/시험시작 pointerdown에서 음성 세션 prime
+   - 결과 오답 버튼은 data-eng에 실제 영어를 직접 저장
 */
 (function(){
-  function sdPickManualVoice(){
-    try{
-      const vs=window.speechSynthesis.getVoices()||[];
-      return vs.find(v=>/^en-US/i.test(v.lang))
-        ||vs.find(v=>/^en-/i.test(v.lang))
-        ||vs.find(v=>/^en/i.test(v.lang))
-        ||null;
-    }catch(e){return null}
+  if(!('speechSynthesis' in window)) return;
+
+  const synth = window.speechSynthesis;
+  let held = [];
+  let voice = null;
+
+  function cleanText(x){
+    return String(x || '')
+      .replace(/[~…]/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
   }
 
-  function sdManualSpeak(text){
-    const t=String(text||'').replace(/[~…]/g,' ').replace(/\s+/g,' ').trim();
-    if(!t)return false;
+  function pickVoice(){
     try{
-      if(!('speechSynthesis' in window))return false;
-      const s=window.speechSynthesis;
-      try{s.cancel()}catch(e){}
-      try{s.resume()}catch(e){}
-      const u=new SpeechSynthesisUtterance(t);
-      u.lang='en-US';
-      u.rate=.86;
-      u.pitch=1.0;
-      u.volume=1.0;
-      const v=sdPickManualVoice();
-      if(v)u.voice=v;
-      s.speak(u);
+      const vs = synth.getVoices() || [];
+      voice =
+        vs.find(v => /^en-US$/i.test(v.lang) && /Samantha|Ava|Siri|Google|Microsoft|English/i.test(v.name)) ||
+        vs.find(v => /^en-US/i.test(v.lang)) ||
+        vs.find(v => /^en-/i.test(v.lang)) ||
+        vs.find(v => /^en/i.test(v.lang)) ||
+        null;
+    }catch(e){ voice = null; }
+    return voice;
+  }
+
+  function keep(u){
+    held.push(u);
+    if(held.length > 12) held = held.slice(-12);
+    const done = () => {
+      const i = held.indexOf(u);
+      if(i >= 0) held.splice(i,1);
+    };
+    u.onend = done;
+    u.onerror = done;
+  }
+
+  function makeUtterance(text, rate){
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = Number(rate) || 0.86;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    const v = voice || pickVoice();
+    if(v) u.voice = v;
+    keep(u);
+    return u;
+  }
+
+  function prime(){
+    try{
+      synth.resume();
+      pickVoice();
+      /* iOS: 사용자 제스처 안에서 빈 utterance로 세션 활성화 */
+      if(!synth.speaking && !synth.pending){
+        const u = new SpeechSynthesisUtterance('');
+        u.lang='en-US'; u.volume=1; u.rate=1;
+        keep(u);
+        synth.speak(u);
+      }
       return true;
-    }catch(e){
-      try{
-        if(window.__sdSpeak)return window.__sdSpeak(t,.86);
-      }catch(x){}
-      return false;
+    }catch(e){ return false; }
+  }
+
+  function speakNow(text, rate){
+    const t = cleanText(text);
+    if(!t) return false;
+    try{
+      synth.resume();
+      pickVoice();
+      /* 중요: 여기서는 cancel()하지 않는다. */
+      const u = makeUtterance(t, rate);
+      synth.speak(u);
+
+      /* iOS에서 조용히 누락되는 경우 한 번만 재시도.
+         기존 utterance가 실제 시작되지 않았을 때만 실행한다. */
+      let started = false;
+      const oldStart = u.onstart;
+      u.onstart = function(ev){
+        started = true;
+        if(oldStart) oldStart.call(this,ev);
+      };
+      setTimeout(function(){
+        try{
+          if(started) return;
+          if(!synth.speaking && !synth.pending){
+            synth.resume();
+            const u2 = makeUtterance(t, rate);
+            synth.speak(u2);
+          }
+        }catch(e){}
+      }, 260);
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function speakFresh(text, rate){
+    const t = cleanText(text);
+    if(!t) return false;
+    try{
+      synth.resume();
+      /* 이미 다른 발음이 진행 중인 경우에만 정리하고,
+         바로 speak하지 않고 짧게 기다린다. */
+      if(synth.speaking || synth.pending){
+        synth.cancel();
+        setTimeout(function(){ speakNow(t,rate); }, 180);
+        return true;
+      }
+      return speakNow(t,rate);
+    }catch(e){ return false; }
+  }
+
+  window.__sdPrimeAudio = prime;
+  window.__sdSpeak = speakNow;
+  window.__sdSpeakNow = speakNow;
+  window.__sdSpeakFresh = speakFresh;
+  window.__sdTtsReset = function(){
+    try{ synth.resume(); pickVoice(); }catch(e){}
+  };
+  window.__sdTtsPrime = pickVoice;
+
+  try{
+    synth.onvoiceschanged = pickVoice;
+    pickVoice();
+    setTimeout(pickVoice,100);
+    setTimeout(pickVoice,700);
+  }catch(e){}
+
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden){
+      try{synth.resume();}catch(e){}
+      pickVoice();
     }
-  }
-  window.__sdManualSpeak=sdManualSpeak;
+  });
+  window.addEventListener('pageshow', function(){
+    try{synth.resume();}catch(e){}
+    pickVoice();
+  });
 
-  function getWrongEnglish(btn){
-    const row=btn.closest('.wrong-item');
-    if(!row)return '';
-    const el=row.querySelector('.w')||row.querySelector('b')||row.querySelector('strong');
-    return el ? String(el.textContent||'').trim() : '';
-  }
+  /* 실제 탭이 시작되는 순간 세션을 깨운다. */
+  document.addEventListener('pointerdown', function(ev){
+    const b = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+    if(!b) return;
+    const txt = (b.textContent || '').trim();
+    if(
+      /확인|제출|시험 시작|시작|다시 듣기|정답 발음|소리 확인/.test(txt) ||
+      /submit|start|sound|speak/i.test(b.id || '')
+    ){
+      prime();
+    }
+  }, true);
 
-  /* 기존 v2 버튼의 이벤트보다 먼저 잡아서 직접 재생 */
-  document.addEventListener('click',function(ev){
-    const btn=ev.target && ev.target.closest ? ev.target.closest('.sd-wrong-speak') : null;
-    if(!btn)return;
+  /* 오답 다시듣기: data-eng를 직접 읽는다. */
+  document.addEventListener('click', function(ev){
+    const b = ev.target && ev.target.closest ? ev.target.closest('.sd-wrong-speak') : null;
+    if(!b) return;
     ev.preventDefault();
     ev.stopPropagation();
-    if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
-    const eng=getWrongEnglish(btn);
-    sdManualSpeak(eng);
-  },true);
+    if(ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+    const eng = cleanText(b.dataset.eng || '');
+    if(eng){
+      try{
+        const a = document.activeElement;
+        if(a && /INPUT|TEXTAREA/.test(a.tagName)) a.blur();
+      }catch(e){}
+      prime();
+      speakNow(eng,0.86);
+    }
+  }, true);
 
-  /* 결과화면이 다시 그려질 때 버튼이 빠진 경우를 즉시 보완 */
+  /* 결과화면 오답 행에 버튼 및 data-eng를 확실히 부착 */
   function ensureWrongButtons(){
     document.querySelectorAll('.wrong-item').forEach(function(row){
-      let b=row.querySelector('.sd-wrong-speak');
+      const wordEl = row.querySelector('.w') || row.querySelector('b') || row.querySelector('strong');
+      const eng = cleanText(wordEl ? wordEl.textContent : '');
+      if(!eng || !/[A-Za-z]/.test(eng)) return;
+      let b = row.querySelector('.sd-wrong-speak');
       if(!b){
-        const word=row.querySelector('.w')||row.querySelector('b')||row.querySelector('strong');
-        if(!word || !/[A-Za-z]/.test(String(word.textContent||'')))return;
-        b=document.createElement('button');
-        b.type='button';
-        b.className='sd-wrong-speak';
-        b.textContent='🔊 다시 듣기';
+        b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sd-wrong-speak';
+        b.textContent = '🔊 다시 듣기';
         row.appendChild(b);
       }
+      b.dataset.eng = eng;
     });
   }
 
-  function install(){
+  function boot(){
     ensureWrongButtons();
-    const mo=new MutationObserver(function(){ensureWrongButtons()});
-    mo.observe(document.body,{childList:true,subtree:true});
+    new MutationObserver(ensureWrongButtons).observe(document.body,{childList:true,subtree:true});
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
-  else install();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
 })();
+
+
+
+/* =========================================================
+   SEOLDAE UNIFIED GRADING ENGINE 4.0
+   2026-09-03
+   원칙
+   1) [ ]는 글자 그대로의 정답이 아니라 '대체 가능한 뜻'으로 확장
+   2) 띄어쓰기/일반 조사 차이는 의미를 바꾸지 않는 범위에서 무시
+   3) 명백한 동의어·유의어는 폭넓게 인정
+   4) 철자오타나 엉뚱한 뜻은 fuzzy match로 억지 정답 처리하지 않음
+   5) 품사가 분명히 다른 경우 pos-mismatch 반환
+========================================================= */
+(function(){
+  const PARTICLES = ['에서','에게','한테','께서','으로','처럼','만큼','부터','까지','보다','께','을','를','이','가','은','는','의','에','로','와','과','도','만'];
+  const PARTICLE_LAST = new Set(['에','을','를','이','가','은','는','의','와','과','도','만']);
+  const SHORT_OK = new Set(['점','별','팀','조','집','곳','숲','웹','줄','눈','코','입','귀','팔','손','발','개','닭','말','양','책','색','차','봄','비','해','달','길','방','문','옷','컵','빵','물','밥','알','위','밑','아래','앞','뒤','안','밖','속','옆','둘','셋','넷','열']);
+  const STRICT_PRONOUNS = {
+    i:['나는','내가'], me:['나를','나에게'], my:['나의','내'], mine:['나의것','내것'],
+    we:['우리는','우리가'], us:['우리를','우리에게'], our:['우리의','우리들의'], ours:['우리의것','우리들것'],
+    you:['너는','네가','너를','너희는','너희가','너희를'], your:['너의','네','너희의'], yours:['너의것','네것','너희의것'],
+    he:['그는','그가'], him:['그를','그에게'], his:['그의'], she:['그녀는','그녀가'], her:['그녀를','그녀의'], hers:['그녀의것'],
+    it:['그것은','그것이'], its:['그것의'], they:['그들은','그들이','그것들은'], them:['그들을','그것들을'], their:['그들의','그것들의'], theirs:['그들의것','그것들의것']
+  };
+  const NUMS = {
+    zero:['0','영','제로'], one:['1','하나','한','일'], two:['2','둘','두','이'], three:['3','셋','세','삼'],
+    four:['4','넷','네','사'], five:['5','다섯','오'], six:['6','여섯','육'], seven:['7','일곱','칠'],
+    eight:['8','여덟','팔'], nine:['9','아홉','구'], ten:['10','열','십']
+  };
+
+  /* 실제 수업에서 반복적으로 인정해야 했던 '의미군'.
+     철자 유사도가 아니라 의미가 같은 한국어만 묶는다. */
+  const KOR_GROUPS = [
+    ['감명','감동'],
+    ['추정','추측','짐작','가정'],
+    ['소비','소모'],
+    ['혜택','이득','이익'],
+    ['도움','유익','이로움'],
+    ['흔적','자국','발자국'],
+    ['끊임없이','계속','항상','늘','지속적으로','계속해서'],
+    ['꾸준한','일관된','한결같은','변함없는','지속적인'],
+    ['증가','증대','늘어남'],
+    ['감소','감축','줄어듦'],
+    ['허용','용인'],
+    ['관대한','너그러운','아량있는'],
+    ['사례','경우','보기','예'],
+    ['곤경','고통','괴로움','고난'],
+    ['설립','설치','창립','설정'],
+    ['엄격하게','엄하게','철저하게'],
+    ['강렬하게','격렬하게','강하게']
+  ];
+
+  const ENG_GROUPS = [
+    ['begin','start'],['big','large','huge','giant'],['small','little','tiny'],
+    ['fast','quick','rapid'],['happy','glad','pleased'],['sad','unhappy'],
+    ['buy','purchase'],['show','display'],['talk','speak','chat'],['answer','reply','respond'],
+    ['finish','end','complete'],['gift','present'],['kid','child'],['scared','afraid','frightened'],
+    ['angry','mad'],['choose','select','pick'],['fix','repair'],['ill','sick'],
+    ['shop','store'],['photo','picture'],['trip','travel','journey']
+  ];
+
+  function normEng(s){
+    return String(s||'').toLowerCase().normalize('NFKC')
+      .replace(/[’‘]/g,"'").replace(/[~…]/g,' ')
+      .replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim();
+  }
+  function cleanKor(s){
+    return String(s||'').toLowerCase().normalize('NFKC')
+      .replace(/\b\d+\s*\./g,'')
+      .replace(/[(){}\[\]<>~_＿－—–\-ㆍ·․….,;:!?，。"'“”‘’`]/g,'')
+      .replace(/\s+/g,'').trim();
+  }
+
+  function dropInnerParticles(s){
+    let x=cleanKor(s);
+    PARTICLES.forEach(p=>{
+      const re=new RegExp(p+'(?=[가-힣])','g');
+      x=x.replace(re,'');
+    });
+    return x;
+  }
+
+  /* [ ]를 두 가지 실제 표현으로 펼친다.
+     감명[감동]을 받은 -> 감명을 받은 / 감동을 받은
+     해외에[로] -> 해외에 / 해외로
+     외국에[으로] -> 외국에 / 외국으로
+     소비[소모]하다 -> 소비하다 / 소모하다 */
+  function expandSquare(raw){
+    let out=[String(raw||'')];
+    for(let guard=0;guard<10;guard++){
+      let changed=false, next=[];
+      out.forEach(str=>{
+        const m=str.match(/\[([^\]]+)\]/);
+        if(!m){ next.push(str); return; }
+        changed=true;
+        const idx=m.index, whole=m[0], inside=m[1];
+        const before=str.slice(0,idx), after=str.slice(idx+whole.length);
+        const alts=inside.split(/[\/,，;、]/).map(x=>x.trim()).filter(Boolean);
+        /* 원래 표기(괄호 부분 삭제) */
+        next.push(before+after);
+
+        const wm=before.match(/([가-힣]+)$/);
+        const word=wm?wm[1]:'';
+        const prefix=wm?before.slice(0,before.length-word.length):before;
+        alts.forEach(alt=>{
+          let repl;
+          if(word && alt.length<=2 && PARTICLE_LAST.has(word.slice(-1))){
+            repl=word.slice(0,-1)+alt;              // 해외에[로]
+          }else if(word && alt==='으로' && word.endsWith('에')){
+            repl=word.slice(0,-1)+alt;              // 외국에[으로]
+          }else if(word){
+            repl=alt;                               // 감명[감동], 소비[소모]
+          }else{
+            repl=alt;
+          }
+          next.push(prefix+repl+after);
+        });
+      });
+      out=[...new Set(next)];
+      if(!changed) break;
+    }
+    return out;
+  }
+
+  function stripParenNotes(s){
+    /* 괄호 안은 보충설명인 경우가 많으므로 '있는 버전/없는 버전'을 모두 만든다. */
+    const raw=String(s||'');
+    const a=raw.replace(/\([^)]*\)/g,' ');
+    const b=raw.replace(/[()]/g,' ');
+    return [a,b];
+  }
+
+  function splitMeanings(full){
+    let set=new Set();
+    expandSquare(full).forEach(v=>{
+      stripParenNotes(v).forEach(x=>{
+        if(x.trim()) set.add(x.trim());
+        x.split(/[\/;,，、]|\d+\s*\./).forEach(p=>{ if(p.trim()) set.add(p.trim()); });
+      });
+    });
+    return [...set];
+  }
+
+  function posOfKor(raw){
+    const s=cleanKor(raw);
+    if(!s) return null;
+    if(/(하다|되다|시키다|주다|받다|먹다|가다|오다|보다|듣다|읽다|쓰다|말하다|돕다|잃다|얻다|만들다)$/.test(s)) return 'verb';
+    if(/(받은|되는|된|하는|한|있는|없는|로운|스러운|적인|같은|많은|적은|좋은|나쁜|큰|작은|긴|짧은|높은|낮은|빠른|느린|의)$/.test(s)) return 'adj';
+    if(/(하게|히|없이|도록|적으로|에서|으로|로|에)$/.test(s)) return 'adv';
+    return 'noun';
+  }
+
+  function forms(raw){
+    const c=cleanKor(raw);
+    const set=new Set();
+    if(!c) return [];
+    set.add(c);
+    set.add(dropInnerParticles(c));
+    set.add(c.replace(/(을|를)(?=받은|하는|하다|되다|된|시키다)/g,''));
+    set.add(c.replace(/(이|가|은|는)(?=있는|없는|되는|된|하다|하는)/g,''));
+    /* 하다류는 명사어근도 후보로 보존하되, 최종 판정에서 품사를 확인한다. */
+    if(c.length>=3){
+      set.add(c.replace(/하다$/,''));
+      set.add(c.replace(/되다$/,''));
+      set.add(c.replace(/시키다$/,''));
+    }
+    return [...set].filter(Boolean);
+  }
+
+  function canonKor(s){
+    let x=dropInnerParticles(s);
+    for(let i=0;i<KOR_GROUPS.length;i++){
+      const g=KOR_GROUPS[i];
+      for(let j=0;j<g.length;j++){
+        const k=cleanKor(g[j]);
+        if(x===k) return '#g'+i;
+        if(k.length>=2 && x.indexOf(k)>=0) return x.replace(k,'#g'+i);
+      }
+    }
+    return x;
+  }
+
+  function meaningCandidates(full,eng){
+    const set=new Set();
+    splitMeanings(full).forEach(part=>forms(part).forEach(v=>set.add(v)));
+    const e=normEng(eng);
+    if(NUMS[e]) NUMS[e].forEach(v=>set.add(cleanKor(v)));
+
+    /* 기존 앱에 이미 구축된 보조 유의어 사전도 가져오되,
+       4.0의 동일한 정규화 규칙을 거친다. */
+    try{
+      const dicts=[
+        (typeof SD22_SYNONYM_KOR!=='undefined'?SD22_SYNONYM_KOR:null),
+        (typeof KOR_SYNONYMS!=='undefined'?KOR_SYNONYMS:null),
+        (typeof EXACT_KOR_EXTRA!=='undefined'?EXACT_KOR_EXTRA:null)
+      ].filter(Boolean);
+      dicts.forEach(d=>{
+        const arr=d[e]||[];
+        (Array.isArray(arr)?arr:[arr]).forEach(v=>forms(v).forEach(x=>set.add(x)));
+      });
+    }catch(e){}
+    return [...set].filter(Boolean);
+  }
+
+  function posSetFromMeaning(full){
+    const set=new Set();
+    splitMeanings(full).forEach(x=>{
+      const p=posOfKor(x);
+      if(p) set.add(p);
+    });
+    return set;
+  }
+
+  function koreanGrade(userAnswer,full,eng){
+    const userForms=forms(userAnswer);
+    if(!userForms.length) return {correct:false,reason:'blank',label:'미입력'};
+
+    const e=normEng(eng);
+    if(STRICT_PRONOUNS[e]){
+      const allowed=[];
+      STRICT_PRONOUNS[e].forEach(v=>forms(v).forEach(x=>allowed.push(x)));
+      const ok=userForms.some(u=>allowed.includes(u));
+      return {correct:ok,reason:ok?'strict-pronoun':'strict-pronoun-wrong',label:ok?'정답':'대명사 형태가 다릅니다'};
+    }
+
+    const candidates=meaningCandidates(full,eng);
+
+    /* 1. 정확/조사·띄어쓰기 차이 */
+    for(const u of userForms){
+      for(const c of candidates){
+        if(!u||!c) continue;
+        if(u===c) return {correct:true,reason:'exact',label:'정답'};
+      }
+    }
+
+    /* 2. 의미군 동의어. 품사가 맞을 때만 인정 */
+    const userPos=posOfKor(userAnswer);
+    const targetPos=posSetFromMeaning(full);
+    for(const u of userForms){
+      const cu=canonKor(u);
+      for(const c of candidates){
+        if(!c) continue;
+        if(cu===canonKor(c) && (!userPos || targetPos.size===0 || targetPos.has(userPos))){
+          return {correct:true,reason:'semantic-synonym',label:'유사한 뜻 정답'};
+        }
+      }
+    }
+
+    /* 3. 너무 짧은 어근의 무분별한 부분일치는 금지.
+          3글자 이상이고 품사가 맞는 경우에만 자연스러운 포함관계 인정 */
+    for(const u of userForms){
+      for(const c of candidates){
+        if(!u||!c) continue;
+        if(u.length>=3 && c.length>=3 && (u.includes(c)||c.includes(u))){
+          if(!userPos || targetPos.size===0 || targetPos.has(userPos)){
+            return {correct:true,reason:'meaning-contained',label:'의미 정답'};
+          }
+        }
+        if(SHORT_OK.has(u) && u===c) return {correct:true,reason:'short-exact',label:'정답'};
+      }
+    }
+
+    /* 4. 학생이 쓴 답의 품사와 원뜻의 품사가 명백히 다르면 따로 안내 */
+    if(userPos && targetPos.size===1 && !targetPos.has(userPos)){
+      return {correct:false,reason:'pos-mismatch',label:'품사가 다릅니다'};
+    }
+
+    return {correct:false,reason:'wrong',label:'오답'};
+  }
+
+  function englishGrade(userAnswer,eng){
+    const u=normEng(userAnswer), e=normEng(eng);
+    if(!u) return {correct:false,reason:'blank',label:'미입력'};
+    if(u===e) return {correct:true,reason:'exact',label:'정답'};
+    for(const g of ENG_GROUPS){
+      const gg=g.map(normEng);
+      if(gg.includes(u)&&gg.includes(e)) return {correct:true,reason:'english-synonym',label:'영어 유의어 정답'};
+    }
+    return {correct:false,reason:'wrong',label:'오답'};
+  }
+
+  function grade(opts){
+    opts=opts||{};
+    const direction=opts.direction||opts.type||'';
+    if(direction==='k2e') return englishGrade(opts.userAnswer||opts.answer||'',opts.eng||'');
+    return koreanGrade(opts.userAnswer||opts.answer||'',opts.korFull||opts.kor_full||opts.kor||'',opts.eng||'');
+  }
+
+  window.SEOLDAE_ENGINE_VERSION='4.0';
+  window.SEOLDAE_GRADE_V40=grade;
+  window.SEOLDAE_KOR_CANDIDATES_V40=meaningCandidates;
+})();
+
+
+function gradeAnswer(ans,item,type){
+  const r=window.SEOLDAE_GRADE_V40({direction:type,userAnswer:ans,eng:item.eng,korFull:item.kor_full||item.kor});
+  if(r.correct) return 'correct';
+  return 'wrong';
+}
 
 </script></body></html>
