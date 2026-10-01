@@ -152,11 +152,12 @@ function primeEnglishVoices(){
 }
 
 function sdBuildUtterance(cleaned, seq){
-  const u=new SpeechSynthesisUtterance(cleaned);
+  const spoken = cleaned + '. ' + cleaned;
+  const u=new SpeechSynthesisUtterance(spoken);
   u.lang='en-US';
-  u.rate=.78;
-  u.pitch=1.0;
-  u.volume=1;
+  u.rate=.72;
+  u.pitch=1.02;
+  u.volume=1.0;
   const v=SD_ENGLISH_VOICE||primeEnglishVoices();
   if(v)u.voice=v;
   u.onstart=function(){
@@ -250,7 +251,7 @@ function testSoundV8(btn,diag){
       return;
     }
     const synth=window.speechSynthesis;
-    const u=new SpeechSynthesisUtterance('Hello! Hello! Sound check.');
+    const u=new SpeechSynthesisUtterance('Hello! Hello! Sound check. Hello! Sound check.');
     u.lang='en-US'; u.rate=.92; u.pitch=1.0; u.volume=1;
     const v=primeEnglishVoices(); if(v)u.voice=v;
     let started=false;
@@ -263,7 +264,7 @@ function testSoundV8(btn,diag){
     setTimeout(function(){
       try{
         if(!started && !synth.speaking && !synth.pending){
-          const r=new SpeechSynthesisUtterance('Hello! Hello! Sound check.');
+          const r=new SpeechSynthesisUtterance('Hello! Hello! Sound check. Hello! Sound check.');
           r.lang='en-US'; r.rate=.82; r.pitch=1.0; r.volume=1;
           const rv=primeEnglishVoices(); if(rv)r.voice=rv;
           r.onstart=function(){if(diag)diag.textContent='Hello가 들리면 정상입니다. 시험을 시작하세요.';};
@@ -509,7 +510,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
         try{
           if(window.__sdSpeak) window.__sdSpeak('Hello! Hello! Sound check.',.92);
           else {
-            const u=new SpeechSynthesisUtterance('Hello! Hello! Sound check.');
+            const u=new SpeechSynthesisUtterance('Hello! Hello! Sound check. Hello! Sound check.');
             u.lang='en-US'; u.rate=.92; u.pitch=1.0; u.volume=1.0;
             window.speechSynthesis.speak(u);
           }
@@ -946,6 +947,11 @@ const SD41_APPROVED_KOR={"ache":["아픔","통증","고통"],"increase":["증가
     ['감소하다','줄다','줄어들다','감축하다']
   ];
 
+
+  /* v20 GLOBAL KOREAN SEMANTIC EQUIVALENCE GROUPS — applies to every DAY/book */
+  const SD50_GLOBAL_KOR_GROUPS = [["낙관주의자","낙천주의자","낙관론자"],["당황하게하다","당황시키다","난처하게하다","난처하게만들다","당황스럽게하다","당황스럽게만들다"],["오락","놀이","즐거움","재미"],["참석하다","참가하다","참여하다"],["아픔","통증","고통","쑤심"],["증가하다","늘다","늘어나다","증대하다","증가시키다"],["감소하다","줄다","줄어들다","감축하다","감소시키다"],["추정하다","추측하다","짐작하다","가정하다"],["소비하다","소모하다","써버리다"],["건너뛰다","생략하다","거르다","넘기다"],["계속하다","지속하다","이어가다","계속되다"],["이득","이익","혜택","유익","도움"],["흔적","자국","발자국"],["허용하다","용인하다","묵인하다"],["관대한","너그러운","아량있는","포용적인"],["설명","묘사","기술"],["운영하다","작동하다","수행하다","실행하다","조작하다"],["의존적인","의지하는","의존하는"],["다수의","여러개의","다중의","복수의"],["포기하다","그만두다","중단하다","단념하다"],["남다","남아있다","여전히있다"],["밝은","명랑한","쾌활한","활기찬","활발한"],["고치다","수리하다","수선하다","고쳐주다"],["구입하다","구매하다","사다"],["선택하다","고르다","뽑다"],["시작하다","개시하다","착수하다"],["끝내다","마치다","완료하다"],["돕다","도와주다","지원하다","보조하다"],["필요하다","요구하다","필요로하다"],["보호하다","지키다","보존하다"],["발견하다","찾아내다","알아내다"],["허락하다","허가하다","승인하다"],["거절하다","거부하다","사양하다"],["도착하다","이르다"],["떠나다","출발하다"],["대답하다","응답하다","답하다"],["질문하다","묻다","문의하다"],["바라다","원하다","희망하다"],["두려워하다","무서워하다","겁내다"],["화난","성난","분노한"],["행복한","기쁜","즐거운"],["슬픈","우울한","서글픈"],["빠른","신속한","재빠른"],["느린","더딘"],["정확한","정확히맞는","정밀한"],["중요한","중대한","주요한"],["유명한","잘알려진"],["평범한","보통의","일반적인"],["충분한","넉넉한"],["부족한","모자란"],["가능한","할수있는"],["불가능한","할수없는"],["안전한","안심할수있는"],["위험한","위태로운"],["깨끗한","청결한","말끔한"],["더러운","지저분한"],["조용한","고요한"],["시끄러운","떠들썩한"],["가까운","근처의","인근의"],["먼","멀리있는"],["목적","목표"],["방법","방식","수단"],["결과","결과물"],["원인","이유"],["기회","찬스"],["실수","잘못","오류"],["문제","어려움","곤란"],["규칙","규정","법칙"],["의견","견해","생각"],["선물","증정품"],["직업","일자리","일"],["쓰레기","폐기물"],["환경","주변환경"],["여행","여정"],["대회","경연","경기"],["상","상품","상금"],["장점","이점","강점"],["단점","약점","결점"],["비용","경비","비용액"],["가격","값","대가"],["허가","허락","승인"],["책임","책임감"],["선택","선정"],["변화","변경","변동"],["발전","발달","진전"],["감정","느낌"],["행동","행위"],["목적지","도착지"],["지역","구역","지방"],["주민","거주자"],["학생","학습자"],["교사","선생님","교원"],["의사","의료인"],["치료","치료법"],["질병","병","질환"],["약","약품","의약품"],["회복","회복됨"],["운동","신체활동"],["음식","식품","먹을것"],["쓰다","사용하다","이용하다"],["만들다","제작하다","생산하다"],["모으다","수집하다"],["나누다","분배하다","분할하다"],["합치다","결합하다","통합하다"],["바꾸다","변경하다","전환하다"],["확인하다","점검하다","검토하다"],["기억하다","기억해내다"],["잊다","망각하다"],["배우다","학습하다","익히다"],["가르치다","교육하다"],["말하다","이야기하다","언급하다"],["보다","바라보다","관찰하다"],["듣다","청취하다"],["걷다","걸어가다"],["달리다","뛰다"],["멈추다","중단하다","정지하다"],["기다리다","대기하다"],["만나다","마주치다"],["방문하다","찾아가다"],["살다","거주하다"],["죽다","사망하다"]];
+  SD50_GLOBAL_KOR_GROUPS.forEach(g=>KOR_GROUPS.push(g));
+
   const ENG_GROUPS = [
     ['begin','start'],['big','large','huge','giant'],['small','little','tiny'],
     ['fast','quick','rapid'],['happy','glad','pleased'],['sad','unhappy'],
@@ -1096,7 +1102,10 @@ const SD41_APPROVED_KOR={"ache":["아픔","통증","고통"],"increase":["증가
     return x;
   }
 
-  function meaningCandidates(full,eng){
+  
+/* === SEOLDAE v20: no headword-specific complaint patches; global semantic rules only === */
+const SD41_APPROVED_KOR = {};
+function meaningCandidates(full,eng){
     const set=new Set();
     splitMeanings(full).forEach(part=>forms(part).forEach(v=>set.add(v)));
     const e=normEng(eng);
@@ -1206,13 +1215,15 @@ const SD41_APPROVED_KOR={"ache":["아픔","통증","고통"],"increase":["증가
     return koreanGrade(opts.userAnswer||opts.answer||'',opts.korFull||opts.kor_full||opts.kor||'',opts.eng||'');
   }
 
-  window.SEOLDAE_ENGINE_VERSION='4.1';
+  window.SEOLDAE_ENGINE_VERSION='5.0';
+  window.SEOLDAE_GRADE_V50=grade;
   window.SEOLDAE_GRADE_V41=grade;
+  window.SEOLDAE_KOR_CANDIDATES_V50=meaningCandidates;
   window.SEOLDAE_KOR_CANDIDATES_V41=meaningCandidates;
 })();
 
 
-function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V41(opts); }
+function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
 
 
 
@@ -1244,6 +1255,30 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V41(opts); }
     }
   },true);
   window.SEOLDAE_TTS_PATCH='17-mobile-gesture';
+})();
+</script>
+
+<script>
+/* === SEOLDAE TTS v18 — AUDIBILITY BOOST / HARD SOUND CHECK === */
+(function(){
+  function loudBeep(){
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+      const c=new AC(); const g=c.createGain(); const o=c.createOscillator();
+      o.type='sine'; o.frequency.value=880; g.gain.value=0.95;
+      o.connect(g); g.connect(c.destination); if(c.state==='suspended')c.resume();
+      o.start(); o.stop(c.currentTime+0.38);
+      o.onended=function(){try{c.close()}catch(e){}}; return true;
+    }catch(e){return false;}
+  }
+  document.addEventListener('click',function(e){
+    const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
+    if(b.id==='soundTestBtn'){
+      /* WebAudio tone uses the media channel and gives a clear maximum-volume reference. */
+      loudBeep();
+    }
+  },true);
+  window.SEOLDAE_TTS_PATCH='18-audibility-boost';
 })();
 </script>
 </body>
