@@ -640,22 +640,23 @@ document.addEventListener('DOMContentLoaded',initApp);
     const text=spokenHeadword(raw);
     if(!text) return false;
     const mySeq=++seq;
-
     try{
+      /* v17: 모바일 Safari에서는 사용자 탭 이벤트 안에서 speak()가 즉시 호출되어야 한다.
+         cancel() 뒤 setTimeout으로 미루면 사용자 활성화가 풀려 무음이 될 수 있다. */
       synth.resume();
       pickVoice();
-
-      /* 이전 단어가 실제 재생 중/대기 중이면 새 단어가 몇 초 뒤 밀리지 않도록
-         queue를 먼저 정리한다. cancel 직후 즉시 speak하지 않고 짧은 간격을 둔다. */
-      if(synth.speaking || synth.pending){
-        try{synth.cancel();}catch(e){}
-        setTimeout(function(){
-          if(mySeq!==seq) return;
-          launch(text,rate,mySeq,true,0);
-        },95);
-        return true;
-      }
-      return launch(text,rate,mySeq,true,0);
+      try{ synth.cancel(); }catch(e){}
+      const u=makeUtt(text,rate,true);
+      let started=false;
+      u.onstart=function(){ started=true; };
+      synth.speak(u);
+      /* 드문 stalled queue만 보조 재시도. 정상 재생 중이면 절대 취소하지 않는다. */
+      setTimeout(function(){
+        if(mySeq!==seq || started || synth.speaking) return;
+        try{ synth.cancel(); synth.resume(); }catch(e){}
+        try{ synth.speak(makeUtt(text,rate,false)); }catch(e){}
+      },700);
+      return true;
     }catch(e){ return false; }
   }
 
@@ -1053,4 +1054,31 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V41(opts); }
 
 
 
-</script></body></html>
+</script>
+<script>
+/* === SEOLDAE TTS v17 — USER-GESTURE REPLAY + POST-ANSWER FIX === */
+(function(){
+  function engNow(){
+    try{if(typeof appState!=='undefined'&&appState){const q=appState.queue&&appState.queue[appState.idx];if(q){const x=q.item||q;return x.eng||q.eng||'';}}}catch(e){}
+    try{if(typeof app!=='undefined'&&app&&app.current){const x=app.current.item||app.current;return x.eng||'';}}catch(e){}
+    try{if(typeof state!=='undefined'&&state&&state.current){const x=state.current.item||state.current;return x.eng||'';}}catch(e){}
+    return '';
+  }
+  function listenEng(){
+    try{if(typeof listenItems!=='undefined'&&listenItems&&listenItems[typeof listenIndex==='number'?listenIndex:0])return listenItems[listenIndex].eng||'';}catch(e){}
+    try{if(typeof app!=='undefined'&&app.listenItems&&app.listenItems[app.listenIndex])return app.listenItems[app.listenIndex].eng||'';}catch(e){}
+    return '';
+  }
+  function say(t,r){try{return !!(t&&window.__sdSpeakNow&&window.__sdSpeakNow(t,r||.82));}catch(e){return false;}}
+  /* 기존 다시듣기 이벤트가 고장나도 capture 단계에서 최신 TTS 코어로 직접 재생 */
+  document.addEventListener('click',function(e){
+    const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
+    if(['speakBtn','speakButton','listen-replay-btn','listenReplayBtn','sdQuizSpeakBtn','sdAnswerSpeakBtn'].includes(b.id)){
+      const t=(b.id==='sdAnswerSpeakBtn'||b.id==='sdQuizSpeakBtn')?engNow():(listenEng()||engNow());
+      if(t){e.preventDefault();e.stopImmediatePropagation();say(t,.82);}
+    }
+  },true);
+  window.SEOLDAE_TTS_PATCH='17-mobile-gesture';
+})();
+</script>
+</body></html>
