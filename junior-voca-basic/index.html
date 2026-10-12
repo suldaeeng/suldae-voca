@@ -857,7 +857,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
   window.addEventListener('pageshow',reset);
 
   /* 시험 시작/확인/다시듣기 등의 실제 터치 순간 TTS 세션을 미리 깨운다. */
-  document.addEventListener('pointerdown',function(ev){
+  document.addEventListener('pointerdown',function(ev){if(window.__SD_MP3_AUDIO)return;
     const b=ev.target&&ev.target.closest?ev.target.closest('button'):null;
     if(!b) return;
     const txt=(b.textContent||'').trim();
@@ -1140,6 +1140,23 @@ function meaningCandidates(full,eng){
     return set;
   }
 
+
+  function multiMeaningAnswerOK(userAnswer,candidates){
+    /* 학생이 '설명 묘사', '조작자 기사'처럼 정답 의미를 2개 이상
+       공백으로 함께 쓴 경우도 인정한다. 단, '큰 소리로' 같은 하나의 구는
+       기존 전체문자열 판정을 먼저 통과시키므로 여기서는 보조 판정만 한다. */
+    const raw=String(userAnswer||'').trim();
+    if(!/\s/.test(raw)) return false;
+    const parts=raw.split(/\s+/).map(x=>x.trim()).filter(x=>x.length>=1);
+    if(parts.length<2) return false;
+    const candCanon=new Set();
+    candidates.forEach(c=>{ forms(c).forEach(f=>{candCanon.add(f);candCanon.add(canonKor(f));}); });
+    return parts.every(p=>{
+      const pf=forms(p);
+      return pf.some(f=>candCanon.has(f)||candCanon.has(canonKor(f)));
+    });
+  }
+
   function koreanGrade(userAnswer,full,eng){
     const userForms=forms(userAnswer);
     if(!userForms.length) return {correct:false,reason:'blank',label:'미입력'};
@@ -1148,7 +1165,7 @@ function meaningCandidates(full,eng){
     if(STRICT_PRONOUNS[e]){
       const allowed=[];
       STRICT_PRONOUNS[e].forEach(v=>forms(v).forEach(x=>allowed.push(x)));
-      const ok=userForms.some(u=>allowed.includes(u));
+      const own=[];splitMeanings(full).forEach(p=>{const c=cleanKor(p);if(c){own.push(c);own.push(dropInnerParticles(c));}});const ok=userForms.some(u=>allowed.includes(u)||own.includes(u)); /* v23: 교재에 적힌 대명사 뜻(예: I=나, he=그 남자, mine=광산)은 그대로 정답 */
       return {correct:ok,reason:ok?'strict-pronoun':'strict-pronoun-wrong',label:ok?'정답':'대명사 형태가 다릅니다'};
     }
 
@@ -1160,6 +1177,11 @@ function meaningCandidates(full,eng){
         if(!u||!c) continue;
         if(u===c) return {correct:true,reason:'exact',label:'정답'};
       }
+    }
+
+    /* 1-1. 정답 의미를 여러 개 공백으로 함께 쓴 답도 인정 */
+    if(multiMeaningAnswerOK(userAnswer,candidates)){
+      return {correct:true,reason:'multi-meaning',label:'정답'};
     }
 
     /* 2. 의미군 동의어. 품사가 맞을 때만 인정 */
@@ -1180,7 +1202,7 @@ function meaningCandidates(full,eng){
     for(const u of userForms){
       for(const c of candidates){
         if(!u||!c) continue;
-        if(u.length>=3 && c.length>=3 && (u.includes(c)||c.includes(u))){
+        if(u.length>=3 && c.length>=3 && ((u.startsWith(c)&&/^(하다|되다|하는|되는|한|된|함|됨|의|적인|적|들|이다|것)?$/.test(u.slice(c.length)))||c.startsWith(u)||(c.includes(u)&&!/다$/.test(u)))){ /* v23: 요구하다≠구하다, '정답+엉뚱한 말'은 오답 */
           if(!userPos || targetPos.size===0 || targetPos.has(userPos)){
             return {correct:true,reason:'meaning-contained',label:'의미 정답'};
           }
@@ -1231,32 +1253,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
 
 </script>
 
-<script>
-/* === SEOLDAE TTS v17 — USER-GESTURE REPLAY + POST-ANSWER FIX === */
-(function(){
-  function engNow(){
-    try{if(typeof appState!=='undefined'&&appState){const q=appState.queue&&appState.queue[appState.idx];if(q){const x=q.item||q;return x.eng||q.eng||'';}}}catch(e){}
-    try{if(typeof app!=='undefined'&&app&&app.current){const x=app.current.item||app.current;return x.eng||'';}}catch(e){}
-    try{if(typeof state!=='undefined'&&state&&state.current){const x=state.current.item||state.current;return x.eng||'';}}catch(e){}
-    return '';
-  }
-  function listenEng(){
-    try{if(typeof listenItems!=='undefined'&&listenItems&&listenItems[typeof listenIndex==='number'?listenIndex:0])return listenItems[listenIndex].eng||'';}catch(e){}
-    try{if(typeof app!=='undefined'&&app.listenItems&&app.listenItems[app.listenIndex])return app.listenItems[app.listenIndex].eng||'';}catch(e){}
-    return '';
-  }
-  function say(t,r){try{return !!(t&&window.__sdSpeakNow&&window.__sdSpeakNow(t,r||.82));}catch(e){return false;}}
-  /* 기존 다시듣기 이벤트가 고장나도 capture 단계에서 최신 TTS 코어로 직접 재생 */
-  document.addEventListener('click',function(e){
-    const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
-    if(['speakBtn','speakButton','listen-replay-btn','listenReplayBtn','sdQuizSpeakBtn','sdAnswerSpeakBtn'].includes(b.id)){
-      const t=(b.id==='sdAnswerSpeakBtn'||b.id==='sdQuizSpeakBtn')?engNow():(listenEng()||engNow());
-      if(t){e.preventDefault();e.stopImmediatePropagation();say(t,.82);}
-    }
-  },true);
-  window.SEOLDAE_TTS_PATCH='17-mobile-gesture';
-})();
-</script>
+
 
 <script>
 /* === SEOLDAE TTS v18 — AUDIBILITY BOOST / HARD SOUND CHECK === */
@@ -1275,11 +1272,230 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
     const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
     if(b.id==='soundTestBtn'){
       /* WebAudio tone uses the media channel and gives a clear maximum-volume reference. */
-      loudBeep();
+      /* v23: 소리 확인은 녹음 mp3로 처리 */
     }
   },true);
   window.SEOLDAE_TTS_PATCH='18-audibility-boost';
 })();
+</script>
+
+
+<script>
+/* === SEOLDAE v23 RELEASE 2026-10-09 ===
+   1) 채점: 쉼표·슬래시·공백으로 여러 뜻을 함께 써도 각 뜻이 모두 맞으면 정답
+   2) 소리: 모든 발음 경로(speechSynthesis 포함)를 녹음 mp3로 통일
+      - 하나의 <audio> 요소를 첫 터치 때 잠금 해제 → iPhone 자동 넘김 후에도 재생
+      - 기기 TTS(갤럭시에서 작게 들리던 소리)는 mp3가 없는 경우에만 사용
+*/
+(function(){
+ /* ---------- 채점 래퍼 ---------- */
+ const LEGACY=window.SEOLDAE_GRADE_V50||window.gradeAnswer;
+ function pieces(s){
+   /* 괄호 [ ] ( ) 안의 쉼표는 나누지 않는다: '입고[신고, 쓰고] 있다' */
+   const str=String(s||'').replace(/\s+(?:또는|혹은)\s+/g,',');
+   const out=[];let cur='',depth=0;
+   for(const ch of str){
+     if(ch==='['||ch==='(')depth++;
+     else if((ch===']'||ch===')')&&depth>0)depth--;
+     if(depth===0&&/[,，、;；\/]/.test(ch)){out.push(cur);cur='';}else cur+=ch;
+   }
+   out.push(cur);
+   return out.map(x=>x.trim()).filter(Boolean);
+ }
+ function legacy(o){try{return LEGACY(o)||{correct:false,reason:'wrong',label:'오답'};}catch(e){return {correct:false,reason:'engine-error',label:'오답'};}}
+ /* 한 덩어리(쉼표 없는 부분)를 채점: 그대로 맞으면 정답,
+    아니면 공백으로 나눈 모든 묶음 방법(예: '눕다 놓여 있다' → '눕다' + '놓여 있다') 중
+    모든 묶음이 정답인 경우가 있으면 정답 */
+ function gradeChunk(o,chunk,cache){
+   const one=(t)=>{if(!(t in cache))cache[t]=legacy(Object.assign({},o,{userAnswer:t}));return cache[t];};
+   const whole=one(chunk);
+   if(whole.correct)return whole;
+   if(/[\[(]/.test(chunk)){const plain=chunk.replace(/\[[^\]]*\]/g,'').replace(/\([^)]*\)/g,'').replace(/\s+/g,' ').trim();if(plain&&plain!==chunk){const r2=gradeChunk(o,plain,cache);if(r2.correct)return r2;}}
+   const toks=chunk.split(/\s+/).filter(Boolean);
+   if(toks.length<2||toks.length>8)return whole;
+   const n=toks.length;
+   for(let mask=1;mask<(1<<(n-1));mask++){
+     let groups=[],cur=[toks[0]];
+     for(let i=1;i<n;i++){if(mask&(1<<(i-1))){groups.push(cur.join(' '));cur=[toks[i]];}else cur.push(toks[i]);}
+     groups.push(cur.join(' '));
+     if(groups.every(g=>/[가-힣0-9]/.test(g)&&one(g).correct))return {correct:true,reason:'multi-meaning',label:'정답'};
+   }
+   return whole;
+ }
+ function gradeOpts(o){
+   o=o||{};
+   if((o.direction||o.type||'')==='k2e'){
+     const r=legacy(o); if(r.correct)return r;
+     /* 교재에 '=' 로 함께 실린 같은 뜻 표현(예: so far = until now)도 정답 */
+     const ne=x=>String(x||'').toLowerCase().replace(/\[[^\]]*\]|\([^)]*\)/g,' ').replace(/[^a-z' ]+/g,' ').replace(/\s+/g,' ').trim();
+     const A=window.SD_ENG_ALTS||{}; const alts=A[String(o.eng||'').toLowerCase().trim()]||[];
+     const exp=x=>[x,String(x).replace(/(\S+)\[([^\]]+)\]/g,'$2')];
+     if(alts.some(x=>exp(x).some(v=>ne(v)===ne(o.userAnswer))))return {correct:true,reason:'english-alt',label:'정답'};
+     return r;
+   }
+   const raw=String(o.userAnswer||'').trim();
+   const cache={};
+   const ps=pieces(raw);
+   if(ps.length>1){
+     /* 쉼표·슬래시로 여러 뜻을 쓴 경우: 모든 뜻이 맞아야 정답 (맞는 뜻 + 엉뚱한 뜻 = 오답) */
+     const rs=ps.map(p=>gradeChunk(o,p,cache));
+     if(rs.every(x=>x.correct))return {correct:true,reason:'multi-meaning',label:'정답'};
+     return {correct:false,reason:'multi-wrong',label:'오답'};
+   }
+   return gradeChunk(o,raw,cache);
+ }
+ /* 책마다 채점 함수 호출 방식이 달라서(객체 1개 / (답,단어,방향) 3개) 둘 다 받는다.
+    v22까지는 고교기본·워드마스터에서 3개짜리 호출이 깨져 모든 답이 오답 처리됐다. */
+ function toOpts(ans,item,type){
+   item=item||{};
+   return {direction:type||item.type||item.direction,userAnswer:ans,eng:item.eng,korFull:item.kor_full||item.korFull||item.kor};
+ }
+ window.gradeAnswer=function(a,item,type){
+   if(a&&typeof a==='object'&&item===undefined)return gradeOpts(a);
+   const r=gradeOpts(toOpts(a,item,type));
+   if(window.__SD_GRADE_RETURNS_STRING)return r.correct?'correct':'wrong';
+   return r;
+ };
+ try{gradeAnswer=window.gradeAnswer;}catch(e){}
+ if(typeof window.gradeAnswerV5==='function'){
+   window.gradeAnswerV5=function(ans,item,type){return gradeOpts(toOpts(ans,item,type));};
+   try{gradeAnswerV5=window.gradeAnswerV5;}catch(e){}
+ }
+
+ /* ---------- 녹음 mp3 재생 ---------- */
+ const MAP={"fix":"audio/99f707ef02f096ed.mp3","shade":"audio/7f5bb03cf507c861.mp3","bury":"audio/139d7cf1cb866aa0.mp3","cave":"audio/9dba6a05bc1c150b.mp3","useful":"audio/c4ba45eb15e9b761.mp3","dot":"audio/348a3c4a81ea6081.mp3","copy":"audio/f84e2e2dadd87384.mp3","through":"audio/be6a563e765d0c1d.mp3","oven":"audio/c534ed71ba417979.mp3","lend":"audio/5e4fc9a5e1d11202.mp3","moment":"audio/b56def36afbfb8cd.mp3","wing":"audio/bd6658dc079b66a2.mp3","neighbor":"audio/3ba2881d2c6b68db.mp3","piece":"audio/b0a94b3de01d89a0.mp3","still":"audio/677c1bfa3a036c74.mp3","twin":"audio/be605983e1868ad7.mp3","pure":"audio/afe003f11764b023.mp3","stage":"audio/ac5d84bfae726a96.mp3","at first":"audio/3ebd8a6322a5256f.mp3","put on":"audio/9867b6318273f2d1.mp3","war":"audio/24a878ae0121a9e4.mp3","cash":"audio/a34c860a9909dd2e.mp3","advice":"audio/8015f1d1fd4aee94.mp3","lead":"audio/8cb33b2754e53fec.mp3","perfect":"audio/c73c99fd6024c8c0.mp3","search":"audio/3559d7accf003609.mp3","contest":"audio/86d9312fdc10db30.mp3","display":"audio/59b189070af751d4.mp3","tip":"audio/306a967f976ebd7d.mp3","borrow":"audio/72cd0a82a0c7b084.mp3","sharp":"audio/ca0b6293f204dd5c.mp3","machine":"audio/7817c52b25607be6.mp3","trouble":"audio/bee38fbc71dc4377.mp3","roll":"audio/7f7889bab81b66af.mp3","exit":"audio/de3ac21778e51de1.mp3","proud":"audio/0f4d4213d6d9c701.mp3","flood":"audio/ff0db992256ad5c4.mp3","stamp":"audio/bf8f805833a7836a.mp3","at last":"audio/d305dc4334136409.mp3","grow up":"audio/136803b5f0925b9c.mp3","mix":"audio/38743fbb4474f988.mp3","healthy":"audio/de18ccfa15e841c4.mp3","active":"audio/2bb6b986c5d6fb26.mp3","dig":"audio/9080a51cd6de0d21.mp3","simple":"audio/0f7d0d088b6ea936.mp3","view":"audio/8f3a07543988e467.mp3","insect":"audio/1a4e4a7cc4e8f528.mp3","sleepy":"audio/6d677ad010cd3f9f.mp3","root":"audio/dc76e9f0c0006e8f.mp3","total":"audio/5a537e209151ae5f.mp3","final":"audio/d594c2cc0a530250.mp3","scene":"audio/ea5e044532f9bdaa.mp3","prize":"audio/92969bb9ea65e3e7.mp3","nickname":"audio/7428c4145a49b9d0.mp3","pan":"audio/bd2bd8216b9cb4aa.mp3","cartoon":"audio/d524ea4764545378.mp3","leader":"audio/b25f598744d2fedc.mp3","coach":"audio/c63c8ec7f6e23088.mp3","find out":"audio/ecdbd35c938dea22.mp3","be in trouble":"audio/9eeba4dfd146cb08.mp3","lift":"audio/d9090bfdcd31d975.mp3","pack":"audio/6acd621280932e6f.mp3","score":"audio/75ebcb361c656225.mp3","court":"audio/21304eff491bcf79.mp3","desert":"audio/2d5128d7e4e85ee1.mp3","award":"audio/ba19cc7b2184cd3c.mp3","elder":"audio/f429030cf5c0faf3.mp3","among":"audio/2d5a829c4e33fde1.mp3","male":"audio/030ef4a52619b493.mp3","finally":"audio/8f4e3e3c24bac71b.mp3","sometime":"audio/31aaf971949cedd4.mp3","rule":"audio/0f400122e37da3a4.mp3","harmony":"audio/5343a78157a12a7a.mp3","bark":"audio/cc86fbef6659b4c9.mp3","crash":"audio/2fc7f1452374b6e3.mp3","nature":"audio/a5197f10266ae7d8.mp3","valley":"audio/484c4c4a99b32487.mp3","wonder":"audio/c37424cc626cc035.mp3","think up":"audio/a19ac0bb5a4d22d9.mp3","be famous for":"audio/75d6191d9352b903.mp3","hang":"audio/824ee68a8c817170.mp3","able":"audio/782e5ce8edd379fc.mp3","pain":"audio/4582cd02ee9fd9bc.mp3","uniform":"audio/8146160c40cabf56.mp3","beauty":"audio/874f5e379b379e5b.mp3","taste":"audio/270fdbaac5aff8e5.mp3","shout":"audio/d1c79aa3eaf40441.mp3","without":"audio/0d4e654c613ea68b.mp3","care":"audio/ec1deb95d610f97b.mp3","sunlight":"audio/1f4ae04738c55573.mp3","female":"audio/96a1a08dcded48b7.mp3","lower":"audio/346e3ee198e98146.mp3","miss":"audio/f749d76f48b905d2.mp3","exact":"audio/b55e22fe7830e8fe.mp3","popular":"audio/99d637374f51ab8f.mp3","regular":"audio/5f51efbecdb644c4.mp3","noisy":"audio/e570e577ed480b02.mp3","dive":"audio/5ea67a152cd3c52f.mp3","before long":"audio/8be4f9c809a4c58e.mp3","calm down":"audio/aff03a88d5208f26.mp3","pill":"audio/93720caa84103771.mp3","alarm":"audio/73468898c9988e2f.mp3","bored":"audio/aa6897a9085e9241.mp3","freeze":"audio/adcdee7c29e76d6c.mp3","nobody":"audio/365ec17a675f3273.mp3","language":"audio/e11523c5ff23fc16.mp3","teenager":"audio/56c9957fa1f6cf75.mp3","usual":"audio/bf9ebd700b51b03a.mp3","chance":"audio/f49f577d627d39b7.mp3","hero":"audio/0911aed621a145fb.mp3","curl":"audio/5300d17a1d695bd4.mp3","planet":"audio/c8fb554a62152a51.mp3","regularly":"audio/8cd0f11a7181e638.mp3","invent":"audio/1e489c2d76b5aefa.mp3","smart":"audio/1556355684145fce.mp3","dead":"audio/5eb965dd8c804a3a.mp3","soil":"audio/118e80c094833aaf.mp3","meal":"audio/8504d96b1782466c.mp3","take care":"audio/8617fd73a9bbf655.mp3","because of":"audio/e05584535f184310.mp3","coin":"audio/3478fe69c7dcebc1.mp3","prepare":"audio/4197eb0cd81150e5.mp3","quite":"audio/5898102702f11887.mp3","collect":"audio/b3d0a8449e072283.mp3","main":"audio/b28b7af69320201d.mp3","shower":"audio/80136de85bbef43d.mp3","alike":"audio/b79634d7c3ad9b2c.mp3","blank":"audio/6184d6847d594ec7.mp3","freezing":"audio/05468b52a04390b5.mp3","important":"audio/5b4009518b37fa93.mp3","spicy":"audio/680c1e02bc44a15a.mp3","teen":"audio/cca312fae4a655b4.mp3","weigh":"audio/1ea8af94f5c94e36.mp3","deaf":"audio/d69470c437ffb255.mp3","law":"audio/c660f2f32dafabe4.mp3","rub":"audio/0eb10e9f96754ce5.mp3","pour":"audio/03c988f5828654f4.mp3","yet":"audio/1002ea7f7e557f91.mp3","take out":"audio/2041aa7008635d24.mp3","get out of":"audio/7e447b2600c7ad43.mp3","skill":"audio/34b33e00b199d35f.mp3","neat":"audio/4a95dcc4d0463338.mp3","ache":"audio/f4d86d36019180b4.mp3","patient":"audio/b1b0b8de8a6228f6.mp3","elderly":"audio/eb229edafc79a2f7.mp3","mistake":"audio/c07a45a81c6ac151.mp3","channel":"audio/fbe7d7baacdd551e.mp3","during":"audio/ffed391ca2a6c8bb.mp3","flour":"audio/3bcfa747d1716cbd.mp3","lawyer":"audio/3a16417e76977b46.mp3","tire":"audio/63f72cc7de5e660f.mp3","bar":"audio/62cdb7020ff920e5.mp3","soldier":"audio/5a58d848204bd117.mp3","recipe":"audio/e2a2270c8ad2b82d.mp3","course":"audio/4809561b34384fc0.mp3","wallet":"audio/c307b632ca379cb7.mp3","guide":"audio/4956faddb70fe7e0.mp3","silent":"audio/b32285bf14101379.mp3","fill in":"audio/f8c2fc47c1663828.mp3","be different from":"audio/287eb108fbfa4dc1.mp3","rail":"audio/a241b037a73c6def.mp3","adult":"audio/82aef589a6ef88ac.mp3","tasty":"audio/bf34ccd73bfd0aa4.mp3","couple":"audio/33fc2d930ae98120.mp3","especially":"audio/8284b5c967de4e51.mp3","soap":"audio/f6c1ab81815f784f.mp3","lonely":"audio/2689a5aa7f3f3526.mp3","mind":"audio/d42c0112962be8a7.mp3","invention":"audio/94ac05762d597279.mp3","blind":"audio/7afb6295c77cd188.mp3","curly":"audio/e122d28c768ab44c.mp3","stick":"audio/946466f6c96345a8.mp3","purse":"audio/a7e546716acb48c7.mp3","share":"audio/aab90dfe8c6f152a.mp3","design":"audio/056f118278992da3.mp3","form":"audio/d00b39815c187d83.mp3","wild":"audio/0ce0cb683d02f030.mp3","gallery":"audio/5b47b90353dce961.mp3","pick up":"audio/60ee3a8fc0608f2d.mp3","help out":"audio/ec0e28c8f7ba9627.mp3","chat":"audio/7ecde348ff9cda2c.mp3","designer":"audio/1ec1e366509d9a83.mp3","result":"audio/37a5301a88da334d.mp3","type":"audio/d0a3e7f81a9885e9.mp3","someday":"audio/8987238a6266dbb8.mp3","actual":"audio/50f46198a1bd5184.mp3","culture":"audio/8f2e7cd784967d6a.mp3","lost":"audio/2010281d5053cc58.mp3","item":"audio/3a7d9767b1233601.mp3","natural":"audio/11e60b0eaadebaab.mp3","secret":"audio/e5e9fa1ba31ecd1a.mp3","breath":"audio/a99a9c012ef73bd7.mp3","excite":"audio/eccc4d3ab4f5dbae.mp3","online":"audio/2dbc2fd2358e1ea1.mp3","garbage":"audio/78c67c126575c20c.mp3","suck":"audio/4f79cc4a70ffd215.mp3","prison":"audio/6fab4b2b74f96e06.mp3","flow":"audio/d8f7e9c783be8232.mp3","make noise":"audio/22c63e7b9a677b7e.mp3","hand in hand":"audio/d85fc68ad8be59ab.mp3","solar":"audio/0f016a18993f0c48.mp3","captain":"audio/85f45e1685b99e03.mp3","dialogue":"audio/779e2f502781c780.mp3","fail":"audio/a602e216eb44a3ac.mp3","actually":"audio/d617b5ef5a36ed1c.mp3","special":"audio/ba36b97a41e7faf7.mp3","tear":"audio/57c16e02da2f792d.mp3","however":"audio/500f872eb1983c61.mp3","burn":"audio/03b5db720ed1ff2f.mp3","upstairs":"audio/193c47c9b6c7f35c.mp3","living":"audio/54785b354a6fe9bf.mp3","report":"audio/a27297bde9732f2e.mp3","produce":"audio/432f62c7a71c113b.mp3","cheer":"audio/db01e6565927de33.mp3","excited":"audio/f529c0de3cab3a3f.mp3","gather":"audio/d7eee0be1ee642e5.mp3","melt":"audio/c6a0f6ff3d5c617f.mp3","straw":"audio/95e968da9c458a2c.mp3","take care of":"audio/7ee785fc07b00b9e.mp3","not anymore":"audio/1cdd2e7a14af0bcc.mp3","save":"audio/13a4a11319d31c1b.mp3","cause":"audio/ccadf5de3d738fbe.mp3","exercise":"audio/eb70d1fcdf826fda.mp3","member":"audio/6467baa3b187373e.mp3","press":"audio/cd09e18a9bd74eda.mp3","serious":"audio/2b33481854c8c35e.mp3","talent":"audio/b842d5967032eb8d.mp3","greet":"audio/35ff71782def3615.mp3","beat":"audio/47668d39509b45df.mp3","stress":"audio/165bd364fed980be.mp3","later":"audio/3f14ecc8cc777b55.mp3","create":"audio/9b7c68a918b17eb0.mp3","flat":"audio/b9c7b42de27fde88.mp3","return":"audio/63143b6f8007b98c.mp3","activity":"audio/0bf4170444cd473c.mp3","afraid":"audio/2ae3870908b4ef07.mp3","dessert":"audio/f5194be92b9ad0f1.mp3","toothache":"audio/6ff48cffa9ac47dd.mp3","in fact":"audio/2fc799879cfdf2fb.mp3","no longer":"audio/c8637dae75054ad2.mp3","effect":"audio/68d1dae1af85bb6a.mp3","focus":"audio/78918dcaf22c0486.mp3","dictionary":"audio/f18bfb74e613afb1.mp3","allow":"audio/6452e7c5a42f97b0.mp3","print":"audio/6d0d5876e6710ebb.mp3","safely":"audio/04efcab00df6c495.mp3","giant":"audio/0d956e868cfeb496.mp3","usually":"audio/66c2fa4e9e566957.mp3","creative":"audio/df0b6c410fc70cee.mp3","review":"audio/61e62b213a1a56f7.mp3","kiss":"audio/07a2e25662f8c794.mp3","strange":"audio/1468ebe41e325bdf.mp3","comic":"audio/040432c66a82e43e.mp3","mark":"audio/f1b5a91d4d6ad523.mp3","shop":"audio/5042d146667518a1.mp3","talented":"audio/b100212cb69ac72a.mp3","bare":"audio/b9e2c5c9b81ab160.mp3","housework":"audio/6f2e06096af8d0fd.mp3","at least":"audio/b4e380389a774a58.mp3","pass through":"audio/248ecf0f3ef1d6b7.mp3","rise":"audio/e5edb94ec7c2fc31.mp3","accept":"audio/5fb801f2f30ac5b8.mp3","topic":"audio/b415e16fbe4ca40f.mp3","flight":"audio/cca5020761d41326.mp3","hunter":"audio/6e2f9e6111e77edd.mp3","medicine":"audio/ea5eb8e27f6e7dd7.mp3","text":"audio/372ea08cab33e71c.mp3","boil":"audio/807a11e7b9317200.mp3","pleasure":"audio/59ea4ada2701b408.mp3","dirt":"audio/7c97ce2798329767.mp3","everywhere":"audio/a3285469a88cd584.mp3","sheet":"audio/542ebc9c55cd767f.mp3","village":"audio/3bdc3ec682bfbb47.mp3","powerful":"audio/0e1ce4b96457c05a.mp3","scare":"audio/2bfa6b03b4580864.mp3","step":"audio/bd370d1b6f9b3580.mp3","cooking":"audio/c2c1a1062d882a63.mp3","anger":"audio/60b7715d6fe55856.mp3","look up":"audio/198925bb2ce61088.mp3","cut into pieces":"audio/49e71c4be720c942.mp3","own":"audio/fbf63c6adba57ff2.mp3","praise":"audio/59dfae373738ac5b.mp3","continue":"audio/eee0bbba4ff92adb.mp3","wooden":"audio/fc9577268e4aa838.mp3","coast":"audio/366eb327e24036df.mp3","hike":"audio/ecec1d5479ca398b.mp3","scared":"audio/34305c61a64c3c5c.mp3","beyond":"audio/754159999dd84d5f.mp3","meeting":"audio/bd7580126b941404.mp3","danger":"audio/222b3e11200d82d6.mp3","traffic":"audio/c8ab51895da8a2a3.mp3","even":"audio/04b8c80bb78edbc4.mp3","foreign":"audio/44d16146ba6b2951.mp3","lie":"audio/54e2fcb9cc6fe546.mp3","skip":"audio/c7e16815bdd61271.mp3","refuse":"audio/106f0aba1b00a6e6.mp3","plate":"audio/9012c45d7bd54d45.mp3","alive":"audio/006e1d4a9aa6b4eb.mp3","stay up":"audio/4ff1bfd1145c9f03.mp3","get along with":"audio/094de84ee0094351.mp3","sign":"audio/81e9209e64bdd3a5.mp3","branch":"audio/10d735e581f1e250.mp3","reach":"audio/baff1506c2674f5b.mp3","common":"audio/94c8c21d08740f5d.mp3","path":"audio/3150ecd5e0294534.mp3","core":"audio/94a0426e8d3203da.mp3","foreigner":"audio/322f54266fbc86d8.mp3","toward":"audio/c8c87511ab8b4cbe.mp3","vote":"audio/fd63f1ed328da340.mp3","headache":"audio/9023bc9bd0350c38.mp3","interest":"audio/5e8aa8dfeca53b53.mp3","match":"audio/ef5c844eab88bcac.mp3","owner":"audio/579233b2c4792415.mp3","scary":"audio/10e0b28d621df7b6.mp3","aid":"audio/69482e483f4d1126.mp3","tradition":"audio/56d99310d2462709.mp3","per":"audio/8205aed0c460f4ec.mp3","wax":"audio/653470783a93985b.mp3","at that time":"audio/7fa2339d84f3466a.mp3","sooner or later":"audio/cccc103eb6cdc754.mp3","judge":"audio/d1c10fb0e672479e.mp3","agree":"audio/c9600527f45e29da.mp3","basic":"audio/61a7508ed1b04e9a.mp3","drawer":"audio/38591decbaf4a67f.mp3","greenhouse":"audio/ffedc28b1cb42bd3.mp3","iron":"audio/b6a8f89581549d66.mp3","tower":"audio/54efaa66b0dfe19d.mp3","either":"audio/fa98d8d430693455.mp3","mad":"audio/1b3cccda27f8c7a6.mp3","straight":"audio/6ec09feb3f1285b3.mp3","record":"audio/275a700078f03f25.mp3","solve":"audio/f544e4c95b06b4e3.mp3","company":"audio/71b21161ffa1e651.mp3","nation":"audio/f6908a01e19f8e04.mp3","pleased":"audio/b28206465e3d204c.mp3","control":"audio/2aeede80be6f6dfc.mp3","helpful":"audio/4b7392910ae3d09b.mp3","self":"audio/40380bc1d358a6f8.mp3","run out":"audio/66c9cad0ac4a03ee.mp3","after all":"audio/93d6e3a74d59cbbd.mp3","fry":"audio/00c7103750bf7ba9.mp3","habit":"audio/3800515d4b6d29f1.mp3","tax":"audio/e8e27c0a096e5bec.mp3","surprised":"audio/39da98e5cdf61a2e.mp3","abroad":"audio/5fcf5cdf976e8e38.mp3","slide":"audio/e75e1be665cd80a0.mp3","disagree":"audio/f584439dd0eaefd7.mp3","while":"audio/6517f89c46c3f0d6.mp3","row":"audio/e8cdc05b346aa0d4.mp3","festival":"audio/f114308994e541e1.mp3","aloud":"audio/d2d4898b64519a59.mp3","shape":"audio/5080fd62c27826c4.mp3","tough":"audio/c1f0cd9eff02123d.mp3","cafeteria":"audio/90e0948a756a6ffb.mp3","lock":"audio/e117797422d35ce5.mp3","bottom":"audio/c03e9099aad17cb5.mp3","product":"audio/38a007151abe87cc.mp3","medal":"audio/828b391160a796f5.mp3","get to":"audio/ba7ad109259118be.mp3","come true":"audio/e6dc5e8762fedc49.mp3","sale":"audio/5b8a763b54510a22.mp3","metal":"audio/4963bb059132fa0c.mp3","complete":"audio/0737c22d3bfae812.mp3","general":"audio/dfe2db74975e0aa9.mp3","parade":"audio/28e532d56b18548c.mp3","royal":"audio/9d644bbc55710745.mp3","ever":"audio/55472e5395290a0b.mp3","though":"audio/3b4524320a92ca76.mp3","direct":"audio/24a1733ca8bb0ae4.mp3","amazing":"audio/5749570a404b690f.mp3","clay":"audio/de6b29cb18084bdc.mp3","bow":"audio/fa5bd38090c7d421.mp3","interview":"audio/af537eebeeb24855.mp3","outdoor":"audio/28ddbab039004f9e.mp3","normal":"audio/9c2a6e4809aeef7b.mp3","factory":"audio/7b202d57f214af01.mp3","peer":"audio/2b974ba4b46a6ad2.mp3","sketch":"audio/3e862665217aaea7.mp3","after a while":"audio/20a345366b5ea8ed.mp3","slow down":"audio/2185c48b70679027.mp3","base":"audio/1405df66cbe219b0.mp3","grade":"audio/39a6bd435eb632f8.mp3","signal":"audio/36ab4aaa56c8fea2.mp3","meaning":"audio/2a9079f50339e361.mp3","cover":"audio/a28100fa6a50a3cb.mp3","awake":"audio/93d34b45d5ed7ffb.mp3","quickly":"audio/0b35c19a59e785e6.mp3","trash":"audio/6aa460340bed42d0.mp3","protect":"audio/145969f1390d3ca1.mp3","evil":"audio/b653891162a040e1.mp3","character":"audio/f0db3fa401aea04b.mp3","friendly":"audio/41209342f3614110.mp3","worried":"audio/7c3dc3889b6f5348.mp3","director":"audio/235acfdf1375f5ef.mp3","sentence":"audio/a17dbb9a6b3ff869.mp3","loose":"audio/67805069b9d0f716.mp3","indoor":"audio/227980c20ada8087.mp3","puzzle":"audio/ddcb4be46283a088.mp3","take away":"audio/66acf4aeecc1a825.mp3","have in common":"audio/b739d97ab6f70727.mp3","bill":"audio/c692d6a10598e0a8.mp3","cough":"audio/1b9bcbed0d26155a.mp3","image":"audio/0e76292794888d4f.mp3","national":"audio/ba1d4317935dffc0.mp3","seed":"audio/92713d4709377111.mp3","truth":"audio/45fa151bf9a11c0e.mp3","mixture":"audio/ab41eb3febbf7b75.mp3","reuse":"audio/1fc36975bb7157a9.mp3","discover":"audio/1eb0b8dc987b82e5.mp3","junk":"audio/c911297212d955d6.mp3","courage":"audio/a2d90f4e973af241.mp3","shine":"audio/3da90bd3db535c44.mp3","eastern":"audio/26e8e3d3a68a48f9.mp3","peace":"audio/d7c50a080cb30eef.mp3","fortune":"audio/e628da552b759cd0.mp3","accident":"audio/f2b195dcacbaa0f4.mp3","humor":"audio/f6f30f107aaf2f38.mp3","wrap":"audio/f0cad97953dfb126.mp3","show up":"audio/0e6a89d8eb9a2584.mp3","be covered with":"audio/2d122b8555422abc.mp3","breathe":"audio/5224feaaede304d4.mp3","gain":"audio/5fe05a50c1e04e07.mp3","fit":"audio/9c20b9ba55a293ba.mp3","chief":"audio/c4b038d0316060f7.mp3","humorous":"audio/6b3c044195ebcd2d.mp3","unique":"audio/58037c0078d5f54e.mp3","completely":"audio/36152587b7f8361c.mp3","pose":"audio/bd68205c2099fb1b.mp3","adventure":"audio/ae78612a049cca72.mp3","tight":"audio/98b9f3569789ee53.mp3","stupid":"audio/5514ae81cf9b1af3.mp3","double":"audio/bdb36bb22deb1692.mp3","race":"audio/de4bedce64a13c43.mp3","express":"audio/f3c62de455962fbd.mp3","illegal":"audio/848c4bd26ce5574c.mp3","symbol":"audio/810a25d76c31e495.mp3","mention":"audio/7ee02fc66dfb9806.mp3","sum":"audio/e9dff3557ded7414.mp3","look through":"audio/da085220a3cf09d7.mp3","throw away":"audio/49d09cc66a0eb5ca.mp3","bite":"audio/6a20d919ef6203f8.mp3","society":"audio/4abdad28f520e9c6.mp3","title":"audio/3c6de1b7dd91465d.mp3","anybody":"audio/5105ca66e90356fd.mp3","fever":"audio/e2f347fb47ff25ff.mp3","scenery":"audio/3a1e3fa7afed17e3.mp3","order":"audio/cce55e4309a75398.mp3","neither":"audio/f1078caaa8ebb366.mp3","diamond":"audio/f872caad177d67bb.mp3","source":"audio/828d338a9b04221c.mp3","contact":"audio/1a73af9e7ae00182.mp3","equal":"audio/f57b2d312d9efe8f.mp3","none":"audio/71f8e7976e4cbc45.mp3","period":"audio/54235b8b0e980ebb.mp3","journey":"audio/7da33f49740772bd.mp3","rough":"audio/6bb57c7ed7c1e831.mp3","million":"audio/e8502058829cfba5.mp3","ceiling":"audio/baacee0a140dadfd.mp3","give up":"audio/54ceacd5d219a44b.mp3","hang out with":"audio/ce0f5124a61d00dd.mp3","hug":"audio/f11fb55cedc6b7d6.mp3","vision":"audio/625f139d6ccd7576.mp3","century":"audio/75a03fc2c552a850.mp3","anywhere":"audio/112c2a063a0f6f3f.mp3","nearly":"audio/749a99285f3623ad.mp3","beard":"audio/c8dc9f4db4b2fa2c.mp3","surround":"audio/31292d34ffc2c1c7.mp3","upper":"audio/c538c170bdc6b0f3.mp3","dynasty":"audio/e71e137b66c7e112.mp3","whole":"audio/af81132610ec2145.mp3","follow":"audio/f7ac253b1bed9171.mp3","effort":"audio/3f1e727356a5c84f.mp3","imagine":"audio/971687e355a1a283.mp3","shot":"audio/8faccbbfbfdbc1c6.mp3","pimple":"audio/571a71df7c992b63.mp3","raindrop":"audio/e545b10d93e698c5.mp3","ghost":"audio/c4745785181de931.mp3","sweat":"audio/8c49835ccb2c634d.mp3","care for":"audio/edf25704f8dcee72.mp3","make up":"audio/a65504d21af4b122.mp3","huge":"audio/f2104f95264636b0.mp3","tool":"audio/1937c4c28f726186.mp3","attack":"audio/a6d81694b1fea544.mp3","battle":"audio/ddb4a6bd8fed8f7b.mp3","universe":"audio/244fb75b19415c9e.mp3","global":"audio/9027cc5a2c1321de.mp3","sudden":"audio/77b8a75549e1d4c7.mp3","rude":"audio/06458dcb90a4ca12.mp3","challenge":"audio/bb064b23223dff9b.mp3","frankly":"audio/5ad65e61a0bf04cd.mp3","death":"audio/4f14c08f988ebf91.mp3","else":"audio/ae050f5b7fb8d383.mp3","fantastic":"audio/3be18d81b31f817c.mp3","swing":"audio/723f4e1ce33adddf.mp3","master":"audio/4f26aeafdb236762.mp3","social":"audio/0dbe529c4dfad996.mp3","code":"audio/e6fb06210fafc02f.mp3","pedal":"audio/8d3eb82f81afb8f9.mp3","watch out":"audio/a1e3e9837dd08c43.mp3","not at all":"audio/b050566d50f0f1cb.mp3","action":"audio/34eb4c4ef005207e.mp3","backward":"audio/92cfee211c2718d2.mp3","sore":"audio/f7db00c282373404.mp3","daytime":"audio/fa484b08fef7cdee.mp3","chore":"audio/310ec97dfbafdfe8.mp3","impress":"audio/ad68fcd96e5cda05.mp3","fair":"audio/187770cf5af2d346.mp3","process":"audio/c2e2d6621334dc89.mp3","comfort":"audio/4ea61f940e0a991c.mp3","suddenly":"audio/fac40e01fef1e0f7.mp3","host":"audio/86dd1cf45142e904.mp3","graphic":"audio/35db87052909da83.mp3","merry":"audio/c441111693385491.mp3","silence":"audio/ca456ebf8e01e11c.mp3","trade":"audio/6f3eb703dcabcb06.mp3","enemy":"audio/706c3c2934d87936.mp3","volume":"audio/d387fc8d57b2e3dc.mp3","journal":"audio/4954ccf587d79316.mp3","on time":"audio/5a94729cd8f51774.mp3","make fun of":"audio/9a639c91546c19ca.mp3","pace":"audio/4c1e65d64348c17a.mp3","compare":"audio/b64ca250f492e3f0.mp3","cloth":"audio/a8d3866ed41c0d80.mp3","novel":"audio/caee3e9d54b49ae5.mp3","rate":"audio/1e01d215bc098e7f.mp3","gorgeous":"audio/0a6af09f6e46c076.mp3","relax":"audio/63bb094ca4821a02.mp3","against":"audio/b51c31d9cefe2793.mp3","duty":"audio/d1f30ba13f7633d8.mp3","unfair":"audio/ee50a54d0fd68e3d.mp3","traditional":"audio/c949c0afd96a975e.mp3","prove":"audio/82ffc9435b79fa76.mp3","seem":"audio/72f15b250fdd58cc.mp3","equally":"audio/c51c9a5de8c7e329.mp3","modern":"audio/b09be85d514f805a.mp3","footprint":"audio/627ddd6f0d79ad23.mp3","loudly":"audio/afdced5da7115fc0.mp3","seafood":"audio/6386a42908c37e32.mp3","stop by":"audio/8e31b743911e5635.mp3","be over":"audio/965c49532c508919.mp3","mild":"audio/021c64fef7805484.mp3","absent":"audio/16ca7689b5f95367.mp3","connect":"audio/f11a107f38328604.mp3","fur":"audio/cee609b48cd2c56a.mp3","interested":"audio/ebfb2e9c2ac20e1a.mp3","rival":"audio/9ba5eef5f0cb4831.mp3","decide":"audio/d14809f05ad6075c.mp3","throat":"audio/39736679cb35de1c.mp3","examination":"audio/36d2b0a31a6434ea.mp3","bump":"audio/ca067828db296cce.mp3","golden":"audio/ec30adc79e734900.mp3","swimsuit":"audio/d78b03876c03aa75.mp3","cancel":"audio/4fd0653c4f2aef3b.mp3","passion":"audio/eabc12ab2e0eb30b.mp3","stomach":"audio/cfa81d59225647d2.mp3","wheel":"audio/3a7195d99bee6bb1.mp3","sour":"audio/000b4b94cb03a48b.mp3","pole":"audio/57e9db67451c8ad5.mp3","hand out":"audio/68cd03ff3b255c2b.mp3","try one's best":"audio/4d9cf4e9f26abdd8.mp3","brick":"audio/e56bb5acc77bdc54.mp3","edge":"audio/a0f2c69a18eaea9d.mp3","chase":"audio/702b78f40c5a2ca9.mp3","fashionable":"audio/1c4820fecf833519.mp3","human":"audio/d787f56b080945c1.mp3","mask":"audio/9d4cca1595c30e43.mp3","single":"audio/ce0b1612aa711b78.mp3","therefore":"audio/012071d7359274e1.mp3","closely":"audio/be102793f30e8f7c.mp3","divide":"audio/c4da7b6033f205b1.mp3","impression":"audio/5c00aab5b80600e8.mp3","animation":"audio/a6b8b600c27ce95d.mp3","target":"audio/0e8a3ad980ec1798.mp3","repair":"audio/e8a7d6f2bc4132a0.mp3","skin":"audio/d0cb2acd07392521.mp3","western":"audio/b681487927bbb2be.mp3","speed":"audio/92b6320812d86abe.mp3","port":"audio/062d8a9dec0fa507.mp3","ask for …":"audio/16a64ca57c1bed9a.mp3","for the first time":"audio/43d412cadb9c3808.mp3","forward":"audio/ace0c5e90ac07202.mp3","track":"audio/42aef171c1c0acca.mp3","choice":"audio/630af549b66857e8.mp3","shoot":"audio/191048ed5a4e50ac.mp3","peel":"audio/9e858e757965b5cb.mp3","decision":"audio/8501a34f34dea308.mp3","quietly":"audio/c60db3ad3011231b.mp3","beside":"audio/d1c8869983ffe3b4.mp3","clearly":"audio/27eddd83f261606a.mp3","repeat":"audio/c0ac4842418e3458.mp3","switch":"audio/01ba7992f85de477.mp3","landmark":"audio/93ac1a0050ee54e7.mp3","goods":"audio/3f76207183ce12fe.mp3","announce":"audio/4abd4f9c8fc9a2d3.mp3","poem":"audio/69d27e80a95a3fb1.mp3","electric":"audio/22d362f033d9bd28.mp3","storm":"audio/6ad3a9478f1c4162.mp3","wire":"audio/6e1c68495f82f763.mp3","day by day":"audio/a84e9a8748d3e751.mp3","turn into …":"audio/2933b2cb6801bcec.mp3","advise":"audio/1ce9e22bdf933624.mp3","introduce":"audio/a69afe5d834b5e8d.mp3","opinion":"audio/b0af31bd966bfffb.mp3","smooth":"audio/254f76970b57b910.mp3","defend":"audio/a4555a4be0d70c08.mp3","possible":"audio/db7c8cf9138543af.mp3","wave":"audio/d7ce74466d54133c.mp3","nor":"audio/19d0495c3630c205.mp3","chemical":"audio/4d3d0a8d249dd91d.mp3","fake":"audio/c053ecf9ed41df03.mp3","rapidly":"audio/c7a6343baa9568fa.mp3","trust":"audio/fcbc333bd18271e9.mp3","garage":"audio/4c2f65997d3e1137.mp3","plain":"audio/68c46e84d76d2e7e.mp3","bother":"audio/ddb1e7c979a33eef.mp3","favorite":"audio/75017a36ec07fd4c.mp3","victory":"audio/eaa6a0410f2c7a8d.mp3","salty":"audio/31c31e4d9247bebd.mp3","check out":"audio/cdb580e20d560228.mp3","more and more":"audio/d23c78d13a83372a.mp3","birth":"audio/e461268b795e9dba.mp3","accent":"audio/50f8438e2eea35c7.mp3","educate":"audio/a62a96702da958b6.mp3","forever":"audio/e07f8c4ab6822127.mp3","handle":"audio/a2dd7ec666aacd57.mp3","impossible":"audio/a708dd233307e61e.mp3","lastly":"audio/3ce69cdfac0d26af.mp3","site":"audio/c099a42a5555825c.mp3","condition":"audio/afad9a69767e7c24.mp3","doubt":"audio/d69cbcb4efbb8a20.mp3","subject":"audio/335ce16b3fe40346.mp3","youth":"audio/f9925d1162aeb202.mp3","monster":"audio/0e818bfa0679df30.mp3","stomachache":"audio/91b0c2bb6f869bf6.mp3","public":"audio/61c9b2b17db77a27.mp3","private":"audio/e80721793c24ae14.mp3","task":"audio/7fbb727db4b2b671.mp3","circus":"audio/3f2c0d970e76980d.mp3","run away":"audio/0c58121e7097ddb9.mp3","at the same time":"audio/e0fbf196642689d6.mp3","apart":"audio/b76ade163d874cc5.mp3","poetry":"audio/0e23246b5c43f521.mp3","balance":"audio/8dfa30e0245064df.mp3","chart":"audio/b82b40b84a2f0695.mp3","damp":"audio/f5e2e360d28214bc.mp3","publish":"audio/5e2fb0c2c59448e1.mp3","weekday":"audio/4a4b1ab4fa1a544d.mp3","celebrate":"audio/fc05e0e4f89f79aa.mp3","triangle":"audio/b7d045ced8a819cb.mp3","electricity":"audio/3894e20772402596.mp3","fear":"audio/865a39232acd5b79.mp3","recent":"audio/7a7d1b8a93da53ce.mp3","injury":"audio/c5b0c16a71e80ada.mp3","select":"audio/81448fe273247b53.mp3","haircut":"audio/ff274b1c2906197f.mp3","net":"audio/391b6629d9b645d3.mp3","screen":"audio/35b19fa87f2e1737.mp3","shore":"audio/24dc631636ba6694.mp3","fill out":"audio/d5e7896fc743c83c.mp3","more than":"audio/f9c07b5f68620249.mp3","offer":"audio/98362e3f05e068d9.mp3","address":"audio/c662180230cad147.mp3","bitter":"audio/23fda791fa8727ee.mp3","cancer":"audio/30632c306ba7c5de.mp3","fold":"audio/c5b2b01d33b40a69.mp3","downtown":"audio/248191c5112ac54d.mp3","crime":"audio/cdde326f00b45b81.mp3","surface":"audio/c6359a7968b3cd89.mp3","entrance":"audio/df33994d15593333.mp3","slice":"audio/0a5228e66df38e2f.mp3","pattern":"audio/91cc2e927b3bfb1d.mp3","respect":"audio/14012cd1b375ede0.mp3","soul":"audio/0867322e7c4223c8.mp3","instead":"audio/571d5bc739cc9f7b.mp3","muscle":"audio/4b696327299c61a1.mp3","unit":"audio/0df9eea0bad5a553.mp3","powder":"audio/823fafde4e8306ec.mp3","theme":"audio/dc151a5a2b81059b.mp3","as well":"audio/3177a98c038fd4ff.mp3","hand in":"audio/4d53b96ef0ae52a8.mp3","cycle":"audio/5d2432d4636d257e.mp3","degree":"audio/7955b936c48c9e75.mp3","bend":"audio/abf1da7e9fd453d6.mp3","reason":"audio/7947e92e3c8e49d8.mp3","safety":"audio/be6c324c05dd1f47.mp3","asleep":"audio/40799d1d25d2f141.mp3","confident":"audio/39a449bf0e1bc04e.mp3","wavy":"audio/b981a589a01d1010.mp3","tube":"audio/0ae2f41c62e8be2f.mp3","attend":"audio/600f311cf31f8446.mp3","destroy":"audio/6870010883a79e8b.mp3","visitor":"audio/4ed0428505b0b89f.mp3","emotion":"audio/a1faba8ba889571d.mp3","spin":"audio/a801301ec2b8c65e.mp3","southern":"audio/5fd2a36e8130e4bc.mp3","fortunately":"audio/7ef172de58ba035f.mp3","guest":"audio/35675e68f4b5af7b.mp3","pump":"audio/94c8197e8c2d01d8.mp3","take place":"audio/19e57fb7f44822d2.mp3","instead of":"audio/cb82821f54436209.mp3","origin":"audio/b284f94827db1fa2.mp3","major":"audio/18c9d4621ef6c311.mp3","appear":"audio/910f17dc52f0ccb2.mp3","fabric":"audio/19d3cef9dd655b3c.mp3","customer":"audio/b39f008e318efd2b.mp3","importance":"audio/f6fa22a7f0fb43a6.mp3","candle":"audio/7aa020f7ef6a89e5.mp3","although":"audio/dea713fc735e960f.mp3","expect":"audio/ff93c451ac21b507.mp3","sink":"audio/6f2b83563239e866.mp3","trick":"audio/1cb0f0d6acdcefed.mp3","detail":"audio/b7f90d4c10dc4a03.mp3","remind":"audio/aa6f937291fa7350.mp3","happen":"audio/53571adf08ca262f.mp3","beg":"audio/ff14a362669695cc.mp3","plenty":"audio/219f00c2893dd823.mp3","schoolwork":"audio/7962b6a1db8af7cf.mp3","steal":"audio/b07df62bae8c8120.mp3","end up with":"audio/ab5fa623b421d79b.mp3","would like to-v":"audio/72f5994b2b1854ed.mp3","feed":"audio/65c3466e8889ff12.mp3","pile":"audio/eb212bb2faeeaf8f.mp3","reply":"audio/a5dfd1e2a15413c2.mp3","similar":"audio/af62f3021051fbc9.mp3","awful":"audio/36e8e550c9f9bc5b.mp3","escape":"audio/cdecabe1520a398e.mp3","overcome":"audio/aa078da4c54fa520.mp3","anyway":"audio/736b67b302dc5ebd.mp3","blend":"audio/f9b1cd1ec91a928e.mp3","disappear":"audio/dbec95941dfcfb27.mp3","found":"audio/2739bb260ce45a5a.mp3","international":"audio/4ff75f80957469c4.mp3","curious":"audio/293028aa6ff9c08a.mp3","shock":"audio/3dbcdd8b3ea17c35.mp3","worth":"audio/c5918b665934175e.mp3","cell":"audio/5f435eb30281de82.mp3","scream":"audio/0e12221811eb338d.mp3","provide":"audio/4ab69d1f449d0c97.mp3","get together":"audio/0a71afed16bbf628.mp3","talk to oneself":"audio/3ce87c081b3398de.mp3","brain":"audio/8b9248a4e0b64bbc.mp3","disease":"audio/4be181e4cac822c0.mp3","gesture":"audio/a820fe7d4cadc83d.mp3","locker":"audio/e321a3ac1caa894c.mp3","remember":"audio/0759f56c5c8c8e61.mp3","curiosity":"audio/f90bc924da413d16.mp3","athlete":"audio/2822571142546a1a.mp3","such":"audio/47080e9f573ccc9d.mp3","article":"audio/565cecd7e8f5c606.mp3","capital":"audio/5d8df9b1deffcdaa.mp3","explain":"audio/f7c1380a0d710f68.mp3","forget":"audio/b96cfac54be61549.mp3","manner":"audio/4ebd24dfcee2a933.mp3","navy":"audio/57c5f2e274183c79.mp3","skillful":"audio/cb921db179e41b53.mp3","tune":"audio/920ae2fa4bff806d.mp3","sticky":"audio/3e0fd166d4940e5f.mp3","perhaps":"audio/b81f4a81f3612a37.mp3","in need":"audio/377089321850eea5.mp3","come across":"audio/20aa81e7decff1a6.mp3","sense":"audio/e9a38c050834263f.mp3","army":"audio/0b50dd7e1b37dc26.mp3","booth":"audio/929ec48a315a267b.mp3","conduct":"audio/1f005da3de016bc8.mp3","fault":"audio/586cbf6adf67d60e.mp3","ladder":"audio/0c3ddcfc0b1dc616.mp3","heal":"audio/0d19b4a6d5b75638.mp3","difference":"audio/48d53c6e22192bba.mp3","success":"audio/53a5687cb26dc41f.mp3","violent":"audio/3304fb6be0936341.mp3","guard":"audio/c7e42d43b0a326f8.mp3","manage":"audio/3f282fcba8933e03.mp3","remain":"audio/7649a446e543cac9.mp3","exchange":"audio/a3497f3e45b19383.mp3","castle":"audio/36e473c8b75b36f9.mp3","northern":"audio/42c65f1a90f37c2f.mp3","pillow":"audio/81cebb9e8bd9c850.mp3","tomb":"audio/d660902bf83ccd03.mp3","set up":"audio/eafa3ec6a2e1f3ee.mp3","all the time":"audio/182a8068e3487449.mp3","sight":"audio/89be8e3911b8558d.mp3","amount":"audio/9cb6ff12fb81d5cd.mp3","bold":"audio/c9b76ae79584aabf.mp3","community":"audio/418b03c91215cc91.mp3","diet":"audio/0a96963bb82b753e.mp3","explore":"audio/9dda9754b3ee7600.mp3","grain":"audio/ee4dddc76b9d5e55.mp3","represent":"audio/7e6a97c5642c983e.mp3","disappointed":"audio/74699616123fb641.mp3","wealth":"audio/b42f805d80e2e796.mp3","solution":"audio/00f97cb506e7cfbb.mp3","loss":"audio/c9279f09f8296b9e.mp3","notice":"audio/a81b09d9521597eb.mp3","poison":"audio/e6aa09fd40ce4f9d.mp3","series":"audio/8c45d090913a21d5.mp3","tribe":"audio/c9a7eef6154a136e.mp3","failure":"audio/d68049bb85454c0b.mp3","cage":"audio/895ff49d4e22e30c.mp3","ahead of":"audio/10282280493d839b.mp3","in short":"audio/3ef39813d7f7bfbb.mp3","familiar":"audio/1b7e649fe6adac88.mp3","argue":"audio/bf1a4c6597155e9f.mp3","honor":"audio/489c8fd4b6dd4879.mp3","campaign":"audio/23f43ae94d2546d1.mp3","delight":"audio/2a17ce1476ccc47f.mp3","cable":"audio/e97ba6aed5561a3d.mp3","zone":"audio/b6931b00fd5c406e.mp3","memory":"audio/81c5d49be9505089.mp3","expression":"audio/ec9814396ba26fa0.mp3","pipe":"audio/aaa83eac6890a9a6.mp3","volunteer":"audio/0167562988f35591.mp3","spill":"audio/c97bf2544e2181bb.mp3","physical":"audio/aa8d71087485ba45.mp3","lean":"audio/8be47d2b8549b583.mp3","research":"audio/2c7bf1b777859b71.mp3","include":"audio/d3ecb0d890368d76.mp3","successful":"audio/33375351bc25cf13.mp3","silly":"audio/e891b554dd524dde.mp3","be filled with":"audio/9fd2a9348b76f626.mp3","on one's way":"audio/7fa691e78150a353.mp3","ease":"audio/93ae3f8edb79bd71.mp3","force":"audio/fafec1e5ff94390c.mp3","average":"audio/93a8018f99fa5bd7.mp3","relationship":"audio/6a73a9121a5de293.mp3","information":"audio/83dd9d6af43f8cbe.mp3","pollute":"audio/5f07350b2aa85a6f.mp3","smoke":"audio/5cb1e6240fb46e67.mp3","document":"audio/4f8278c89ad16da0.mp3","ancient":"audio/9c92ad25076f8390.mp3","succeed":"audio/013b6e6fb5329cfa.mp3","kindness":"audio/67b889b2ec5cba72.mp3","growth":"audio/34a7962212abe169.mp3","university":"audio/f9f914060ccb1e10.mp3","crazy":"audio/33b501a5f87749b2.mp3","newborn":"audio/305c1f21410f8aa5.mp3","virus":"audio/68bb75d24bdb38da.mp3","chemistry":"audio/822131fc544a9543.mp3","steel":"audio/f91421def5ee0d7f.mp3","cut down":"audio/10e90e2bef9aa532.mp3","be familiar with":"audio/09bd0c1cf2186d7a.mp3","value":"audio/f32b67c7e26342af.mp3","cast":"audio/39aa12e6d633fbb4.mp3","fame":"audio/4a43d29dc895335e.mp3","object":"audio/1615307cc4523f18.mp3","recycle":"audio/089f4e36079ef274.mp3","schedule":"audio/11e9ba26c91a2db7.mp3","stare":"audio/bdd9b993f664e8e9.mp3","probably":"audio/a843d4094a2402d8.mp3","supply":"audio/076df7153a50d682.mp3","debt":"audio/e52ec7a1e9dd16e5.mp3","experience":"audio/f96da029a6daa432.mp3","instant":"audio/6a370268c37496bd.mp3","bacteria":"audio/bc5cdba9ae40548b.mp3","appropriate":"audio/f290fd9a145f9e54.mp3","comment":"audio/118a9989815489c2.mp3","apology":"audio/6164d9ce2e38316f.mp3","magnet":"audio/b257af45fbc9f52d.mp3","tap":"audio/25f30d353d672994.mp3","hang on":"audio/5a365eb6d4eb23dc.mp3","get used to":"audio/0a90785e5d66022e.mp3","blame":"audio/e04a67a1c220ec37.mp3","realize":"audio/dab96e77cfd931f6.mp3","tend":"audio/629cc13eb4ceefa0.mp3","college":"audio/d9c4e99a174c9471.mp3","comfortable":"audio/2b867d9270e055e8.mp3","scold":"audio/46727cb0bbe4b862.mp3","freedom":"audio/7ecfd8f97b4729c6.mp3","hardly":"audio/be67ab6fe5bea874.mp3","lay":"audio/b455d3853f3b89b1.mp3","separate":"audio/afddd76fc131aac8.mp3","moonlight":"audio/18cae9faeeb9b99b.mp3","pity":"audio/26c78a3f38ed59b7.mp3","discuss":"audio/1b7949a7060ddc9e.mp3","education":"audio/24e7451df05ed5cd.mp3","pardon":"audio/00e1de3f52d4da09.mp3","wisdom":"audio/d788956320b23c44.mp3","afterward":"audio/7d908755934f53e6.mp3","slip":"audio/191c1609d7f3e873.mp3","one another":"audio/00447456d63f871c.mp3","take part in":"audio/484d8f4b7815d176.mp3","figure":"audio/f85bdc67e8bb222e.mp3","gap":"audio/81bf0145c8f2cc44.mp3","satisfy":"audio/fb36f0d0af66ddc2.mp3","valuable":"audio/fc3fb5a92ee6c281.mp3","closet":"audio/87dc8fb31ceeea03.mp3","diligent":"audio/74f55636889c7216.mp3","consume":"audio/4bbe204fd0282132.mp3","flash":"audio/6117e45ab57f8660.mp3","improve":"audio/69a42959af3e5974.mp3","attract":"audio/dd335b0dc8bc0e1c.mp3","position":"audio/90be16585da21a82.mp3","tease":"audio/9d67e2d5876ef375.mp3","exhibition":"audio/bf0d88b0920d0f1f.mp3","narrow":"audio/e1b335fb5313ef3a.mp3","brief":"audio/57c8ddb090f665c0.mp3","restroom":"audio/624851096d1ba26d.mp3","shut":"audio/e9683b50d456b492.mp3","stretch":"audio/14431dad2755f89d.mp3","pull out":"audio/f0bc3b9e18de9949.mp3","keep in mind":"audio/6aca659309bf0370.mp3","fuel":"audio/43505540e7e80bf5.mp3","spread":"audio/ea118158db412243.mp3","analyze":"audio/6257f84cd8ec6ec4.mp3","bullet":"audio/472da2b94e9fa87b.mp3","dislike":"audio/aedf61564743e549.mp3","engineer":"audio/8d7050ffcf7a2ee2.mp3","frame":"audio/39d88b573c35d2ff.mp3","astronaut":"audio/30f83b95350925c0.mp3","wisely":"audio/ff502ab858e6b7e1.mp3","several":"audio/b2eea5ed0cec12e1.mp3","height":"audio/73e7e545c519a38f.mp3","nervous":"audio/e159bc524f9a6d88.mp3","spot":"audio/9f4b5271fc0c57fb.mp3","pollution":"audio/233471efd5752016.mp3","cotton":"audio/69eb65f29a0da607.mp3","instrument":"audio/2f342f5b7494b6ab.mp3","certainly":"audio/2146c08a66ed1221.mp3","typhoon":"audio/52c4c1e7bc8ec6d3.mp3","pull up":"audio/abd4db93f183679f.mp3","run across":"audio/f7653530e0e9030d.mp3","liberty":"audio/abd663767ae6badd.mp3","feather":"audio/85f15bc57d6c4e8a.mp3","compass":"audio/9d0f85fe3fbd242b.mp3","deliver":"audio/c3a71b1518872882.mp3","earthquake":"audio/e8dea393aacba5f4.mp3","strength":"audio/57a4e7ca7f6cbd2e.mp3","treasure":"audio/66435385d0b72e62.mp3","unlike":"audio/0f32db0802691d73.mp3","announcer":"audio/ba8bfd179eeede14.mp3","state":"audio/aa4a5f8125f23418.mp3","bless":"audio/710f4beb6f3094fc.mp3","heaven":"audio/66da9f3b8d9d83f3.mp3","purpose":"audio/231e65684158501c.mp3","inform":"audio/c44cec6316cd516d.mp3","neighborhood":"audio/131b6ec8486125a1.mp3","regret":"audio/66450d9519864e82.mp3","various":"audio/7942c90e546d25e4.mp3","canal":"audio/bdc7b3f63327eb92.mp3","make it":"audio/d3f80d604cb3b716.mp3","sign up for":"audio/143e775693bda907.mp3","spray":"audio/761b4fbbdf6bd1ab.mp3","delivery":"audio/391cb1e07c5f1f4e.mp3","friendship":"audio/850b4d7aa8e83b4c.mp3","horror":"audio/bf7b06aaafb4bbb1.mp3","climbing":"audio/2bbed9587ed692a4.mp3","justice":"audio/050d859cf653c3bf.mp3","concern":"audio/c5c3bf5953de7fde.mp3","extra":"audio/b43c4b82570e182e.mp3","appearance":"audio/85a7b4e8d512e969.mp3","original":"audio/d73ef92426f2b11d.mp3","infection":"audio/afb56160aba3490b.mp3","counsel":"audio/e5de0ecc53061954.mp3","waste":"audio/3fcdcb3d0e685f28.mp3","spoil":"audio/de4030a2141c2298.mp3","polar":"audio/29e909f30aa17db2.mp3","relate":"audio/84774ba193af2400.mp3","vet":"audio/cd57239bd6edcd45.mp3","tragedy":"audio/712bb05acc526e4e.mp3","such as":"audio/21a3d83ad5f9f4cc.mp3","give away":"audio/aa96c1432c6a2348.mp3","anytime":"audio/6f2cbfec8210e74f.mp3","business":"audio/6a577a7743f405ea.mp3","credit":"audio/9cf5e7cd8fcf3949.mp3","describe":"audio/dbc3503fab010448.mp3","forgive":"audio/fe2c8eca89001d14.mp3","stroke":"audio/fa2a4fd4647fad8f.mp3","humble":"audio/055b9a4cd714802b.mp3","upon":"audio/76205fd077642109.mp3","idiom":"audio/2e77601873fb79cb.mp3","launch":"audio/f7c91fefc9c39de1.mp3","mount":"audio/c7a6dddea994b260.mp3","photographer":"audio/9ce9b6ec6aadf67c.mp3","string":"audio/ecb252044b5ea0f6.mp3","cardboard":"audio/3702badb047b0586.mp3","supper":"audio/2b0163a93279db37.mp3","terrible":"audio/ccf8956b17ea19ef.mp3","evidence":"audio/100ec4462dec34f6.mp3","riddle":"audio/ecefe3a4d0a5737a.mp3","put up":"audio/25435a364acb89fa.mp3","be related to":"audio/836bcee5e5373d8f.mp3","bet":"audio/c033816b54c9eccf.mp3","script":"audio/cb5346a081dcf654.mp3","recommend":"audio/1fe94581df8b76b2.mp3","career":"audio/25f6f05321caad02.mp3","advantage":"audio/5caa3c36c088b194.mp3","float":"audio/685e80366130387c.mp3","champion":"audio/e79efc4520fbd4b2.mp3","local":"audio/939bb46a04c3640c.mp3","difficulty":"audio/bf1a879257521137.mp3","suffer":"audio/6df580aee7e3c863.mp3","environment":"audio/c6e454d960df4845.mp3","totally":"audio/59a3b207b36d0218.mp3","narrator":"audio/ec62dcc77be5260f.mp3","uneasy":"audio/6ea416d41153395f.mp3","route":"audio/fc166eb81361ff31.mp3","portrait":"audio/25c6048873163793.mp3","motto":"audio/2926bd39965a2d53.mp3","slave":"audio/e25c8f72bd1aeb8a.mp3","give off":"audio/4b2472f50cbb216c.mp3","work out":"audio/9031305dc756c779.mp3","treat":"audio/1f6d9f4e27fb764f.mp3","classic":"audio/290b75188d7c9a38.mp3","account":"audio/ca20728d35f00c3a.mp3","partner":"audio/3624db883007efa1.mp3","collaborate":"audio/d2875e20b1719c80.mp3","expert":"audio/b780d252a12c8c47.mp3","situation":"audio/eea0325f09ff8e01.mp3","within":"audio/f42ef62128025c7f.mp3","distance":"audio/104082c0efcf62ca.mp3","favor":"audio/a399328adb7aaa6f.mp3","individual":"audio/589d230a8d00f115.mp3","serve":"audio/b88fb872d7518241.mp3","bit":"audio/026e996a3a589797.mp3","sneeze":"audio/531f5b0633ca160a.mp3","material":"audio/97912524f34763ab.mp3","generally":"audio/eafd8d1cdeae3967.mp3","vivid":"audio/a0d73f624ffe9961.mp3","rubber":"audio/386a231f3dfd54d4.mp3","use up":"audio/c40f6be988662828.mp3","make a decision":"audio/b09d08b824a89957.mp3","exist":"audio/7e89f2472eea0797.mp3","relative":"audio/d89972fe17d661d7.mp3","apologize":"audio/31cfc0a496dbad91.mp3","virtual":"audio/af84d91fde168566.mp3","maximum":"audio/e77a31599e99d15e.mp3","complain":"audio/6a91578231ef5136.mp3","spirit":"audio/b40d51318efc6650.mp3","since":"audio/2eb888e95f113117.mp3","harm":"audio/8bd24ba3a83c3da2.mp3","crowded":"audio/8bd8c4facee3849d.mp3","truly":"audio/90099b2e34aa9d96.mp3","disadvantage":"audio/1b5e032f903dd678.mp3","filter":"audio/4bb4ca75941b7bbc.mp3","independence":"audio/6f058999688b1f99.mp3","positive":"audio/c4c6c5725301c9d2.mp3","suggest":"audio/fd0a4950be7bdd9f.mp3","arrest":"audio/5450f3b34e6760cd.mp3","unexpected":"audio/fd2a27641c8303d9.mp3","account for":"audio/71e28e86ee3c3fa5.mp3","be about to-v":"audio/3e19c5500a1f0c74.mp3","chain":"audio/2cf64e447b84b497.mp3","former":"audio/46102433ccd7b596.mp3","minimum":"audio/bd164fdac82c4949.mp3","opposite":"audio/95901050a1d6d3d7.mp3","disappoint":"audio/2c0aae3028a55dca.mp3","slightly":"audio/c28dd5959e1ffcd6.mp3","artificial":"audio/d9004fc1b0174817.mp3","bunch":"audio/277bcd4d588242fb.mp3","communicate":"audio/4ab2558b61c2c6d3.mp3","interpret":"audio/14889e1212cdb5d6.mp3","lid":"audio/a53814d71f5683b8.mp3","twisted":"audio/986f16f209e651c1.mp3","survey":"audio/62380fcbeac222ee.mp3","respond":"audio/c0b78996d0a810a3.mp3","environmental":"audio/0b599ed915a0dfe2.mp3","strip":"audio/1a942eab068a2173.mp3","priest":"audio/cb418d42a0be60f6.mp3","vary":"audio/b4452b6d5a6e7b08.mp3","most of all":"audio/c11197b43c10cf49.mp3","give a hand":"audio/99cd0ff0cfce9c1b.mp3","cheat":"audio/8e132eb5f6d22481.mp3","achieve":"audio/f9659d46b223f5c9.mp3","creature":"audio/93fda888e2185c78.mp3","extreme":"audio/6928e84932543506.mp3","reduce":"audio/48c3689f6dd5e9e9.mp3","feature":"audio/4b7615dce52c4c05.mp3","knit":"audio/668166eff767a729.mp3","whenever":"audio/5b9143476244bf34.mp3","graduate":"audio/2c6a6bad65208ce9.mp3","background":"audio/248a20b62efba8f4.mp3","stripe":"audio/2fcb5a43a42afa8e.mp3","movement":"audio/b727a735e7c5ddd7.mp3","option":"audio/14eb14ece52df99c.mp3","personality":"audio/8f835ab723c137a1.mp3","shame":"audio/d4ef5822b74c3c5c.mp3","suppose":"audio/e78b52d7bb28ef2a.mp3","decorate":"audio/836a8ef579a004d6.mp3","rhythm":"audio/da06f0d7b6a05032.mp3","in case of":"audio/af14e126e6242b79.mp3","on one's own":"audio/acaa9a25d053c283.mp3","layer":"audio/d54c2aa2f6160302.mp3","survive":"audio/8dd6d34decdc0d26.mp3","ashamed":"audio/0f43c8dd90c7f5db.mp3","behave":"audio/9ad09bcaf437a8a6.mp3","competition":"audio/1b44f6ddeeb852b7.mp3","deny":"audio/1d16dc2dcc685120.mp3","necessary":"audio/fce3b4d725ee5c9e.mp3","clever":"audio/a31a61e94f3799a9.mp3","presentation":"audio/e4c8d951f1cc300d.mp3","method":"audio/bfbaf8b2d1cdf92b.mp3","transfer":"audio/34420cf5d681717f.mp3","slight":"audio/209700f37a111a13.mp3","require":"audio/623e76c36aa2a886.mp3","strike":"audio/afe5fd4ff1a85caa.mp3","well-known":"audio/d5f0fc2c7798d005.mp3","fantasy":"audio/ec1e111db30c9cca.mp3","envelope":"audio/ab140545205541c5.mp3","ordinary":"audio/eb9e4a900705e5ac.mp3","hold out":"audio/9e0131ffd35a8efe.mp3","pass away":"audio/95667e475ea1954e.mp3","edit":"audio/9ead47a82a0d2598.mp3","receipt":"audio/14e60ace3d83eeb2.mp3","statue":"audio/0561c01caf716d57.mp3","available":"audio/7b231a50a498ef15.mp3","banner":"audio/37f93a070955b889.mp3","apply":"audio/69f45da1683c5016.mp3","digest":"audio/2923f6fa36614586.mp3","congratulation":"audio/9623edca5a6cbeef.mp3","depressed":"audio/2f27bbc50aaf7ce1.mp3","gradually":"audio/7ab6c6063dcd0f3f.mp3","hunger":"audio/e2e63b387c51effd.mp3","insert":"audio/a26aafc1f521420b.mp3","mission":"audio/e59abed352187d91.mp3","system":"audio/317f1e761f2faa8d.mp3","tender":"audio/245d1e8a77f995f8.mp3","unfortunately":"audio/bf9d6230aaaf73f3.mp3","fountain":"audio/4620ade69035f78c.mp3","stove":"audio/9338aa5b38dd486f.mp3","put together":"audio/d48f1561321cfffc.mp3","on the other hand":"audio/73710e07ad77a681.mp3","forecast":"audio/018c49f84bd1bb7b.mp3","awesome":"audio/03d67c263c27a453.mp3","consult":"audio/190b435b70400ff4.mp3","deal":"audio/60f59e2b541c1e43.mp3","empire":"audio/91c15fd5d990bd83.mp3","satellite":"audio/362932003964d7cc.mp3","upset":"audio/589ceff369dc67f6.mp3","communication":"audio/60c58ad2ef34d96f.mp3","develop":"audio/418a6bc4deccf0f7.mp3","escalate":"audio/27ce8fb95a855837.mp3","invitation":"audio/923cba465a819d56.mp3","migrate":"audio/ce5070ef8a0cf3e5.mp3","raw":"audio/ce15802a8c5e8e9d.mp3","poverty":"audio/5ac8834cd91b1b3f.mp3","station":"audio/2da36ff30a38777c.mp3","grocery":"audio/e1c4e84a9dcdec0a.mp3","studio":"audio/9a12c50f2f23af9f.mp3","unbelievable":"audio/80927930981974a2.mp3","be stuck in":"audio/1eb43609c1fd0445.mp3","tell from …":"audio/97ca681e850a4e75.mp3","leap":"audio/c2eea009cf3f22fa.mp3","support":"audio/5bdcd3c0d4d24ae3.mp3","proverb":"audio/5698b5c1f36e8639.mp3","argument":"audio/0f3802314d747bbc.mp3","billion":"audio/ab08c707d243fff0.mp3","organization":"audio/7cb06027e87e7d84.mp3","following":"audio/6cbf68c50f73c846.mp3","except":"audio/672fccd70b672edf.mp3","tag":"audio/5e9b60f69165f32f.mp3","responsible":"audio/37926bac108626bb.mp3","encourage":"audio/808cae8b94a639e5.mp3","harvest":"audio/2721c74f6d2dc865.mp3","miserable":"audio/d4cad4e3fbc01312.mp3","stranger":"audio/ed5acfe897a4c94a.mp3","concrete":"audio/aec5c8ead67a724b.mp3","servant":"audio/91d8f81576d66e2f.mp3","waterproof":"audio/07453f9a57f866be.mp3","underground":"audio/105b8a8cee2f93be.mp3","up to":"audio/c341286f9cb44e16.mp3","come to mind":"audio/85097796e199b76d.mp3","risk":"audio/11a110bbef1bcc07.mp3","behavior":"audio/7b09f36e52f1fe68.mp3","amusement":"audio/e800291ff82c43b5.mp3","consider":"audio/9cef6dd4b5bf583a.mp3","nest":"audio/10eff6288cedaa3e.mp3","embarrass":"audio/0a7737e7118d2f5d.mp3","clerk":"audio/f38de2358e07b0c3.mp3","observe":"audio/4f4224f44ad29e46.mp3","sightseeing":"audio/f4c0053901c73839.mp3","transport":"audio/a8e6012e4ab8ed7b.mp3","suit":"audio/338ad11a14ea55f9.mp3","participate":"audio/d6857486514dfb81.mp3","faucet":"audio/63fade39e96f4160.mp3","mysterious":"audio/3b41c7aefc79a08f.mp3","mud":"audio/589539e9dc2b6aaf.mp3","structure":"audio/2d309ce90c549a12.mp3","hatch":"audio/cbb4919b3d9322b2.mp3","optimist":"audio/b33bb364dae4ea49.mp3","watch over":"audio/b967c240bea2cf85.mp3","to one's surprise":"audio/e6c3a20eac72673c.mp3","link":"audio/4f0aa52d656a3d75.mp3","description":"audio/cb329146a0dd0d56.mp3","sincere":"audio/9556ec7556695127.mp3","temperature":"audio/7033e90fcdda169d.mp3","feast":"audio/f37a74d828697560.mp3","dew":"audio/72d628f9e272dc75.mp3","persuade":"audio/cd0de7c91effbd6d.mp3","operator":"audio/fe96dd39756ac41b.mp3","motivate":"audio/00108964ff7a1e82.mp3","function":"audio/c218e39efa2e1aae.mp3","paralyze":"audio/99fc7386bc328f7f.mp3","construction":"audio/535ae678fd33caa2.mp3","revolution":"audio/75d625211c6682d4.mp3","hurricane":"audio/383826550f6aead8.mp3","experiment":"audio/f45f2bc801bb77f6.mp3","performance":"audio/476ee0f6af1d78aa.mp3","spaceship":"audio/6900a064deb17648.mp3","surprisingly":"audio/08d6e4413966a983.mp3","bring back":"audio/723b4db73ce95cd1.mp3","a variety of":"audio/1736742a2f590363.mp3"};
+ const SILENT='data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAHAAADkQBQUFBQUFBQUFBQUFBQUG1tbW1tbW1tbW1tbW1tioqKioqKioqKioqKioqoqKioqKioqKioqKioqKjFxcXFxcXFxcXFxcXFxeLi4uLi4uLi4uLi4uLi//////////////////8AAAAATGF2YzYwLjMxAAAAAAAAAAAAAAAAJANpAAAAAAAAA5G5oLCCAAAAAAD/+xDEAAPAAAGkAAAAIAAANIAAAARMQU1FMy4xMDBVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVTEFNRTMuMTAwVf/7EsQpg8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVf/7EMRTg8AAAaQAAAAgAAA0gAAABFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sSxH0DwAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//sQxKcDwAABpAAAACAAADSAAAAEVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xLE0IPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xDE1gPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==';
+ function norm(s){return String(s||'').toLowerCase().replace(/[’‘`]/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim();}
+ function key(s){return String(s||'').replace(/\([^)]*\)/g,'').replace(/\[[^\]]*\]/g,'').replace(/~/g,'').trim().replace(/\s+/g,' ');}
+ const NMAP={};
+ Object.keys(MAP).forEach(k=>{NMAP[norm(k)]=MAP[k];});
+ try{
+   if(typeof VOCA!=='undefined'){
+     const all=Array.isArray(VOCA)?VOCA:Object.values(VOCA).flat();
+     all.forEach(it=>{
+       const eng=it&&it.eng; if(!eng)return;
+       const src=MAP[key(eng)]; if(!src)return;
+       [eng,key(eng),(window.__sdSpokenHeadword?window.__sdSpokenHeadword(eng):eng)].forEach(v=>{const n=norm(v);if(n&&!NMAP[n])NMAP[n]=src;});
+     });
+   }
+ }catch(e){}
+ function srcFor(t){const a=norm(t);if(NMAP[a])return NMAP[a];const b=norm(key(t));return NMAP[b]||'';}
+
+ const synth=('speechSynthesis' in window)?window.speechSynthesis:null;
+ const origSpeak=synth?synth.speak.bind(synth):null;
+ const origCancel=synth?synth.cancel.bind(synth):null;
+
+ const player=document.createElement('audio');
+ player.preload='auto';
+ player.setAttribute('playsinline','');player.setAttribute('webkit-playsinline','');
+ player.style.display='none';
+ (document.body||document.documentElement).appendChild(player);
+
+ let unlocked=false, busy=false, token=0, lastT='', lastAt=0;
+ function unlock(){
+   if(unlocked)return;
+   try{
+     if(busy)return;           /* 이미 실제 단어를 재생 중이면 그것이 잠금 해제를 겸한다 */
+     player.muted=false;player.volume=1;player.src=SILENT;
+     const p=player.play();
+     if(p&&p.then)p.then(()=>{unlocked=true;}).catch(()=>{});else unlocked=true;
+   }catch(e){}
+ }
+ ['touchend','click','keydown'].forEach(ev=>document.addEventListener(ev,unlock,{capture:true,passive:true}));
+
+ function playSrc(src,times,onstart,onend){
+   if(!src)return false;
+   const my=++token; let left=times||1;
+   try{if(origCancel)origCancel();}catch(e){}
+   busy=true;
+   player.onended=function(){
+     if(my!==token)return;
+     if(--left>0){setTimeout(function(){if(my!==token)return;try{player.currentTime=0;const p=player.play();if(p&&p.catch)p.catch(()=>{});}catch(e){}},250);}
+     else{busy=false;if(onend)try{onend()}catch(e){}}
+   };
+   player.onerror=function(){if(my!==token)return;busy=false;if(onend)try{onend()}catch(e){}};
+   try{
+     player.pause();
+     player.muted=false;player.volume=1;
+     player.src=src;
+     const p=player.play();
+     if(p&&p.then)p.then(()=>{unlocked=true;if(onstart)try{onstart()}catch(e){}}).catch(()=>{if(my===token){busy=false;showTapHint();}});
+     else if(onstart)setTimeout(onstart,0);
+     return true;
+   }catch(e){busy=false;return false;}
+ }
+ function stopAudio(){token++;busy=false;try{player.pause();}catch(e){}}
+
+ /* 자동 재생이 막혔을 때(아이폰에서 첫 터치 전) 안내 */
+ let hintTimer=null;
+ function showTapHint(){
+   let h=document.getElementById('sdTapHint');
+   if(!h){h=document.createElement('div');h.id='sdTapHint';h.textContent='🔊 화면을 한 번 터치하면 발음이 나옵니다';
+     h.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#202321;color:#fff;padding:9px 14px;border-radius:20px;font-size:13px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+     document.body.appendChild(h);}
+   h.style.display='block';clearTimeout(hintTimer);hintTimer=setTimeout(()=>{h.style.display='none'},3500);
+ }
+
+ function playWord(t){
+   const src=srcFor(t); if(!src)return false;
+   const now=Date.now(), n=norm(t);
+   if(n===lastT&&now-lastAt<700&&busy)return true;   /* 여러 패치가 같은 단어를 동시에 부르는 경우 1번만 */
+   lastT=n;lastAt=now;
+   return playSrc(src,2);
+ }
+
+ /* 모든 기존 TTS 호출을 mp3로 연결 (책마다 다른 speak/speakWord/speakEnglish 코드 공통 처리) */
+ if(synth){
+   try{
+     synth.speak=function(u){
+       const text=u&&u.text!=null?String(u.text):'';
+       if(!text.trim()){return;}                       /* 빈 문장 prime 호출은 무시 */
+       const src=srcFor(text);
+       if(src){
+         const fire=(fn)=>{try{if(typeof fn==='function')fn.call(u,{type:'x',utterance:u});}catch(e){}};
+         const now=Date.now(), n=norm(text);
+         if(n===lastT&&now-lastAt<700&&busy){fire(u.onstart);return;}
+         lastT=n;lastAt=now;
+         playSrc(src,2,()=>fire(u.onstart),()=>fire(u.onend));
+         return;
+       }
+       stopAudio();
+       try{u.volume=1;}catch(e){}
+       return origSpeak(u);
+     };
+     synth.cancel=function(){try{origCancel();}catch(e){}};   /* mp3는 다음 재생이 알아서 교체 */
+     const proto=Object.getPrototypeOf(synth);
+     const dS=Object.getOwnPropertyDescriptor(proto,'speaking');
+     const dP=Object.getOwnPropertyDescriptor(proto,'pending');
+     if(dS&&dS.get)Object.defineProperty(synth,'speaking',{configurable:true,get:function(){return busy||dS.get.call(synth);}});
+     if(dP&&dP.get)Object.defineProperty(synth,'pending',{configurable:true,get:function(){return dP.get.call(synth);}});
+   }catch(e){}
+ }
+
+ const TTS=window.__sdSpeakNow||window.__sdSpeak||null;
+ function speakAny(t,rate){
+   if(playWord(t))return true;
+   try{if(TTS)return TTS(t,rate);}catch(e){}
+   try{if(origSpeak){const u=new SpeechSynthesisUtterance(String(t||''));u.lang='en-US';u.rate=rate||.85;u.volume=1;origSpeak(u);return true;}}catch(e){}
+   return false;
+ }
+ window.__SD_MP3_AUDIO=true;
+ window.__sdSpeakNow=speakAny;window.__sdSpeak=speakAny;window.__sdSpeakFresh=speakAny;
+ window.__sdPrimeAudio=unlock;window.__sdTtsPrime=unlock;
+ window.SEOLDAE_TTS_VERSION='23-mp3-unlocked-player';window.SEOLDAE_ENGINE_VERSION='5.3';
+
+ /* 소리 확인 버튼: 녹음 mp3로 확인 */
+ document.addEventListener('click',function(e){
+   const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
+   if(b.id==='soundTestBtn'){
+     e.preventDefault();e.stopImmediatePropagation();
+     const ok=playSrc('audio/_soundcheck.mp3',1);
+     const d=document.getElementById('soundDiag');
+     if(d)d.textContent=ok?'Hello가 들리면 준비 완료! 작게 들리면 휴대폰 옆 볼륨 버튼으로 "미디어 음량"을 올려주세요.':'소리 재생에 실패했습니다. Chrome·Safari로 다시 열어주세요.';
+   }
+ },true);
+})();
+
 </script>
 </body>
 </html>
