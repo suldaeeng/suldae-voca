@@ -1631,7 +1631,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
 
 </script>
 <script>
-/* === SEOLDAE LEARN MODE v1 (2026-11-10) ===
+/* === SEOLDAE LEARN MODE v2 (2026-11-10, 학습 기록·다음 Day 안내·학습 후 바로 시험) ===
    학습 모드: 카드로 보기 → 4지선다(영→한) → 4지선다(한→영) → 직접 쓰기(한→영)
    - 맞히면 다음 단계, 틀리면 한 단계 내려가서 몇 문제 뒤 다시 나옴
    - 다시 나올 때마다 선지를 새로 뽑음
@@ -1686,6 +1686,19 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  const css=`
  .sdlm-entry{display:block;width:100%;margin:0 0 14px;padding:15px 12px;border:0;border-radius:14px;background:linear-gradient(135deg,#2f6b4f,#3f8a66);color:#fff;font-size:17px;font-weight:800;box-shadow:0 4px 12px rgba(47,107,79,.25);cursor:pointer;line-height:1.35}
  .sdlm-entry small{display:block;font-size:12.5px;font-weight:500;opacity:.9;margin-top:3px}
+ .sdlm-bn{background:#fff8e6;border:1.5px solid #ecd9a6;border-radius:14px;padding:12px 13px;margin:0 0 12px;text-align:left;font-size:14px;line-height:1.5;color:#333}
+ .sdlm-bn-t{font-size:14px}
+ .sdlm-bn-s{font-size:13px;color:#777;margin-top:2px}
+ .sdlm-bn-n{font-size:16px;margin-top:6px}
+ .sdlm-bn-n span{font-size:12.5px;color:#888}
+ .sdlm-chip{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:10px;background:#eee;color:#999;margin-left:3px}
+ .sdlm-chip.on{background:#e3f2e8;color:#2f6b4f;font-weight:700}
+ .sdlm-bn-b{display:flex;gap:8px;margin-top:8px}
+ .sdlm-bn-b button{flex:1;width:auto !important;margin:0 !important;border:0;border-radius:10px;padding:10px 6px;font-size:14px;font-weight:700;background:#3f8a66 !important;color:#fff !important;cursor:pointer}
+ .sdlm-bn-b button+button{background:#d98b2b !important}
+ .sdlm-bn-l{display:block;width:auto !important;margin:8px 0 0 !important;padding:0 !important;border:0;background:none !important;color:#8a7a50 !important;font-size:12.5px;text-decoration:underline;cursor:pointer;box-shadow:none !important;min-height:0 !important}
+ #sdlm table.sdlm-log{width:100%;border-collapse:collapse;font-size:14px}
+ #sdlm table.sdlm-log th,#sdlm table.sdlm-log td{padding:7px 4px;border-bottom:1px solid #eee;text-align:center}
  #sdlm{position:fixed;inset:0;z-index:99999;background:#f6f4ee;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#222}
  #sdlm *{box-sizing:border-box}
  #sdlm button{width:auto;height:auto;min-height:0;margin:0;color:#222;font-family:inherit;text-transform:none;letter-spacing:normal;box-shadow:none;opacity:1;-webkit-appearance:none;appearance:none}
@@ -1731,6 +1744,69 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  `;
  const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 
+
+ /* ---------- 학습 기록 (v2) ---------- */
+ const HK='hist';
+ function hist(){return store.get(HK,[]);}
+ function addHist(day,kind){if(!day||!VOCA[day])return;const h=hist();h.push({d:String(day),k:kind,t:Date.now()});store.set(HK,h.slice(-120));}
+ const dnum=d=>DAYS.indexOf(String(d));
+ function dateStr(t){const x=new Date(t);const w='일월화수목금토'[x.getDay()];return (x.getMonth()+1)+'월 '+x.getDate()+'일('+w+')';}
+ function dayStatus(d){const h=hist().filter(x=>x.d===String(d));return {learn:h.some(x=>x.k==='learn'),test:h.some(x=>x.k==='test'),last:h.length?h[h.length-1].t:0};}
+ function nextDay(){
+   const h=hist();if(!h.length)return null;
+   const last=h[h.length-1].d;const st=dayStatus(last);
+   if(!(st.learn&&st.test))return {d:last,why:st.learn?'시험을 아직 안 봤어요':'학습을 마무리하지 않았어요'};
+   const i=dnum(last);return i>=0&&i<DAYS.length-1?{d:DAYS[i+1],why:''}:null;
+ }
+ function hostDayInput(){return $('#dayValue')||$('#day-select')||$('#day');}
+ function hostSelectDay(d){
+   const opener=$('#dayButton')||$('#dayBtn');if(opener)opener.click();
+   const list=$('#dayList');let btn=null;
+   if(list){const bs=[...list.querySelectorAll('button')];const re=new RegExp('^DAY\\s*0*'+String(d).replace(/^0+/,'')+'(\\D|$)');btn=bs.find(b=>b.dataset&&String(b.dataset.day)===String(d))||bs.find(b=>re.test(b.textContent.trim()));}
+   if(btn)btn.click();
+   const m=$('#dayModal');if(m&&!m.classList.contains('hidden')){const c=$('#dayCloseButton')||$('#dayModalClose');if(c)c.click();}
+   return !!btn;
+ }
+ function hostStart(d){
+   hostSelectDay(d);
+   const nameIn=$('#studentName')||$('#student-name')||$('#name');
+   const nm=store.get('name','');
+   if(nameIn&&!nameIn.value.trim()&&nm)nameIn.value=nm;
+   const sb=$('#startButton')||$('#start-btn')||$('#startBtn');
+   if(nameIn&&!nameIn.value.trim()){nameIn.focus();try{nameIn.scrollIntoView({block:'center'});}catch(e){}return;}
+   if(sb)sb.click();
+ }
+ function hookStart(){
+   const sb=$('#startButton')||$('#start-btn')||$('#startBtn');if(!sb)return;
+   sb.addEventListener('click',()=>{const di=hostDayInput();const nameIn=$('#studentName')||$('#student-name')||$('#name');
+     if(nameIn&&nameIn.value.trim())store.set('name',nameIn.value.trim());
+     const v=di&&di.value;if(v&&VOCA[v])addHist(v,'test');setTimeout(renderBanner,300);},true);
+ }
+ let banner=null;
+ function renderBanner(){
+   if(!banner)return;
+   const h=hist();
+   if(!h.length){banner.innerHTML='<div class="sdlm-bn-t">📅 학습 기록</div><div class="sdlm-bn-s">아직 기록이 없어요. 학습 모드나 시험을 하면 여기에 남아요.</div>';return;}
+   const last=h[h.length-1];const st=dayStatus(last.d);const nx=nextDay();
+   const tags=(st.learn?'<span class="sdlm-chip on">학습 ✓</span>':'<span class="sdlm-chip">학습</span>')+(st.test?'<span class="sdlm-chip on">시험 ✓</span>':'<span class="sdlm-chip">시험</span>');
+   banner.innerHTML=`<div class="sdlm-bn-t">📅 지난번: <b>${dayLabel(last.d)}</b> · ${dateStr(last.t)} ${tags}</div>`+
+     (nx?`<div class="sdlm-bn-n">👉 오늘은 <b>${dayLabel(nx.d)}</b> 차례예요 ${nx.why?'<span>('+nx.why+')</span>':''}</div>
+      <div class="sdlm-bn-b"><button type="button" data-a="learn">📚 학습하기</button><button type="button" data-a="test">✏️ 시험 보기</button></div>`:'<div class="sdlm-bn-n">🎉 마지막 Day까지 했어요!</div>')+
+     `<button type="button" class="sdlm-bn-l" data-a="log">전체 기록 보기</button>`;
+   banner.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;prime();
+     if(a.dataset.a==='learn'&&nx)startDay(nx.d);
+     if(a.dataset.a==='test'&&nx)hostStart(nx.d);
+     if(a.dataset.a==='log')openLog();};
+ }
+ function openLog(){
+   const r=shell();
+   const rows=DAYS.map(d=>{const st=dayStatus(d);if(!st.last)return '';return `<tr><td>${dayLabel(d)}</td><td>${st.learn?'✓':'–'}</td><td>${st.test?'✓':'–'}</td><td>${dateStr(st.last)}</td></tr>`;}).filter(Boolean).join('');
+   r.innerHTML=`<div class="w"><div class="hd"><b>📅 내 학습 기록</b><button class="x" data-a="close">닫기</button></div>
+   <div class="card" style="text-align:left"><table class="sdlm-log"><tr><th>DAY</th><th>학습</th><th>시험</th><th>마지막 날짜</th></tr>${rows||'<tr><td colspan=4>기록 없음</td></tr>'}</table>
+   <div class="ans" style="margin-top:10px">※ 기록은 이 휴대폰·이 브라우저에만 저장돼요.</div></div></div>`;
+   r.onclick=e=>{const a=e.target.closest('[data-a]');if(a&&a.dataset.a==='close')close();};
+ }
+
  /* ---------- 진입 버튼 ---------- */
  function addEntry(){
    const setup=$('#setup .card')||$('#setup-screen .card')||$('#setup')||$('#setup-screen');
@@ -1738,17 +1814,22 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    b.innerHTML='📚 학습 모드 (외우기)<small>카드 → 4지선다 → 직접 쓰기로 단계별로 외워요</small>';
    b.addEventListener('click',()=>{prime();openHome();});
    if(setup)setup.insertBefore(b,setup.firstChild);else{b.style.cssText='position:fixed;right:12px;bottom:12px;width:auto;z-index:9999';document.body.appendChild(b);}
+   banner=document.createElement('div');banner.className='sdlm-bn';
+   if(setup)setup.insertBefore(banner,b);
+   /* 예전 학습 모드 완료 기록도 학습 기록으로 옮김 */
+   const dn=store.get('done',{});if(!store.get('migr',0)){Object.keys(dn).forEach(d=>{const h=hist();h.push({d:String(d),k:'learn',t:dn[d]});store.set(HK,h.sort((a,b)=>a.t-b.t));});store.set('migr',1);}
+   hookStart();renderBanner();
  }
 
  /* ---------- 화면 ---------- */
  let root=null,S=null;
  function shell(){if(!root){root=document.createElement('div');root.id='sdlm';document.body.appendChild(root);}root.style.display='block';document.documentElement.style.overflow='hidden';return root;}
- function close(){if(S)save();if(root){root.style.display='none';root.innerHTML='';}document.documentElement.style.overflow='';S=null;}
+ function close(){if(S)save();if(root){root.style.display='none';root.innerHTML='';}document.documentElement.style.overflow='';S=null;try{renderBanner();}catch(e){}}
 
  function openHome(){
    const r=shell();
-   const tiles=DAYS.map(d=>{const p=store.get('d'+d,null);const done=store.get('done',{})[d];
-     const cls=done?'day done':(p?'day part':'day');const sub=done?'완료 ✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개'));
+   const tiles=DAYS.map(d=>{const p=store.get('d'+d,null);const done=store.get('done',{})[d];const tst=dayStatus(d).test;
+     const cls=done?'day done':(p?'day part':'day');const sub=(done?'학습✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개')))+(tst?' 시험✓':'');
      return `<button class="${cls}" data-d="${esc(d)}">${dayLabel(d)}<small>${sub}</small></button>`;}).join('');
    r.innerHTML=`<div class="w"><div class="hd"><b>📚 학습 모드</b><button class="x" data-a="close">닫기</button></div>
    <div class="help">① <b>카드</b>로 단어와 뜻을 보고 발음을 들어요.<br>② <b>4지선다</b>로 뜻 고르기 → 영어 고르기<br>③ 마지막에 뜻을 보고 <b>영어를 직접 써요.</b><br>틀리면 한 단계 내려가서 조금 뒤에 다시 나와요.</div>
@@ -1872,22 +1953,22 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
 
  function finish(){
    const hard=S.words.map((w,i)=>({w,m:S.miss[i],i})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
-   if(!S.only){const dn=store.get('done',{});dn[S.day]=Date.now();store.set('done',dn);store.del('d'+S.day);}
+   if(!S.only){const dn=store.get('done',{});dn[S.day]=Date.now();store.set('done',dn);store.del('d'+S.day);addHist(S.day,'learn');}
    const r=shell();const d=S.day;const words=S.words;const n=words.length;
    r.innerHTML=`<div class="w"><div class="hd"><b>${dayLabel(d)} 학습 완료 🎉</b><button class="x" data-a="home">DAY 목록</button></div>
    <div class="card"><div class="kor">${n}개 단어를 모두 외웠어요!</div>
    ${hard.length?`<div class="tag" style="margin-top:12px">틀렸던 단어 ${hard.length}개</div><ul class="hard">${hard.slice(0,15).map(x=>`<li><b>${esc(showEng(x.w.eng))}</b> ${esc(shortKor(x.w))} <span style="color:#c2453a">×${x.m}</span></li>`).join('')}</ul>
    <button class="btn" data-a="hard">틀렸던 단어만 다시 학습</button>`:'<div class="ans">한 번도 틀리지 않았어요. 대단해요!</div>'}
-   <button class="btn sec" data-a="test">이제 시험 보러 가기</button></div></div>`;
+   <button class="btn sec" data-a="test">바로 ${dayLabel(d)} 시험 보기 →</button></div></div>`;
    const hardIdx=hard.map(x=>x.i);
    r.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;
      if(a.dataset.a==='home'){S=null;openHome();}
      if(a.dataset.a==='hard'){S=null;begin(d,words,null,hardIdx);}
-     if(a.dataset.a==='test'){close();}};
+     if(a.dataset.a==='test'){close();renderBanner();hostStart(d);}};
  }
 
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v1';
+ window.SEOLDAE_LEARN_MODE='v2';
 })();
 
 </script>
