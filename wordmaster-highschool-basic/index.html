@@ -949,17 +949,31 @@ const SD41_APPROVED_KOR={"ache":["아픔","통증","고통"],"increase":["증가
         const word=wm?wm[1]:'';
         const prefix=wm?before.slice(0,before.length-word.length):before;
         alts.forEach(alt=>{
-          let repl;
-          if(word && alt.length<=2 && PARTICLE_LAST.has(word.slice(-1))){
-            repl=word.slice(0,-1)+alt;              // 해외에[로]
-          }else if(word && alt==='으로' && word.endsWith('에')){
-            repl=word.slice(0,-1)+alt;              // 외국에[으로]
-          }else if(word){
-            repl=alt;                               // 감명[감동], 소비[소모]
+          /* v25: 대괄호 펼치기 규칙 수정
+             - 조사 바꾸기: 해외에[로]→해외로, 외국에[으로]→외국으로, 어딘가에[에서]→어딘가에서
+             - 어미 바꾸기: 유포되다[하다]→유포하다
+             - 한 글자: 인용구[문]→인용문  (예전엔 '문'만 만들어짐)
+             - 두 글자 이상: 참가[참여]하다→참여하다, 돌아가다[오다]→돌아오다
+               (예전엔 '가'를 조사로 오인해 '참참여하다'를 만들어 '참여하다'가 오답 처리됨) */
+          const reps=new Set();
+          const PART=/^(으로|로|에|에서|에게|으로서|로서|의|을|를|이|가|은|는|와|과|도|만|까지|부터)$/;
+          const ENDS=['시키다','하다','되다','하는','되는','한','된','적인','적'];
+          if(!word){ reps.add(alt); }
+          else if(PART.test(alt)){
+            if(PARTICLE_LAST.has(word.slice(-1))||/[에의로을를]$/.test(word)) reps.add(word.slice(0,-1)+alt);
+            if(word.endsWith('에서')&&word.length>2) reps.add(word.slice(0,-2)+alt);
+            reps.add(word+alt);
+          }else if(ENDS.includes(alt) && ENDS.some(en=>word.endsWith(en)&&word.length>en.length)){
+            const en=ENDS.find(en=>word.endsWith(en)&&word.length>en.length);
+            reps.add(word.slice(0,-en.length)+alt);
+          }else if(alt.length===1){
+            reps.add(word.slice(0,-1)+alt);
           }else{
-            repl=alt;
+            reps.add(alt);
+            if(word.length>alt.length) reps.add(word.slice(0,-alt.length)+alt);
           }
-          next.push(prefix+repl+after);
+          if(!reps.size) reps.add(alt);
+          reps.forEach(r=>next.push(prefix+r+after));
         });
       });
       out=[...new Set(next)];
@@ -1438,6 +1452,125 @@ window.__SD_GRADE_RETURNS_STRING=true;
      if(d)d.textContent=ok?'Hello가 들리면 준비 완료! 작게 들리면 휴대폰 옆 볼륨 버튼으로 "미디어 음량"을 올려주세요.':'소리 재생에 실패했습니다. Chrome·Safari로 다시 열어주세요.';
    }
  },true);
+})();
+
+</script>
+<script>
+/* === SEOLDAE v25 PATCH 2026-11-10 ===
+   1) 저장된 오답·이어하기 기록 갱신: 예전 버전에서 저장된 단어는 그때의 (틀린) 뜻을 그대로
+      들고 있어서, 데이터를 고쳐도 '저장된 오답만' 시험에서는 계속 오답 처리됐다.
+      앱을 열 때 저장된 단어의 뜻을 현재 단어장 뜻으로 바꿔 놓는다.
+   2) 다른 단어장에서 가져온 보조 뜻 중, 이 단어장의 '다른 단어' 뜻이 잘못 섞인 것 제거
+      (예: look down on = 존경하다 가 정답 처리되던 문제)
+   3) 영어 쓰기: 괄호( )는 있어도/없어도, [ ]는 앞 단어 대신 써도 정답
+      (be made (up) of → be made of, until[up to] now → up to now)
+*/
+(function(){
+ if(typeof VOCA==='undefined')return;
+ const ALL=Array.isArray(VOCA)?VOCA:Object.values(VOCA).flat();
+ const BY=new Map();
+ ALL.forEach(it=>{if(it&&it.eng){const k=String(it.eng).toLowerCase().trim();if(!BY.has(k))BY.set(k,it);}});
+
+ /* ---------- 1. 저장된 기록 갱신 ---------- */
+ function refresh(x,depth){
+   if(!x||typeof x!=='object'||depth>6)return false;
+   let ch=false;
+   if(Array.isArray(x)){x.forEach(v=>{if(refresh(v,depth+1))ch=true;});return ch;}
+   if(typeof x.eng==='string'&&('kor' in x||'kor_full' in x)){
+     const cur=BY.get(x.eng.toLowerCase().trim());
+     if(cur){
+       if('kor' in x&&cur.kor!==undefined&&x.kor!==cur.kor){x.kor=cur.kor;ch=true;}
+       if('kor_full' in x&&cur.kor_full!==undefined&&x.kor_full!==cur.kor_full){x.kor_full=cur.kor_full;ch=true;}
+       if(!('kor_full' in x)&&cur.kor_full!==undefined&&'kor' in x){x.kor_full=cur.kor_full;ch=true;}
+     }
+   }
+   Object.keys(x).forEach(k=>{const v=x[k];if(v&&typeof v==='object'&&refresh(v,depth+1))ch=true;});
+   return ch;
+ }
+ try{
+   const keys=[];for(let i=0;i<localStorage.length;i++)keys.push(localStorage.key(i));
+   keys.forEach(k=>{
+     try{
+       const raw=localStorage.getItem(k);
+       if(!raw||raw.length<10||(raw[0]!=='{'&&raw[0]!=='['))return;
+       if(raw.indexOf('"eng"')<0)return;
+       const obj=JSON.parse(raw);
+       if(refresh(obj,0))localStorage.setItem(k,JSON.stringify(obj));
+     }catch(e){}
+   });
+ }catch(e){}
+
+ /* ---------- 2. 잘못 섞인 보조 뜻 제거 ---------- */
+ const ck=s=>String(s||'').replace(/\([^)]*\)/g,'').replace(/\[[^\]]*\]/g,'').replace(/[^가-힣]/g,'');
+ const parts=s=>String(s||'').split(/[;,\/，、]|\d+\s*\./).map(ck).filter(x=>x.length>=2);
+ const OWNER=new Map();
+ ALL.forEach(it=>{const e=String(it.eng).toLowerCase().trim();parts(it.kor_full||it.kor).forEach(p=>{if(!OWNER.has(p))OWNER.set(p,new Set());OWNER.get(p).add(e);});});
+ function clean(D){
+   if(!D||typeof D!=='object')return;
+   Object.keys(D).forEach(eng=>{
+     const own=BY.get(String(eng).toLowerCase().trim());if(!own)return;
+     const mine=new Set(parts(own.kor_full||own.kor));
+     const e=String(eng).toLowerCase().trim();
+     const arr=Array.isArray(D[eng])?D[eng]:[D[eng]];
+     const kept=arr.filter(v=>{
+       const ps=parts(v);
+       if(ps.some(p=>mine.has(p)))return true;           /* 이 단어 뜻과 겹치면 유지 */
+       return !ps.some(p=>OWNER.has(p)&&!OWNER.get(p).has(e)); /* 다른 단어의 뜻이면 제거 */
+     });
+     if(kept.length!==arr.length)D[eng]=kept;
+   });
+ }
+ try{if(typeof SD41_CROSSBOOK_KOR!=='undefined')clean(SD41_CROSSBOOK_KOR);}catch(e){}
+ try{if(typeof SD_CROSSBOOK_KOR!=='undefined')clean(SD_CROSSBOOK_KOR);}catch(e){}
+ try{if(typeof CROSS_KOR_BY_ENG!=='undefined')clean(CROSS_KOR_BY_ENG);}catch(e){}
+
+ /* day and night: 교재 뜻 '밤낮으로'와 같은 뜻의 흔한 표현 */
+ try{if(typeof SD41_APPROVED_KOR!=='undefined'){SD41_APPROVED_KOR['day and night']=['밤낮없이','밤이나 낮이나','낮이나 밤이나'];}}catch(e){}
+
+ /* ---------- 3. 영어 쓰기: 선택 부분 허용 ---------- */
+ const ne=s=>String(s||'').toLowerCase().replace(/[’']/g,'').replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+ function engVariants(eng){
+   let out=[String(eng||'').replace(/~/g,' ')];
+   for(let g=0;g<6;g++){
+     const nx=[];let changed=false;
+     out.forEach(s=>{
+       let m=s.match(/\(([^)]*)\)/);
+       if(m){changed=true;nx.push(s.replace(m[0],' '));nx.push(s.replace(m[0],' '+m[1]+' '));return;}
+       m=s.match(/([A-Za-z']+)\[([^\]]+)\]/);
+       if(m){changed=true;nx.push(s.replace(m[0],m[1]));m[2].split(/[\/,]/).forEach(a=>nx.push(s.replace(m[0],a.trim())));return;}
+       m=s.match(/\[([^\]]+)\]/);
+       if(m){changed=true;nx.push(s.replace(m[0],' '));m[1].split(/[\/,]/).forEach(a=>nx.push(s.replace(m[0],' '+a.trim()+' ')));return;}
+       nx.push(s);
+     });
+     out=[...new Set(nx)];if(!changed)break;
+   }
+   const set=new Set();
+   out.forEach(v=>{set.add(ne(v));v.split(/\s*\/\s*/).forEach(p=>set.add(ne(p)));});
+   set.delete('');return set;
+ }
+ function isK2E(a,item,type){
+   if(a&&typeof a==='object'&&item===undefined)return (a.direction||a.type||'')==='k2e';
+   return (type||(item&&(item.type||item.direction))||'')==='k2e';
+ }
+ function wrap(PREV){
+   if(typeof PREV!=='function')return PREV;
+   return function(a,item,type){
+     const r=PREV.apply(this,arguments);
+     const ok=r===true||r==='correct'||(r&&r.correct);
+     if(ok||!isK2E(a,item,type))return r;
+     const ans=(a&&typeof a==='object'&&item===undefined)?(a.userAnswer||a.answer):a;
+     const eng=(a&&typeof a==='object'&&item===undefined)?a.eng:(item&&item.eng);
+     const u=ne(ans);
+     if(u&&engVariants(eng).has(u)){
+       if(typeof r==='string')return 'correct';
+       return Object.assign({},r||{},{correct:true,reason:'english-optional',label:'정답'});
+     }
+     return r;
+   };
+ }
+ try{const g=wrap(window.gradeAnswer);window.gradeAnswer=g;try{gradeAnswer=g;}catch(e){}}catch(e){}
+ try{if(typeof window.gradeAnswerV5==='function'){const g5=wrap(window.gradeAnswerV5);window.gradeAnswerV5=g5;try{gradeAnswerV5=g5;}catch(e){}}}catch(e){}
+ window.SEOLDAE_PATCH_VERSION='v25';
 })();
 
 </script>
