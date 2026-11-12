@@ -1934,11 +1934,23 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    const inp=r.querySelector('input.ty');setTimeout(()=>{try{inp.focus();}catch(e){}},60);
    let stage='answer',hinted=false;
    const target=showEng(it.eng).replace(/\([^)]*\)|\[[^\]]*\]/g,' ').replace(/\s+/g,' ').trim();
+   /* 같은 뜻을 가진 다른 단어(reject/refuse 등)가 있으면 구별 힌트를 미리 보여 주고, 그 단어를 써도 오답 처리하지 않음 */
+   const mine=new Set(kparts(it));
+   const twins=pool(it._day).filter(x=>x!==it&&x.eng.toLowerCase()!==it.eng.toLowerCase()&&kparts(x).some(p=>mine.has(p)));
+   if(twins.length){
+     const tl=target.toLowerCase();let k=1;
+     while(k<tl.length&&twins.some(x=>x.eng.toLowerCase().startsWith(tl.slice(0,k))))k++;
+     const hb=document.createElement('div');hb.className='ans';hb.style.cssText='margin-top:6px;color:#8a6d1a';
+     hb.innerHTML='💡 같은 뜻의 단어가 또 있어요. 힌트: <b>'+esc(target.slice(0,k))+'…</b> ('+target.replace(/[^A-Za-z]/g,'').length+'글자)';
+     r.querySelector('.kor').after(hb);
+   }
    r.querySelector('[data-a="hint"]').onclick=()=>{if(stage!=='answer')return;hinted=true;inp.placeholder=target.slice(0,1)+' _ _ _ ('+target.replace(/[^A-Za-z]/g,'').length+'글자)';inp.focus();};
    const go=()=>{
      const v=inp.value.trim();if(!v)return;
      const fb=r.querySelector('.fb');
      if(stage==='answer'){
+       const tw=twins.find(x=>isRight(x,v)&&!isRight(it,v));
+       if(tw){fb.className='fb';fb.style.color='#8a6d1a';fb.textContent='\u2018'+showEng(tw.eng)+'\u2019도 같은 뜻이지만, 여기서는 다른 단어예요. 힌트를 보고 다시 써 보세요.';inp.select();return;}
        const ok=isRight(it,v);speak(it.eng);
        if(ok){fb.className='fb ok';fb.textContent=hinted?'정답! (힌트 사용)':'정답! 완벽해요 🎉';result(i,!hinted);if(hinted){S.lv[i]=3;}inp.disabled=true;setTimeout(next,950);}
        else{result(i,false);fb.className='fb bad';fb.textContent='정답 철자를 보고 한 번 따라 써 보세요.';r.querySelector('.ans').innerHTML='정답: <b>'+esc(showEng(it.eng))+'</b>';inp.value='';inp.placeholder=target;stage='copy';inp.focus();}
