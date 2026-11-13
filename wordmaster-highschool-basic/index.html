@@ -1575,7 +1575,7 @@ window.__SD_GRADE_RETURNS_STRING=true;
 
 </script>
 <script>
-/* === SEOLDAE LEARN MODE v2 (2026-11-10, 학습 기록·다음 Day 안내·학습 후 바로 시험) ===
+/* === SEOLDAE LEARN MODE v3 (학습 먼저 → 시험, 2026-11-10, 학습 기록·다음 Day 안내·학습 후 바로 시험) ===
    학습 모드: 카드로 보기 → 4지선다(영→한) → 4지선다(한→영) → 직접 쓰기(한→영)
    - 맞히면 다음 단계, 틀리면 한 단계 내려가서 몇 문제 뒤 다시 나옴
    - 다시 나올 때마다 선지를 새로 뽑음
@@ -1591,7 +1591,8 @@ window.__SD_GRADE_RETURNS_STRING=true;
  const $=(s,r)=>(r||document).querySelector(s);
  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
  const store={get(k,d){try{const v=localStorage.getItem(KEY+k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(KEY+k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(KEY+k);}catch(e){}}};
- const dayLabel=d=>'DAY '+String(d).padStart(2,'0');
+ const UNIT=/STEP 선택|STEP 0?1/.test(document.body?document.body.innerHTML.slice(0,200000):'')?'STEP':'DAY';
+ const dayLabel=d=>UNIT+' '+String(d).padStart(2,'0');
  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const showEng=e=>String(e||'').replace(/\s+/g,' ').trim();
  const shortKor=it=>{const k=String(it.kor||it.kor_full||'');return k.length>34?k.slice(0,32)+'…':k;};
@@ -1702,29 +1703,47 @@ window.__SD_GRADE_RETURNS_STRING=true;
    if(!(st.learn&&st.test))return {d:last,why:st.learn?'시험을 아직 안 봤어요':'학습을 마무리하지 않았어요'};
    const i=dnum(last);return i>=0&&i<DAYS.length-1?{d:DAYS[i+1],why:''}:null;
  }
- function hostDayInput(){return $('#dayValue')||$('#day-select')||$('#day');}
+ function hostDayInput(){return $('#dayValue')||$('#day-select')||$('#daySelect')||$('#day');}
+ const NAME_SEL='#studentName,#student-name,#name,#nameInput';
+ const START_SEL='#startButton,#start-btn,#startBtn';
  function hostSelectDay(d){
    const opener=$('#dayButton')||$('#dayBtn');if(opener)opener.click();
    const list=$('#dayList');let btn=null;
-   if(list){const bs=[...list.querySelectorAll('button')];const re=new RegExp('^DAY\\s*0*'+String(d).replace(/^0+/,'')+'(\\D|$)');btn=bs.find(b=>b.dataset&&String(b.dataset.day)===String(d))||bs.find(b=>re.test(b.textContent.trim()));}
+   if(list){const bs=[...list.querySelectorAll('button')];const re=new RegExp('^(DAY|STEP|Day|Step)\\s*0*'+String(d).replace(/^0+/,'')+'(\\D|$)');btn=bs.find(b=>b.dataset&&String(b.dataset.day)===String(d))||bs.find(b=>re.test(b.textContent.trim()));}
    if(btn)btn.click();
    const m=$('#dayModal');if(m&&!m.classList.contains('hidden')){const c=$('#dayCloseButton')||$('#dayModalClose');if(c)c.click();}
    return !!btn;
  }
  function hostStart(d){
    hostSelectDay(d);
-   const nameIn=$('#studentName')||$('#student-name')||$('#name');
+   const nameIn=$(NAME_SEL);
    const nm=store.get('name','');
    if(nameIn&&!nameIn.value.trim()&&nm)nameIn.value=nm;
-   const sb=$('#startButton')||$('#start-btn')||$('#startBtn');
+   const sb=$(START_SEL);
    if(nameIn&&!nameIn.value.trim()){nameIn.focus();try{nameIn.scrollIntoView({block:'center'});}catch(e){}return;}
    if(sb)sb.click();
  }
+ function wrongMode(){
+   return [...document.querySelectorAll('select')].some(x=>x.value==='wrong')||!!document.querySelector('[data-mode="wrong"].active,[data-mode="wrong"].selected,.mode-btn.active[data-value="wrong"]');
+ }
+ function learned(d){return dayStatus(d).learn||!!store.get('done',{})[d];}
+ function gate(d){
+   const r=shell();
+   r.innerHTML=`<div class="w"><div class="hd"><b>📚 먼저 학습 모드!</b><button class="x" data-a="close">닫기</button></div>
+   <div class="card"><div class="kor"><b>${dayLabel(d)}</b> 학습 모드를 아직 안 했어요.<br>학습 모드로 먼저 외우고 시험을 봐요.</div>
+   <button class="btn" data-a="learn">📚 ${dayLabel(d)} 학습 시작</button>
+   <div class="ans" style="margin-top:10px">※ 저장된 오답만 다시 보는 시험은 바로 볼 수 있어요.</div></div></div>`;
+   r.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='close')close();if(a.dataset.a==='learn'){S=null;startDay(d);}};
+ }
  function hookStart(){
-   const sb=$('#startButton')||$('#start-btn')||$('#startBtn');if(!sb)return;
-   sb.addEventListener('click',()=>{const di=hostDayInput();const nameIn=$('#studentName')||$('#student-name')||$('#name');
-     if(nameIn&&nameIn.value.trim())store.set('name',nameIn.value.trim());
-     const v=di&&di.value;if(v&&VOCA[v])addHist(v,'test');setTimeout(renderBanner,300);},true);
+   document.addEventListener('click',e=>{
+     const sb=e.target.closest&&e.target.closest(START_SEL);if(!sb)return;
+     const di=hostDayInput();const v=di&&String(di.value||'').replace(/^0+(?=\d)/,'');
+     const day=v&&VOCA[v]?v:(di&&VOCA[di.value]?di.value:null);
+     const nameIn=$(NAME_SEL);if(nameIn&&nameIn.value.trim())store.set('name',nameIn.value.trim());
+     if(day&&!wrongMode()&&!learned(day)){e.preventDefault();e.stopImmediatePropagation();prime();gate(day);return;}
+     if(day)addHist(day,'test');setTimeout(renderBanner,300);
+   },true);
  }
  let banner=null;
  function renderBanner(){
@@ -1924,7 +1943,7 @@ window.__SD_GRADE_RETURNS_STRING=true;
  }
 
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v2';
+ window.SEOLDAE_LEARN_MODE='v3';
 })();
 
 </script>
