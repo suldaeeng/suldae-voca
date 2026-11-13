@@ -1565,6 +1565,18 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  .sdpp-links{display:flex;gap:6px;margin-top:10px}
  .sdpp-links button{flex:1;width:auto !important;margin:0 !important;border:1px solid #d8d3c6 !important;background:#f6f4ee !important;color:#444 !important;border-radius:10px;padding:8px 4px;font-size:13px;font-weight:600;cursor:pointer;min-height:0 !important;box-shadow:none !important}
  .sdpp-note{font-size:12px;color:#888;margin-top:8px;text-align:center}
+ .sdpp-skip{display:block;width:100% !important;margin:8px 0 0 !important;border:1px solid #d8d3c6 !important;background:#f6f4ee !important;color:#555 !important;border-radius:10px;padding:9px 6px;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:none !important}
+ #dayList button[data-sdh]:not(.active){background:#e3f4ea !important;border-color:#3f8a66 !important;color:#1f5c40 !important}
+ #dayList button[data-sdh="test"]:not(.active){background:#fff4d6 !important;border-color:#d9a520 !important;color:#7a5600 !important}
+ #dayList button[data-sdh="both"]:not(.active){background:#bfe6cf !important;border-color:#2f6b4f !important;color:#16402c !important}
+ #dayList button[data-sdh="red"]:not(.active){background:#fde2df !important;border-color:#d64541 !important;color:#9b1c17 !important}
+ #dayList button[data-sdh]::after{content:attr(data-sdm);display:block;font-size:10.5px;font-weight:600;opacity:.9;margin-top:1px}
+ .sd-legend{font-size:12px;color:#555;padding:6px 4px 8px;line-height:1.7;text-align:center}
+ .sd-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin:0 3px 0 8px;border:1px solid #999}
+ .sd-low{background:#fde2df;border:2px solid #d64541;color:#7d1712;border-radius:14px;padding:12px;margin:0 0 12px;font-size:15px;line-height:1.5;text-align:center}
+ .sd-low button{display:block;width:100%;margin-top:10px;border:0;border-radius:12px;background:#d64541;color:#fff;font-weight:800;font-size:16px;padding:13px}
+ #sdlm .day.tested{border-color:#d9a520;background:#fff4d6}
+ #sdlm .day.red{border-color:#d64541;background:#fde2df}
  #sdlm{position:fixed;inset:0;z-index:99999;background:#f6f4ee;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#222}
  #sdlm *{box-sizing:border-box}
  #sdlm button{width:auto;height:auto;min-height:0;margin:0;color:#222;font-family:inherit;text-transform:none;letter-spacing:normal;box-shadow:none;opacity:1;-webkit-appearance:none;appearance:none}
@@ -1614,7 +1626,73 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  /* ---------- 학습 기록 (v2) ---------- */
  const HK='hist';
  function hist(){return store.get(HK,[]);}
- function addHist(day,kind){if(!day||!VOCA[day])return;const h=hist();h.push({d:String(day),k:kind,t:Date.now()});store.set(HK,h.slice(-120));}
+ function addHist(day,kind){if(!day||!VOCA[day])return;const h=hist();h.push({d:String(day),k:kind,t:Date.now()});store.set(HK,h.slice(-400));try{paintDays();}catch(e){}}
+ /* ===== v5: 자유 진도 + 기록 색 표시 + 낮은 점수 재학습 ===== */
+ const LOW=80,LEARN_LOW=70;
+ function scores(){return store.get('scores',{});}
+ function setScore(d,pct){if(!d||!VOCA[d]||!(pct>=0))return;const s=scores();const o=s[d]||{};s[d]={last:Math.round(pct),t:Date.now(),best:Math.max(Math.round(pct),o.best||0)};store.set('scores',s);noteStudied(d);try{paintDays();}catch(e){}try{renderPanel();}catch(e){}}
+ /* 어떤 방법으로든 DAY 시험을 보면 진도에 넣고, 5개마다 누적 테스트 */
+ function noteStudied(d){const P=path();if(!VOCA[d]||P.order.includes(d))return;P.order.push(d);P.done[d]=P.done[d]||Date.now();P.cur=Math.max(P.cur||0,DAYS.indexOf(d)+1);P.started=true;
+   const n=P.order.length;if(n%CUM_EVERY===0)P.pend='cum';else if(n%REV_EVERY===0&&P.pend!=='cum')P.pend='rev';savePath(P);}
+ function gateCum(){
+   const r=shell();const P=path();const days=P.order.slice(-CUM_EVERY);
+   r.innerHTML=`<div class="w"><div class="hd"><b>🔁 누적 테스트 먼저!</b><button class="x" data-a="close">닫기</button></div>
+   <div class="card"><div class="kor">${UNIT} ${CUM_EVERY}개를 공부했어요.<br><b>${dayLabel(days[0])}~${dayLabel(days[days.length-1])} 누적 테스트</b>를 통과해야 새 ${UNIT} 시험을 볼 수 있어요. (${PASS}점 이상)</div>
+   <button class="btn" data-a="go">누적 테스트 보기</button>
+   <div class="ans" style="margin-top:10px">※ 이미 공부한 ${UNIT}는 지금도 다시 시험 볼 수 있어요.</div></div></div>`;
+   r.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='close')goHome();if(a.dataset.a==='go')runCum();};
+ }
+ function needRelearn(d){const s=scores()[d];if(!s||s.last>=LOW)return false;return !hist().some(x=>x.d===String(d)&&x.k==='learn'&&x.t>s.t);}
+ function redDays(){return DAYS.filter(needRelearn);}
+ function markLearn(d){const dn=store.get('done',{});dn[d]=Date.now();store.set('done',dn);store.del('d'+d);addHist(d,'learn');}
+ function autoStart(P){
+   const hd=DAYS.filter(d=>{const s=dayStatus(d);return s.learn||s.test||learned(d);});
+   P.cur=hd.length?Math.min(DAYS.length-1,Math.max(...hd.map(d=>DAYS.indexOf(d)))+1):0;
+   P.started=true;savePath(P);return true;
+ }
+ function btnDay(b){if(b.dataset&&b.dataset.day&&VOCA[String(b.dataset.day)])return String(b.dataset.day);const m=(b.textContent||'').match(/(?:DAY|STEP|Day|Step)\s*0*(\d+)/);if(!m)return null;const n=m[1];return VOCA[n]?n:(VOCA[n.padStart(2,'0')]?n.padStart(2,'0'):null);}
+ function paintDays(){
+   const list=document.getElementById('dayList');if(!list)return;
+   const P=store.get('path',null)||{done:{}};const SC=scores();
+   list.querySelectorAll('button').forEach(b=>{const d=btnDay(b);if(!d)return;const s=dayStatus(d);const L=s.learn||learned(d)||!!(P.done&&P.done[d]);const T=s.test||!!SC[d];
+     let v=L&&T?'both':(L?'learn':(T?'test':''));let m=v==='both'?'학습✓ 시험✓':(v==='learn'?'학습✓':(v==='test'?'시험✓':''));
+     if(SC[d]&&v)m=(L?'학습✓ ':'')+SC[d].last+'점';
+     if(needRelearn(d)){v='red';m='재학습 필요 '+SC[d].last+'점';}
+     if(v){b.setAttribute('data-sdh',v);b.setAttribute('data-sdm',m);}else{b.removeAttribute('data-sdh');b.removeAttribute('data-sdm');}});
+   if(!document.querySelector('.sd-legend')){const lg=document.createElement('div');lg.className='sd-legend';lg.innerHTML='<i style="background:#bfe6cf"></i>학습+시험 <i style="background:#e3f4ea"></i>학습 <i style="background:#fff4d6"></i>시험만 <i style="background:#fde2df"></i>재학습 필요';list.parentNode.insertBefore(lg,list);}
+ }
+ function readPct(){const t=['resScore','resultScore','result-score','resDetail','resultDetail','result-detail'].map(i=>{const e=document.getElementById(i);return e?e.textContent:'';}).join(' ');
+   let m=t.match(/정답률\s*(\d+)\s*%/)||t.match(/(\d+)\s*%/);if(m)return +m[1];m=t.match(/(\d+)\s*\/\s*(\d+)/);if(m&&+m[2])return Math.round(+m[1]/+m[2]*100);return null;}
+ function hookResults(){
+   ['result','result-screen'].forEach(id=>{const el=document.getElementById(id);if(!el)return;
+     new MutationObserver(()=>{if(el.classList.contains('hidden')||el.style.display==='none'||!window.__sdTD)return;
+       setTimeout(()=>{const d=window.__sdTD;if(!d)return;window.__sdTD=null;const pct=readPct();if(pct==null)return;setScore(d,pct);
+         const old=el.querySelector('.sd-low');if(old)old.remove();
+         if(pct<LOW){const nb=document.createElement('div');nb.className='sd-low';
+           nb.innerHTML=`🔴 <b>${pct}점</b> — ${LOW}점이 안 돼서 <b>${dayLabel(d)}</b>를 다시 학습해야 해요.<br>다시 학습을 끝내야 이 ${UNIT} 시험을 다시 볼 수 있어요.<button type="button">지금 ${dayLabel(d)} 다시 학습하기</button>`;
+           nb.querySelector('button').onclick=()=>{prime();runRelearn(d);};el.insertBefore(nb,el.firstChild);}
+       },150);}).observe(el,{attributes:true,attributeFilter:['class','style']});});
+ }
+ function gateRed(d){
+   const r=shell();const s=scores()[d];
+   r.innerHTML=`<div class="w"><div class="hd"><b>🔴 다시 학습이 필요해요</b><button class="x" data-a="close">닫기</button></div>
+   <div class="card"><div class="kor"><b>${dayLabel(d)}</b> 지난 시험이 <b>${s?s.last:0}점</b>이었어요.<br>${LOW}점이 안 되면 <b>다시 학습</b>을 끝내야 시험을 볼 수 있어요.</div>
+   <button class="btn" data-a="go">지금 ${dayLabel(d)} 다시 학습하기</button>
+   <div class="ans" style="margin-top:10px">※ 다른 ${UNIT}는 지금도 바로 시험 볼 수 있어요.</div></div></div>`;
+   r.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;if(a.dataset.a==='close')goHome();if(a.dataset.a==='go')runRelearn(d);};
+ }
+ function runRelearn(d){
+   pendingTitle=`${dayLabel(d)} 다시 학습`;
+   pendingCb=()=>{intro(`${dayLabel(d)} 다시 학습 완료!`,`이제 <b>재시험</b>을 봐요.<br><b>${LOW}점 이상</b>이면 통과예요.`,'재시험 시작',()=>runRetest(d));};
+   store.del('d'+d);startDay(d);
+ }
+ function runRetest(d){
+   const ws=(VOCA[d]||[]).map((it,i)=>Object.assign(it,{_day:d,_i:i}));
+   const items=shuffle(ws.slice()).map(it=>({it,dir:'k2e'})).concat(shuffle(ws.slice()).map(it=>({it,dir:'e2k'})));
+   return runTest({title:`${dayLabel(d)} 재시험`,items,onEnd:res=>{addHist(d,'test');setScore(d,res.score);const ok=res.score>=LOW;
+     intro(ok?'통과! 🎉':`아직 ${LOW}점이 안 돼요`,ok?`${dayLabel(d)} 재시험 <b>${res.score}점</b>`:`<b>${res.score}점</b>이라 한 번 더 학습해야 해요.`,ok?'처음 화면으로':'다시 학습하기',ok?goHome:()=>runRelearn(d),res);}});
+ }
+
  const dnum=d=>DAYS.indexOf(String(d));
  function dateStr(t){const x=new Date(t);const w='일월화수목금토'[x.getDay()];return (x.getMonth()+1)+'월 '+x.getDate()+'일('+w+')';}
  function dayStatus(d){const h=hist().filter(x=>x.d===String(d));return {learn:h.some(x=>x.k==='learn'),test:h.some(x=>x.k==='test'),last:h.length?h[h.length-1].t:0};}
@@ -1662,7 +1740,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      const di=hostDayInput();const v=di&&String(di.value||'').replace(/^0+(?=\d)/,'');
      const day=v&&VOCA[v]?v:(di&&VOCA[di.value]?di.value:null);
      const nameIn=$(NAME_SEL);if(nameIn&&nameIn.value.trim())store.set('name',nameIn.value.trim());
-     if(day&&!wrongMode()&&!path().done[day]){e.preventDefault();e.stopImmediatePropagation();prime();gate(day);return;}
+     if(day&&!wrongMode()&&needRelearn(day)){e.preventDefault();e.stopImmediatePropagation();prime();gateRed(day);return;}if(day&&!wrongMode()&&path().pend==='cum'&&!path().order.includes(day)){e.preventDefault();e.stopImmediatePropagation();prime();gateCum();return;}window.__sdTD=(day&&!wrongMode())?day:null;
      if(day)addHist(day,'test');setTimeout(renderPanel,300);
    },true);
  }
@@ -1698,6 +1776,8 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    if(setup)setup.insertBefore(panel,setup.firstChild);else{document.body.insertBefore(panel,document.body.firstChild);}
    const dn=store.get('done',{});if(!store.get('migr',0)){Object.keys(dn).forEach(d=>{const h=hist();h.push({d:String(d),k:'learn',t:dn[d]});store.set(HK,h.sort((a,b)=>a.t-b.t));});store.set('migr',1);}
    initName();hookStart();renderPanel();
+   try{hookResults();paintDays();const L=document.getElementById('dayList');if(L)new MutationObserver(()=>{clearTimeout(window.__sdPT);window.__sdPT=setTimeout(paintDays,60);}).observe(L,{childList:true});
+     document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#dayButton,#dayBtn'))setTimeout(paintDays,30);},true);}catch(e){}
  }
  /* ---------- 화면 ---------- */
  let root=null,S=null;
@@ -1706,11 +1786,11 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
 
  function openHome(){
    pendingCb=null;pendingTitle=null;
-   const r=shell();const P=path();const allowed=d=>!!P.done[d];
+   const r=shell();const P=path();const allowed=d=>true;
    const tiles=DAYS.filter(allowed).map(d=>{const p=store.get('d'+d,null);const done=store.get('done',{})[d];const tst=dayStatus(d).test;
-     const cls=done?'day done':(p?'day part':'day');const sub=(done?'학습✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개')))+(tst?' 시험✓':'');
+     const rd=needRelearn(d),sc=scores()[d];const cls=rd?'day red':(done?'day done':(p?'day part':(tst?'day tested':'day')));const sub=rd?('재학습 '+sc.last+'점'):((done?'학습✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개')))+(sc?' '+sc.last+'점':(tst?' 시험✓':'')));
      return `<button class="${cls}" data-d="${esc(d)}">${dayLabel(d)}<small>${sub}</small></button>`;}).join('');
-   r.innerHTML=`<div class="w"><div class="hd"><b>📚 끝낸 ${UNIT} 다시 학습</b><button class="x" data-a="close">닫기</button></div>
+   r.innerHTML=`<div class="w"><div class="hd"><b>📚 ${UNIT} 골라서 학습</b><button class="x" data-a="close">닫기</button></div>
    <div class="help">① <b>카드</b>로 단어와 뜻을 보고 발음을 들어요.<br>② <b>4지선다</b>로 뜻 고르기 → 영어 고르기<br>③ 마지막에 뜻을 보고 <b>영어를 직접 써요.</b><br>틀리면 한 단계 내려가서 조금 뒤에 다시 나와요.</div>
    <div class="days">${tiles||'<div class="ans">아직 끝낸 '+UNIT+'가 없어요.</div>'}</div></div>`;
    r.onclick=e=>{const t=e.target.closest('[data-a],[data-d]');if(!t)return;if(t.dataset.a==='close')goHome();else if(t.dataset.d)startDay(t.dataset.d);};
@@ -1845,6 +1925,11 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  }
 
  function finish(){
+   if(S&&!S.only&&VOCA[S.day]&&S.words.length){const n=S.words.length,ok=S.miss.filter(m=>!m).length,ls=Math.round(ok/n*100);
+     if(ls<LEARN_LOW){const d=S.day,words=S.words,cb=S.cb,idx=S.miss.map((m,i)=>m>0?i:-1).filter(i=>i>=0);S=null;
+       const r=shell();r.innerHTML=`<div class="w"><div class="hd"><b>${dayLabel(d)} 한 번 더! 💪</b></div><div class="card"><div class="kor">한 번에 맞힌 단어: <b>${ok} / ${n}</b> (${ls}%)<br>${LEARN_LOW}%가 안 돼서 <b>틀린 단어 ${idx.length}개</b>를 한 번 더 학습해야 끝나요.</div><button class="btn" data-a="again">틀린 단어 다시 학습하기</button></div></div>`;
+       r.onclick=e=>{if(!e.target.closest('[data-a="again"]'))return;pendingTitle=`${dayLabel(d)} 틀린 단어 다시 학습`;pendingCb=()=>{markLearn(d);if(cb)cb();else goHome();};begin(d,words,null,idx);};
+       return;}}
    if(S&&S.cb){const cb=S.cb;if(!S.only&&VOCA[S.day]){const dn=store.get('done',{});dn[S.day]=Date.now();store.set('done',dn);store.del('d'+S.day);addHist(S.day,'learn');}S=null;cb();return;}
    const hard=S.words.map((w,i)=>({w,m:S.miss[i],i})).filter(x=>x.m>0).sort((a,b)=>b.m-a.m);
    if(!S.only){const dn=store.get('done',{});dn[S.day]=Date.now();store.set('done',dn);store.del('d'+S.day);addHist(S.day,'learn');}
@@ -1889,6 +1974,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function curDay(){const P=path();return DAYS[P.cur]||null;}
  function todayTask(){
    const P=path();
+   const RD=redDays();if(RD.length){const d=RD[0];return {kind:'relearn',d,label:`🔴 다시 학습: ${dayLabel(d)}`,sub:`지난 시험 ${scores()[d].last}점 → 다시 학습하고 재시험 (${LOW}점 이상 통과)`};}
    if(P.pend==='cum'){const last=P.order.slice(-CUM_EVERY);return {kind:'cum',label:`🔁 누적 테스트 (${dayLabel(last[0])}~${dayLabel(last[last.length-1])})`,sub:`${PASS}점 이상이면 통과! 끝내야 다음 ${UNIT}가 열려요.`};}
    if(P.pend==='rev'){return {kind:'rev',label:`🔄 이틀 복습 (${REV_N}문제)`,sub:'짧게 복습하고 다음으로 가요.'};}
    const d=curDay();
@@ -1918,6 +2004,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    if(!nm){
      panel.innerHTML=`<div class="sdpp-t">👋 처음 왔어요? 이름을 알려 주세요</div>
      <input class="sdpp-in" id="sdppName" placeholder="이름 (한 번만 쓰면 돼요)"><button type="button" class="sdpp-go" data-a="name">시작하기</button>`;
+   }else if(!P.started&&autoStart(P)){renderPanel();return;
    }else if(!P.started){
      const opts=DAYS.map((d,i)=>`<option value="${i}">${dayLabel(d)}</option>`).join('');
      panel.innerHTML=`<div class="sdpp-t">👋 ${esc(nm)}, 반가워요!</div>
@@ -1930,15 +2017,17 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      <button type="button" class="sdpp-go big" data-a="today">${T.label}<small>${T.sub}</small></button>
      <div class="sdpp-prog"><div class="bar"><i style="width:${(doneN/tot*100).toFixed(1)}%"></i></div>
      <span>${doneN} / ${tot} ${UNIT} 완료${T.kind==='day'?` · 누적 테스트까지 ${nextCumIn()}개`:''}</span></div>
-     <div class="sdpp-links"><button type="button" data-a="review">끝낸 ${UNIT} 다시 학습</button><button type="button" data-a="log">내 기록</button><button type="button" data-a="teacher">선생님</button></div>
-     <div class="sdpp-note">아래 시험은 <b>끝낸 ${UNIT}</b>를 다시 볼 때만 써요.</div>`;
+     <div class="sdpp-links"><button type="button" data-a="review">${UNIT} 골라서 학습</button><button type="button" data-a="log">내 기록</button><button type="button" data-a="teacher">선생님</button></div>
+     <div class="sdpp-note">아래에서 <b>어떤 ${UNIT}든</b> 바로 시험 볼 수 있어요. 시험이 <b>${LOW}점 미만</b>이면 그 ${UNIT}는 <span style="color:#d64541">빨간색</span>이 되고, 다시 학습해야 재시험을 볼 수 있어요. ${UNIT} ${CUM_EVERY}개를 시험 볼 때마다 <b>누적 테스트</b>가 있어요.</div>`;
+     if(T.kind==='rev'){const g=panel.querySelector('.sdpp-go.big');if(g)g.insertAdjacentHTML('afterend',`<button type="button" class="sdpp-skip" data-a="skippend">나중에 하고 다음 ${UNIT} 학습하기 →</button>`);}
    }
    panel.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;prime();
      const k=a.dataset.a;
      if(k==='name'){const v=($('#sdppName').value||'').trim();if(!v){$('#sdppName').focus();return;}store.set('name',v);const inp=$(NAME_SEL);if(inp)inp.value=v;renderPanel();}
-     if(k==='startfrom'){const i=+$('#sdppStart').value;const P=path();if(i>0&&!confirm(`${dayLabel(DAYS[i])}부터 시작할까요? 나중에는 선생님만 바꿀 수 있어요.`))return;P.cur=i;P.started=true;savePath(P);renderPanel();}
+     if(k==='startfrom'){const i=+$('#sdppStart').value;const P=path();P.cur=i;P.started=true;savePath(P);renderPanel();}
      if(k==='today')runToday();
      if(k==='review')openHome();
+     if(k==='skippend'){const P=path();P.pend=null;savePath(P);renderPanel();}
      if(k==='log')openLog();
      if(k==='teacher')teacher();
    };
@@ -1951,6 +2040,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    if(T.kind==='end'){goHome();return;}
    if(T.kind==='cum')return runCum();
    if(T.kind==='rev')return runRev();
+   if(T.kind==='relearn')return runRelearn(T.d);
    const d=T.d;const st=P.step&&P.step.d===d?P.step.s:'learn';
    if(st==='learn'){
      if(learned(d)&&store.get('done',{})[d]){P.step={d,s:'test'};savePath(P);return runToday();}
@@ -1962,7 +2052,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      const items=shuffle(ws.slice()).map(it=>({it,dir:'k2e'})).concat(shuffle(ws.slice()).map(it=>({it,dir:'e2k'})));
      return runTest({title:`${dayLabel(d)} 시험`,items,onEnd:res=>{
        const wrongIdx=[...new Set(res.wrong.map(x=>x.it._i))];
-       addHist(d,'test');
+       addHist(d,'test');setScore(d,res.score);
        const P2=path();wrongIdx.forEach(i=>{const k=wid(d,i);if(!P2.wrong.includes(k))P2.wrong.push(k);});
        if(wrongIdx.length){P2.step={d,s:'fix',idx:wrongIdx};savePath(P2);
          resultScreen(res,`틀린 단어 ${wrongIdx.length}개를 다시 외워야 ${UNIT}가 끝나요.`,'틀린 단어 외우기',runToday);}
@@ -2154,7 +2244,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    window.gradeAnswer=g;try{gradeAnswer=g;}catch(e){}
  })();
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v4';
+ window.SEOLDAE_LEARN_MODE='v5';
 })();
 
 </script>
