@@ -68,7 +68,7 @@ function storageKey(name){return 'seoldae_'+APP_BOOK_NAME.replace(/\s+/g,'_')+'_
 function formatDay(d){return d==='all'?'전체 DAY':'DAY '+String(d).padStart(2,'0')}
 function getDayValue(){return byId('dayValue').value||Object.keys(VOCA).sort(function(a,b){return +a-+b})[0]}
 function setDayValue(day){byId('dayValue').value=day;const label=day==='all'?'전체 DAY':formatDay(day)+' ('+(VOCA[day]?VOCA[day].length:0)+'개)';byId('dayButton').textContent=label;Array.from(byId('dayList').querySelectorAll('button')).forEach(function(btn){btn.classList.toggle('active',btn.dataset.day===day)})}
-function populateDays(){const keys=Object.keys(VOCA).sort(function(a,b){return +a-+b});const list=byId('dayList');list.innerHTML='';keys.forEach(function(d){const btn=document.createElement('button');btn.type='button';btn.dataset.day=d;btn.textContent='DAY '+String(d).padStart(2,'0')+'\\n'+VOCA[d].length+'개';btn.addEventListener('click',function(){setDayValue(d);closeDayModal()});list.appendChild(btn)});const all=document.createElement('button');all.type='button';all.dataset.day='all';all.textContent='전체\\n'+keys.length+'DAY';all.addEventListener('click',function(){setDayValue('all');closeDayModal()});list.appendChild(all);setDayValue(keys[0]||'')}
+function populateDays(){const keys=Object.keys(VOCA).sort(function(a,b){return +a-+b});const list=byId('dayList');list.innerHTML='';keys.forEach(function(d){const btn=document.createElement('button');btn.type='button';btn.dataset.day=d;btn.textContent='DAY '+String(d).padStart(2,'0')+'\n'+VOCA[d].length+'개';btn.addEventListener('click',function(){setDayValue(d);closeDayModal()});list.appendChild(btn)});const all=document.createElement('button');all.type='button';all.dataset.day='all';all.textContent='전체\\n'+keys.length+'DAY';all.addEventListener('click',function(){setDayValue('all');closeDayModal()});list.appendChild(all);setDayValue(keys[0]||'')}
 function openDayModal(){byId('dayModal').classList.remove('hidden')}
 function closeDayModal(){byId('dayModal').classList.add('hidden')}
 function chosenItems(){let d=getDayValue();let arr=d==='all'?Object.values(VOCA).flat():((VOCA[d]||[]).slice());if(byId('modeSelect').value==='wrong'){const saved=safeGet(storageKey('wrongbank'))||[];if(saved.length)arr=saved}return arr.map(function(x){return Object.assign({},x)})}
@@ -1566,17 +1566,22 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  .sdpp-links button{flex:1;width:auto !important;margin:0 !important;border:1px solid #d8d3c6 !important;background:#f6f4ee !important;color:#444 !important;border-radius:10px;padding:8px 4px;font-size:13px;font-weight:600;cursor:pointer;min-height:0 !important;box-shadow:none !important}
  .sdpp-note{font-size:12px;color:#888;margin-top:8px;text-align:center}
  .sdpp-skip{display:block;width:100% !important;margin:8px 0 0 !important;border:1px solid #d8d3c6 !important;background:#f6f4ee !important;color:#555 !important;border-radius:10px;padding:9px 6px;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:none !important}
- #dayList button[data-sdh]:not(.active){background:#e3f4ea !important;border-color:#3f8a66 !important;color:#1f5c40 !important}
- #dayList button[data-sdh="test"]:not(.active){background:#fff4d6 !important;border-color:#d9a520 !important;color:#7a5600 !important}
- #dayList button[data-sdh="both"]:not(.active){background:#bfe6cf !important;border-color:#2f6b4f !important;color:#16402c !important}
- #dayList button[data-sdh="red"]:not(.active){background:#fde2df !important;border-color:#d64541 !important;color:#9b1c17 !important}
- #dayList button[data-sdh]::after{content:attr(data-sdm);display:block;font-size:10.5px;font-weight:600;opacity:.9;margin-top:1px}
+ #dayList button{white-space:pre-line}
+ #dayList button[data-sdh]{background:#2b6fd6 !important;border-color:#1d4f9c !important;color:#fff !important}
+ #dayList button[data-sdh="test"]{background:#f5b301 !important;border-color:#b88400 !important;color:#3d2a00 !important}
+ #dayList button[data-sdh="both"]{background:#18864b !important;border-color:#0f5c33 !important;color:#fff !important}
+ #dayList button[data-sdh="red"]{background:#d93636 !important;border-color:#9b1c17 !important;color:#fff !important}
+ #dayList button.active{outline:4px solid #111 !important;outline-offset:2px}
+ #dayList button.active:not([data-sdh]){background:#fff !important;color:#111 !important;border-color:#111 !important}
+ #dayList button[data-sdh]::after{content:attr(data-sdm);display:block;font-size:11px;font-weight:800;margin-top:2px}
  .sd-legend{font-size:12px;color:#555;padding:6px 4px 8px;line-height:1.7;text-align:center}
  .sd-legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin:0 3px 0 8px;border:1px solid #999}
  .sd-low{background:#fde2df;border:2px solid #d64541;color:#7d1712;border-radius:14px;padding:12px;margin:0 0 12px;font-size:15px;line-height:1.5;text-align:center}
  .sd-low button{display:block;width:100%;margin-top:10px;border:0;border-radius:12px;background:#d64541;color:#fff;font-weight:800;font-size:16px;padding:13px}
- #sdlm .day.tested{border-color:#d9a520;background:#fff4d6}
- #sdlm .day.red{border-color:#d64541;background:#fde2df}
+ #sdlm .day.tested{border-color:#b88400;background:#f5b301;color:#3d2a00}
+ #sdlm .day.red{border-color:#9b1c17;background:#d93636;color:#fff}
+ #sdlm .day.fin{border-color:#0f5c33;background:#18864b;color:#fff}
+ #sdlm .day.red small,#sdlm .day.fin small,#sdlm .day.done small{color:#fff;font-weight:700}
  #sdlm{position:fixed;inset:0;z-index:99999;background:#f6f4ee;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:inherit;color:#222}
  #sdlm *{box-sizing:border-box}
  #sdlm button{width:auto;height:auto;min-height:0;margin:0;color:#222;font-family:inherit;text-transform:none;letter-spacing:normal;box-shadow:none;opacity:1;-webkit-appearance:none;appearance:none}
@@ -1611,7 +1616,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  #sdlm .ans{font-size:15px;color:#555;margin-top:4px;word-break:keep-all}
  #sdlm .days{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
  #sdlm .day{border:2px solid #e3dfd3;background:#fff;border-radius:12px;padding:12px 4px;font-size:14px;font-weight:700;cursor:pointer;position:relative}
- #sdlm .day.done{border-color:#3f8a66;background:#e9f6ee}
+ #sdlm .day.done{border-color:#1d4f9c;background:#2b6fd6;color:#fff}
  #sdlm .day.part{border-color:#d9b44a;background:#fbf5e3}
  #sdlm .day small{display:block;font-size:11px;font-weight:500;color:#777;margin-top:2px}
  #sdlm .help{font-size:13.5px;color:#555;line-height:1.6;background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:6px}
@@ -1659,7 +1664,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      if(SC[d]&&v)m=(L?'학습✓ ':'')+SC[d].last+'점';
      if(needRelearn(d)){v='red';m='재학습 필요 '+SC[d].last+'점';}
      if(v){b.setAttribute('data-sdh',v);b.setAttribute('data-sdm',m);}else{b.removeAttribute('data-sdh');b.removeAttribute('data-sdm');}});
-   if(!document.querySelector('.sd-legend')){const lg=document.createElement('div');lg.className='sd-legend';lg.innerHTML='<i style="background:#bfe6cf"></i>학습+시험 <i style="background:#e3f4ea"></i>학습 <i style="background:#fff4d6"></i>시험만 <i style="background:#fde2df"></i>재학습 필요';list.parentNode.insertBefore(lg,list);}
+   if(!document.querySelector('.sd-legend')){const lg=document.createElement('div');lg.className='sd-legend';lg.innerHTML='<i style="background:#18864b"></i>완료(학습+시험) <i style="background:#2b6fd6"></i>학습만 <i style="background:#f5b301"></i>시험만 <i style="background:#d93636"></i>재학습 필요 <i style="background:#fff"></i>아직 안 함';list.parentNode.insertBefore(lg,list);}
  }
  function readPct(){const t=['resScore','resultScore','result-score','resDetail','resultDetail','result-detail'].map(i=>{const e=document.getElementById(i);return e?e.textContent:'';}).join(' ');
    let m=t.match(/정답률\s*(\d+)\s*%/)||t.match(/(\d+)\s*%/);if(m)return +m[1];m=t.match(/(\d+)\s*\/\s*(\d+)/);if(m&&+m[2])return Math.round(+m[1]/+m[2]*100);return null;}
@@ -1788,12 +1793,12 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    pendingCb=null;pendingTitle=null;
    const r=shell();const P=path();const allowed=d=>true;
    const tiles=DAYS.filter(allowed).map(d=>{const p=store.get('d'+d,null);const done=store.get('done',{})[d];const tst=dayStatus(d).test;
-     const rd=needRelearn(d),sc=scores()[d];const cls=rd?'day red':(done?'day done':(p?'day part':(tst?'day tested':'day')));const sub=rd?('재학습 '+sc.last+'점'):((done?'학습✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개')))+(sc?' '+sc.last+'점':(tst?' 시험✓':'')));
+     const rd=needRelearn(d),sc=scores()[d];const fin=!!(P.done[d]||P.order.includes(d)||(dayStatus(d).learn&&tst));const cls=rd?'day red':fin?'day fin':(done?'day done':(p?'day part':(tst?'day tested':'day')));const sub=rd?('재학습 '+sc.last+'점'):((done?'학습✓':(p?Math.round(p.pct||0)+'%':(VOCA[d].length+'개')))+(sc?' '+sc.last+'점':(tst?' 시험✓':'')));
      return `<button class="${cls}" data-d="${esc(d)}">${dayLabel(d)}<small>${sub}</small></button>`;}).join('');
-   r.innerHTML=`<div class="w"><div class="hd"><b>📚 ${UNIT} 골라서 학습</b><button class="x" data-a="close">닫기</button></div>
+   r.innerHTML=`<div class="w"><div class="hd"><b>📅 ${UNIT} 고르기</b><button class="x" data-a="close">닫기</button></div>
    <div class="help">① <b>카드</b>로 단어와 뜻을 보고 발음을 들어요.<br>② <b>4지선다</b>로 뜻 고르기 → 영어 고르기<br>③ 마지막에 뜻을 보고 <b>영어를 직접 써요.</b><br>틀리면 한 단계 내려가서 조금 뒤에 다시 나와요.</div>
    <div class="days">${tiles||'<div class="ans">아직 끝낸 '+UNIT+'가 없어요.</div>'}</div></div>`;
-   r.onclick=e=>{const t=e.target.closest('[data-a],[data-d]');if(!t)return;if(t.dataset.a==='close')goHome();else if(t.dataset.d)startDay(t.dataset.d);};
+   r.onclick=e=>{const t=e.target.closest('[data-a],[data-d]');if(!t)return;if(t.dataset.a==='close')goHome();else if(t.dataset.d){const d=t.dataset.d,Q=path();if(Q.done[d]||Q.order.includes(d)){startDay(d);}else{Q.cur=dnum(d);if(!(Q.step&&Q.step.d===d))Q.step=null;Q.started=true;savePath(Q);goHome();runToday();}}};
  }
 
  function startDay(d){
@@ -1971,7 +1976,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function savePath(P){store.set('path',P);}
  const wid=(d,i)=>d+'|'+i;
  const witem=k=>{const [d,i]=k.split('|');const it=(VOCA[d]||[])[+i];if(it){it._day=d;it._i=+i;}return it;};
- function curDay(){const P=path();return DAYS[P.cur]||null;}
+ function curDay(){const P=path();const dn=d=>!!(P.done[d]||P.order.includes(d));for(let i=P.cur||0;i<DAYS.length;i++)if(!dn(DAYS[i]))return DAYS[i];return DAYS.find(d=>!dn(d))||null;}
  function todayTask(){
    const P=path();
    const RD=redDays();if(RD.length){const d=RD[0];return {kind:'relearn',d,label:`🔴 다시 학습: ${dayLabel(d)}`,sub:`지난 시험 ${scores()[d].last}점 → 다시 학습하고 재시험 (${LOW}점 이상 통과)`};}
@@ -2000,7 +2005,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function renderPanel(){
    if(!panel)return;
    const P=path(),T=todayTask(),nm=myName();
-   const doneN=P.order.length,tot=DAYS.length;
+   const doneN=DAYS.filter(d=>P.done[d]||P.order.includes(d)||(dayStatus(d).learn&&dayStatus(d).test)).length,tot=DAYS.length;
    if(!nm){
      panel.innerHTML=`<div class="sdpp-t">👋 처음 왔어요? 이름을 알려 주세요</div>
      <input class="sdpp-in" id="sdppName" placeholder="이름 (한 번만 쓰면 돼요)"><button type="button" class="sdpp-go" data-a="name">시작하기</button>`;
@@ -2017,7 +2022,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      <button type="button" class="sdpp-go big" data-a="today">${T.label}<small>${T.sub}</small></button>
      <div class="sdpp-prog"><div class="bar"><i style="width:${(doneN/tot*100).toFixed(1)}%"></i></div>
      <span>${doneN} / ${tot} ${UNIT} 완료${T.kind==='day'?` · 누적 테스트까지 ${nextCumIn()}개`:''}</span></div>
-     <div class="sdpp-links"><button type="button" data-a="review">${UNIT} 골라서 학습</button><button type="button" data-a="log">내 기록</button><button type="button" data-a="teacher">선생님</button></div>
+     <div class="sdpp-links"><button type="button" data-a="review">📅 ${UNIT} 고르기</button><button type="button" data-a="log">내 기록</button><button type="button" data-a="teacher">선생님</button></div>
      <div class="sdpp-note">아래에서 <b>어떤 ${UNIT}든</b> 바로 시험 볼 수 있어요. 시험이 <b>${LOW}점 미만</b>이면 그 ${UNIT}는 <span style="color:#d64541">빨간색</span>이 되고, 다시 학습해야 재시험을 볼 수 있어요. ${UNIT} ${CUM_EVERY}개를 시험 볼 때마다 <b>누적 테스트</b>가 있어요.</div>`;
      if(T.kind==='rev'){const g=panel.querySelector('.sdpp-go.big');if(g)g.insertAdjacentHTML('afterend',`<button type="button" class="sdpp-skip" data-a="skippend">나중에 하고 다음 ${UNIT} 학습하기 →</button>`);}
    }
@@ -2069,7 +2074,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function completeDay(d,res){
    const P=path();
    P.done[d]=Date.now();if(!P.order.includes(d))P.order.push(d);
-   P.cur=Math.max(P.cur,dnum(d)+1);P.step=null;
+   P.cur=dnum(d)+1;P.step=null;
    const n=P.order.length;
    if(n%CUM_EVERY===0)P.pend='cum';else if(n%REV_EVERY===0)P.pend='rev';
    savePath(P);
@@ -2244,7 +2249,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    window.gradeAnswer=g;try{gradeAnswer=g;}catch(e){}
  })();
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v5';
+ window.SEOLDAE_LEARN_MODE='v5.1';
 })();
 
 </script>
