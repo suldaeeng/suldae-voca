@@ -1629,7 +1629,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function setScore(d,pct){if(!d||!VOCA[d]||!(pct>=0))return;const s=scores();const o=s[d]||{};s[d]={last:Math.round(pct),t:Date.now(),best:Math.max(Math.round(pct),o.best||0)};store.set('scores',s);noteStudied(d);try{paintDays();}catch(e){}try{renderPanel();}catch(e){}}
  /* 어떤 방법으로든 DAY 시험을 보면 진도에 넣고, 5개마다 누적 테스트 */
  function noteStudied(d){const P=path();if(!VOCA[d]||P.order.includes(d))return;P.order.push(d);P.done[d]=P.done[d]||Date.now();P.cur=Math.max(P.cur||0,DAYS.indexOf(d)+1);P.started=true;
-   const n=P.order.length;if(n%CUM_EVERY===0)P.pend='cum';else if(n%REV_EVERY===0&&P.pend!=='cum')P.pend='rev';savePath(P);}
+   const n=P.order.length;if(n%CUM_EVERY===0){P.pend='cum';P.cumLater=false;P.cumFail=0;}else if(n%REV_EVERY===0&&P.pend!=='cum')P.pend='rev';savePath(P);}
  function gateCum(){
    const r=shell();const P=path();const days=P.order.slice(-CUM_EVERY);
    r.innerHTML=`<div class="w"><div class="hd"><b>🔁 누적 테스트 먼저!</b><button class="x" data-a="close">닫기</button></div>
@@ -1736,7 +1736,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      const di=hostDayInput();const v=di&&String(di.value||'').replace(/^0+(?=\d)/,'');
      const day=v&&VOCA[v]?v:(di&&VOCA[di.value]?di.value:null);
      const nameIn=$(NAME_SEL);if(nameIn&&nameIn.value.trim())store.set('name',nameIn.value.trim());
-     if(day&&!wrongMode()&&needRelearn(day)){e.preventDefault();e.stopImmediatePropagation();prime();gateRed(day);return;}if(day&&!wrongMode()&&path().pend==='cum'&&!path().order.includes(day)){e.preventDefault();e.stopImmediatePropagation();prime();gateCum();return;}window.__sdTD=(day&&!wrongMode())?day:null;
+     if(day&&!wrongMode()&&needRelearn(day)){e.preventDefault();e.stopImmediatePropagation();prime();gateRed(day);return;}window.__sdTD=(day&&!wrongMode())?day:null;
      if(day)addHist(day,'test');setTimeout(renderPanel,300);
    },true);
  }
@@ -1789,7 +1789,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    r.innerHTML=`<div class="w"><div class="hd"><b>📅 ${UNIT} 고르기</b><button class="x" data-a="close">닫기</button></div>
    <div class="help">① <b>카드</b>로 단어와 뜻을 보고 발음을 들어요.<br>② <b>4지선다</b>로 뜻 고르기 → 영어 고르기<br>③ 마지막에 뜻을 보고 <b>영어를 직접 써요.</b><br>틀리면 한 단계 내려가서 조금 뒤에 다시 나와요.</div>
    <div class="days">${tiles||'<div class="ans">아직 끝낸 '+UNIT+'가 없어요.</div>'}</div></div>`;
-   r.onclick=e=>{const t=e.target.closest('[data-a],[data-d]');if(!t)return;if(t.dataset.a==='close')goHome();else if(t.dataset.d){const d=t.dataset.d,Q=path();if(Q.done[d]||Q.order.includes(d)){startDay(d);}else{Q.cur=dnum(d);if(!(Q.step&&Q.step.d===d))Q.step=null;Q.started=true;savePath(Q);goHome();runToday();}}};
+   r.onclick=e=>{const t=e.target.closest('[data-a],[data-d]');if(!t)return;if(t.dataset.a==='close')goHome();else if(t.dataset.d){const d=t.dataset.d,Q=path();if(Q.done[d]||Q.order.includes(d)){startDay(d);}else{Q.cur=dnum(d);if(!(Q.step&&Q.step.d===d))Q.step={d,s:'learn'};if(Q.pend==='cum')Q.cumLater=true;Q.started=true;savePath(Q);goHome();runToday();}}};
  }
 
  function startDay(d){
@@ -1952,6 +1952,9 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  const TPW='0610';
  let panel=null;
  const CUM_EVERY=5,REV_EVERY=2,PASS=80,CUM_MAX=40,REV_N=10;
+ /* v5.2: 초등 단어장은 누적 테스트를 쉽게 (20문제, 4지선다, 70점, 두 번째 도전부터는 틀린 단어만 외우면 통과) */
+ const ELEM=['elem-expressions','alist-basic','elem-800','1hour-elementary','alist-essential','alist-advanced','upri-basic'].includes(BOOK);
+ const CUM_PASS=ELEM?70:PASS,CUM_N=ELEM?20:CUM_MAX;
  function path(){
    let P=store.get('path',null);
    if(!P){
@@ -1970,8 +1973,9 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  function curDay(){const P=path();const dn=d=>!!(P.done[d]||P.order.includes(d));for(let i=P.cur||0;i<DAYS.length;i++)if(!dn(DAYS[i]))return DAYS[i];return DAYS.find(d=>!dn(d))||null;}
  function todayTask(){
    const P=path();
+   if(P.step&&P.step.d&&VOCA[P.step.d]&&!P.done[P.step.d]){const d=P.step.d,st=P.step.s||'learn';return {kind:'day',d,label:`📚 오늘 학습: ${dayLabel(d)}`,sub:`지금 할 차례: ${({learn:'① 학습 모드',test:'② 시험',fix:'③ 틀린 단어 다시 외우기'})[st]||'① 학습 모드'}`};}
    const RD=redDays();if(RD.length){const d=RD[0];return {kind:'relearn',d,label:`🔴 다시 학습: ${dayLabel(d)}`,sub:`지난 시험 ${scores()[d].last}점 → 다시 학습하고 재시험 (${LOW}점 이상 통과)`};}
-   if(P.pend==='cum'){const last=P.order.slice(-CUM_EVERY);return {kind:'cum',label:`🔁 누적 테스트 (${dayLabel(last[0])}~${dayLabel(last[last.length-1])})`,sub:`${PASS}점 이상이면 통과! 끝내야 다음 ${UNIT}가 열려요.`};}
+   if(P.pend==='cum'&&!P.cumLater){const last=P.order.slice(-CUM_EVERY);return {kind:'cum',label:`🔁 누적 테스트 (${dayLabel(last[0])}~${dayLabel(last[last.length-1])})`,sub:`${CUM_PASS}점 이상이면 통과! (나중에 하고 다음 ${UNIT}로 가도 돼요)`};}
    if(P.pend==='rev'){return {kind:'rev',label:`🔄 이틀 복습 (${REV_N}문제)`,sub:'짧게 복습하고 다음으로 가요.'};}
    const d=curDay();
    if(!d)return {kind:'end',label:'🎉 이 단어장을 모두 끝냈어요!',sub:'끝낸 '+UNIT+'는 아래에서 다시 볼 수 있어요.'};
@@ -2014,7 +2018,9 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      <div class="sdpp-prog"><div class="bar"><i style="width:${(doneN/tot*100).toFixed(1)}%"></i></div>
      <span>${doneN} / ${tot} ${UNIT} 완료${T.kind==='day'?` · 누적 테스트까지 ${nextCumIn()}개`:''}</span></div>
      <div class="sdpp-links"><button type="button" data-a="review">📅 ${UNIT} 고르기</button><button type="button" data-a="log">내 기록</button><button type="button" data-a="teacher">선생님</button></div>
-     <div class="sdpp-note">아래에서 <b>어떤 ${UNIT}든</b> 바로 시험 볼 수 있어요. 시험이 <b>${LOW}점 미만</b>이면 그 ${UNIT}는 <span style="color:#d64541">빨간색</span>이 되고, 다시 학습해야 재시험을 볼 수 있어요. ${UNIT} ${CUM_EVERY}개를 시험 볼 때마다 <b>누적 테스트</b>가 있어요.</div>`;
+     <div class="sdpp-note">아래에서 <b>어떤 ${UNIT}든</b> 바로 시험 볼 수 있어요. 시험이 <b>${LOW}점 미만</b>이면 그 ${UNIT}는 <span style="color:#d64541">빨간색</span>이 되고, 다시 학습해야 재시험을 볼 수 있어요. ${UNIT} ${CUM_EVERY}개를 시험 볼 때마다 <b>누적 테스트</b>가 있어요. (미루고 다음 ${UNIT}로 가도 돼요)</div>`;
+     if(T.kind==='cum'){const g=panel.querySelector('.sdpp-go.big');if(g)g.insertAdjacentHTML('afterend',`<button type="button" class="sdpp-skip" data-a="cumlater">나중에 하고 다음 ${UNIT} 학습하기 →</button>`);}
+     if(T.kind!=='cum'&&P.pend==='cum'&&P.cumLater){const g=panel.querySelector('.sdpp-go.big');if(g)g.insertAdjacentHTML('afterend',`<button type="button" class="sdpp-skip" data-a="cumnow">🔁 미뤄둔 누적 테스트 보기</button>`);}
      if(T.kind==='rev'){const g=panel.querySelector('.sdpp-go.big');if(g)g.insertAdjacentHTML('afterend',`<button type="button" class="sdpp-skip" data-a="skippend">나중에 하고 다음 ${UNIT} 학습하기 →</button>`);}
    }
    panel.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;prime();
@@ -2024,6 +2030,8 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      if(k==='today')runToday();
      if(k==='review')openHome();
      if(k==='skippend'){const P=path();P.pend=null;savePath(P);renderPanel();}
+     if(k==='cumlater'){const P=path();P.cumLater=true;savePath(P);renderPanel();}
+     if(k==='cumnow')runCum();
      if(k==='log')openLog();
      if(k==='teacher')teacher();
    };
@@ -2067,10 +2075,10 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    P.done[d]=Date.now();if(!P.order.includes(d))P.order.push(d);
    P.cur=dnum(d)+1;P.step=null;
    const n=P.order.length;
-   if(n%CUM_EVERY===0)P.pend='cum';else if(n%REV_EVERY===0)P.pend='rev';
+   if(n%CUM_EVERY===0){P.pend='cum';P.cumLater=false;P.cumFail=0;}else if(n%REV_EVERY===0&&P.pend!=='cum')P.pend='rev';
    savePath(P);
    const T=todayTask();
-   const msg=P.pend==='cum'?`다음에는 <b>누적 테스트</b>를 봐야 해요. (${PASS}점 이상 통과)`:P.pend==='rev'?'다음에는 <b>짧은 복습</b>부터 해요.':(T.kind==='day'?`다음에는 <b>${dayLabel(T.d)}</b>를 학습해요.`:'');
+   const msg=P.pend==='cum'&&!P.cumLater?`다음에는 <b>누적 테스트</b>가 있어요. (${CUM_PASS}점 이상 통과 · 나중에 해도 돼요)`:P.pend==='rev'?'다음에는 <b>짧은 복습</b>부터 해요.':(T.kind==='day'?`다음에는 <b>${dayLabel(T.d)}</b>를 학습해요.`:'');
    intro(`${dayLabel(d)} 끝! 👏`,msg+(res?`<br><br>시험 점수: <b>${res.score}점</b>`:''),'처음 화면으로',goHome,res);
  }
  function sampleFrom(days,n,includeWrong){
@@ -2084,18 +2092,23 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  }
  function runCum(){
    const P=path();const days=P.order.slice(-CUM_EVERY);
-   const keys=sampleFrom(days,CUM_MAX,true);
-   const items=keys.map(k=>({it:witem(k),dir:Math.random()<.5?'k2e':'e2k',k}));
-   intro('🔁 누적 테스트',`${dayLabel(days[0])}~${dayLabel(days[days.length-1])} 단어와 예전에 틀린 단어에서 <b>${items.length}문제</b>가 나와요.<br><b>${PASS}점 이상</b>이면 통과!`,'시작',()=>runTest({title:'누적 테스트',items,onEnd:res=>{
+   if(!days.length){goHome();return;}
+   const keys=sampleFrom(days,CUM_N,true);
+   const items=keys.map(k=>({it:witem(k),dir:ELEM?(Math.random()<.5?'mce':'mck'):(Math.random()<.5?'k2e':'e2k'),k}));
+   const done=()=>intro('누적 테스트 통과 🎉','이제 다음 '+UNIT+'를 학습할 수 있어요.','처음 화면으로',goHome);
+   intro('🔁 누적 테스트',`${dayLabel(days[0])}~${dayLabel(days[days.length-1])} 단어와 예전에 틀린 단어에서 <b>${items.length}문제</b>가 나와요.${ELEM?'<br>4개 중에서 <b>골라요.</b>':''}<br><b>${CUM_PASS}점 이상</b>이면 통과!`,'시작',()=>runTest({title:'누적 테스트',items,onEnd:res=>{
      const P2=path();
      res.right.forEach(x=>{P2.wrong=P2.wrong.filter(k=>k!==x.k);});
      res.wrong.forEach(x=>{if(!P2.wrong.includes(x.k))P2.wrong.push(x.k);});
      addHist(days[days.length-1],'cum');
-     if(res.score>=PASS){P2.pend=null;savePath(P2);
-       if(res.wrong.length){resultScreen(res,`통과! 🎉 그래도 틀린 단어 ${res.wrong.length}개는 다시 외우고 가요.`,'틀린 단어 외우기',()=>relearn(res.wrong,'누적 테스트 틀린 단어',()=>intro('누적 테스트 통과 🎉','이제 다음 '+UNIT+'를 학습할 수 있어요.','처음 화면으로',goHome)));}
+     const pass=res.score>=CUM_PASS;
+     if(!pass)P2.cumFail=(P2.cumFail||0)+1;
+     if(pass||(ELEM&&P2.cumFail>=2)){P2.pend=null;P2.cumLater=false;P2.cumFail=0;savePath(P2);
+       if(!pass){resultScreen(res,`${res.score}점! 열심히 두 번 도전했어요. 👏<br>틀린 단어 ${res.wrong.length}개만 외우면 <b>통과</b>예요.`,'틀린 단어 외우기',()=>relearn(res.wrong,'누적 테스트 틀린 단어',done));}
+       else if(res.wrong.length){resultScreen(res,`통과! 🎉 그래도 틀린 단어 ${res.wrong.length}개는 다시 외우고 가요.`,'틀린 단어 외우기',()=>relearn(res.wrong,'누적 테스트 틀린 단어',done));}
        else intro('누적 테스트 통과 🎉',`${res.score}점! 한 개도 안 틀렸어요.`,'처음 화면으로',goHome,res);
      }else{savePath(P2);
-       resultScreen(res,`${res.score}점이에요. ${PASS}점이 안 돼서 틀린 단어를 외운 뒤 <b>다시 봐야 해요.</b>`,'틀린 단어 외우기',()=>relearn(res.wrong,'누적 테스트 틀린 단어',()=>intro('다시 도전!','틀린 단어를 다 외웠어요. 누적 테스트를 다시 봐요.','누적 테스트 다시 보기',runCum)));}
+       resultScreen(res,`${res.score}점이에요. ${CUM_PASS}점이 안 돼서 틀린 단어를 외운 뒤 <b>다시 봐요.</b>${ELEM?'<br>(다음 도전에서는 틀린 단어만 외우면 통과예요)':''}`,'틀린 단어 외우기',()=>relearn(res.wrong,'누적 테스트 틀린 단어',()=>intro('다시 도전!','틀린 단어를 다 외웠어요. 누적 테스트를 다시 봐요.','누적 테스트 다시 보기',runCum)));}
    }}));
  }
  function runRev(){
@@ -2128,6 +2141,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    function q(){
      if(i>=items.length){const score=Math.round(right.length/items.length*100);return o.onEnd({score,right,wrong,total:items.length,title:o.title});}
      const x=items[i],it=x.it;const r=shell();
+     if(x.dir==='mce'||x.dir==='mck'){mcQ(x,it,r);return;}
      const prompt=x.dir==='e2k'?`<div class="tag">영어 → 뜻 쓰기</div><div class="eng">${esc(showEng(it.eng))}</div><button class="spk" data-a="spk">🔊</button>`
        :`<div class="tag">뜻 → 영어 쓰기</div><div class="kor" style="font-size:21px;font-weight:700">${esc(fullKor(it))}</div>`;
      r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0">${i+1} / ${items.length}</span></div>
@@ -2159,6 +2173,30 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      };
      r.querySelector('[data-a="chk"]').onclick=go;
      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});
+   }
+   function mcQ(x,it,r){
+     const all=Object.values(VOCA).flat();const lab=y=>x.dir==='mce'?shortKor(y):showEng(y.eng);
+     const opts=[it],seen=new Set([lab(it)]);
+     for(let t=0;t<300&&opts.length<4;t++){const y=all[Math.floor(Math.random()*all.length)];const l=lab(y);if(!y||!l||seen.has(l)||String(y.eng).toLowerCase()===String(it.eng).toLowerCase())continue;seen.add(l);opts.push(y);}
+     shuffle(opts);
+     const prompt=x.dir==='mce'?`<div class="tag">영어 → 뜻 고르기</div><div class="eng">${esc(showEng(it.eng))}</div><button class="spk" data-a="spk">🔊</button>`
+       :`<div class="tag">뜻 → 영어 고르기</div><div class="kor" style="font-size:21px;font-weight:700">${esc(fullKor(it))}</div>`;
+     r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0">${i+1} / ${items.length}</span></div>
+     <div class="bar"><i style="width:${(i/items.length*100).toFixed(1)}%"></i></div>
+     <div class="card">${prompt}${opts.map((y,k)=>`<button class="btn sec" data-o="${k}">${esc(lab(y))}</button>`).join('')}<div class="fb"></div><div class="ans"></div><button class="btn" data-a="nx" style="display:none">다음 →</button></div></div>`;
+     r.onclick=null;
+     if(x.dir==='mce')speak(it.eng);
+     const sp=r.querySelector('[data-a="spk"]');if(sp)sp.onclick=()=>speak(it.eng);
+     let done=false,moved=false;const adv=()=>{if(moved)return;moved=true;i++;q();};
+     r.querySelectorAll('[data-o]').forEach(b=>{b.onclick=()=>{
+       if(done)return;done=true;const y=opts[+b.dataset.o];const ok=y===it;
+       (ok?right:wrong).push(Object.assign({},x,{ans:lab(y)}));
+       if(x.dir==='mck')speak(it.eng);
+       r.querySelectorAll('[data-o]').forEach(c=>{const z=opts[+c.dataset.o];if(z===it){c.style.background='#2f7a52';c.style.color='#fff';}else if(c===b){c.style.background='#c2453a';c.style.color='#fff';}});
+       const fb=r.querySelector('.fb');
+       if(ok){fb.className='fb ok';fb.textContent='정답! 👍';setTimeout(adv,800);}
+       else{fb.className='fb bad';fb.textContent='틀렸어요';r.querySelector('.ans').innerHTML='정답: <b>'+esc(showEng(it.eng))+'</b> = '+esc(fullKor(it));const nx=r.querySelector('[data-a="nx"]');nx.style.display='';nx.onclick=adv;}
+     };});
    }
    q();
  }
@@ -2240,7 +2278,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    window.gradeAnswer=g;try{gradeAnswer=g;}catch(e){}
  })();
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v5.1';
+ window.SEOLDAE_LEARN_MODE='v5.2';
 })();
 
 </script>
