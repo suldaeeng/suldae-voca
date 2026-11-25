@@ -2295,16 +2295,17 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
  }
  function runTest(o){
    const items=o.items.filter(x=>x.it);let i=0;const right=[],wrong=[];
+   const bq=r=>{const b=r.querySelector('[data-a="quit"]');if(b)b.onclick=()=>{if(confirm('시험을 그만할까요? 지금 본 시험은 저장되지 않아요.'))goHome();};};
    function q(){
      if(i>=items.length){const score=Math.round(right.length/items.length*100);return o.onEnd({score,right,wrong,total:items.length,title:o.title});}
      const x=items[i],it=x.it;const r=shell();
      if(x.dir==='mce'||x.dir==='mck'){mcQ(x,it,r);return;}
      const prompt=x.dir==='e2k'?`<div class="tag">영어 → 뜻 쓰기</div><div class="eng">${esc(showEng(it.eng))}</div><button class="spk" data-a="spk">🔊</button>`
        :`<div class="tag">뜻 → 영어 쓰기</div><div class="kor" style="font-size:21px;font-weight:700">${esc(fullKor(it))}</div>`;
-     r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0">${i+1} / ${items.length}</span></div>
+     r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0 8px 0 0">${i+1} / ${items.length}</span><button class="x" data-a="quit">그만하기</button></div>
      <div class="bar"><i style="width:${(i/items.length*100).toFixed(1)}%"></i></div>
      <div class="card">${prompt}<input class="ty" type="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="${x.dir==='e2k'?'뜻을 쓰세요':'영어로 쓰세요'}"><button class="btn" data-a="chk">확인</button><div class="fb"></div><div class="ans"></div></div></div>`;
-     r.onclick=null;
+     r.onclick=null;bq(r);
      if(x.dir==='e2k')speak(it.eng);
      const sp=r.querySelector('[data-a="spk"]');if(sp)sp.onclick=()=>speak(it.eng);
      const inp=r.querySelector('input.ty');setTimeout(()=>{try{inp.focus();}catch(e){}},60);
@@ -2338,10 +2339,10 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
      shuffle(opts);
      const prompt=x.dir==='mce'?`<div class="tag">영어 → 뜻 고르기</div><div class="eng">${esc(showEng(it.eng))}</div><button class="spk" data-a="spk">🔊</button>`
        :`<div class="tag">뜻 → 영어 고르기</div><div class="kor" style="font-size:21px;font-weight:700">${esc(fullKor(it))}</div>`;
-     r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0">${i+1} / ${items.length}</span></div>
+     r.innerHTML=`<div class="w"><div class="hd"><b>${esc(o.title)}</b><span class="meta" style="margin:0 8px 0 0">${i+1} / ${items.length}</span><button class="x" data-a="quit">그만하기</button></div>
      <div class="bar"><i style="width:${(i/items.length*100).toFixed(1)}%"></i></div>
      <div class="card">${prompt}${opts.map((y,k)=>`<button class="btn sec" data-o="${k}">${esc(lab(y))}</button>`).join('')}<div class="fb"></div><div class="ans"></div><button class="btn" data-a="nx" style="display:none">다음 →</button></div></div>`;
-     r.onclick=null;
+     r.onclick=null;bq(r);
      if(x.dir==='mce')speak(it.eng);
      const sp=r.querySelector('[data-a="spk"]');if(sp)sp.onclick=()=>speak(it.eng);
      let done=false,moved=false;const adv=()=>{if(moved)return;moved=true;i++;q();};
@@ -2435,7 +2436,7 @@ function gradeAnswer(opts){ return window.SEOLDAE_GRADE_V50(opts); }
    window.gradeAnswer=g;try{gradeAnswer=g;}catch(e){}
  })();
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',addEntry);else addEntry();
- window.SEOLDAE_LEARN_MODE='v5.2';
+ window.SEOLDAE_LEARN_MODE='v5.3';
 })();
 
 </script>
